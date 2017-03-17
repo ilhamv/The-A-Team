@@ -1,0 +1,120 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 5x8" histories="1e8"/>
+</simulation>
+
+
+<nuclides>
+	<nuclide name="nuc_dark">
+    		<capture xs="100.0"/>
+  	</nuclide>
+
+	<nuclide name="nuc_light">
+    		<capture xs="10.0"/>
+    		<scatter xs="10.0" distribution="isotropic"/>
+  	</nuclide>
+	
+	<nuclide name="nuc_detector">
+    		<scatter xs="1.0" distribution="isotropic"/>
+    		<capture xs="59.0"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat_dark">
+    		<nuclide name="nuc_dark" density="0.1"/>
+  	</material>
+  	
+	<material name="mat_light">
+    		<nuclide name="nuc_light" density="0.1"/>
+  	</material>
+	
+	<material name="mat_detector">
+    		<nuclide name="nuc_detector" density="0.005"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane      name="px1" a="1.0" b="0.0" c="0.0" d="0.0"/>
+	<plane      name="px2" a="1.0" b="0.0" c="0.0" d="4.0"/>
+	<plane      name="px3" a="1.0" b="0.0" c="0.0" d="5.0"/>
+	<plane      name="px4" a="1.0" b="0.0" c="0.0" d="9.0"/>
+	<plane      name="py1" a="0.0" b="1.0" c="0.0" d="0.0"/>
+	<plane      name="py2" a="0.0" b="1.0" c="0.0" d="3.0"/>
+	<plane      name="py3" a="0.0" b="1.0" c="0.0" d="6.0"/>
+	<cylinder_z name="cz1" x="6.5" y="1.5" r="0.5"/>
+</surfaces>
+
+
+<regions>
+  	<region name="light1" material="mat_light" importance="1.0">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+  	</region>
+
+  	<region name="light2" material="mat_light" importance="8.0">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+    		<surface name="py2" sense="+1"/>
+    		<surface name="py3" sense="-1"/>
+  	</region>
+
+  	<region name="light3" material="mat_light" importance="64.0">
+    		<surface name="px2" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+    		<surface name="py2" sense="+1"/>
+    		<surface name="py3" sense="-1"/>
+  	</region>
+  	
+	<region name="light4" material="mat_light" importance="512.0">
+    		<surface name="px3" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+    		<surface name="cz1" sense="+1"/>
+  	</region>
+
+  	<region name="dark" material="mat_dark" importance="1.0">
+    		<surface name="px2" sense="+1"/>
+    		<surface name="px3" sense="-1"/>
+    		<surface name="py1" sense="+1"/>
+    		<surface name="py2" sense="-1"/>
+  	</region>
+	
+  	<region name="detector" material="mat_detector" importance="4096.0">
+    		<surface name="cz1" sense="-1"/>
+  	</region>
+	
+	<region name="left outside" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+  	</region>
+  	
+	<region name="right outside" importance="0.0">
+    		<surface name="px4" sense="+1"/>
+	</region>
+
+	<region name="down outside" importance="0.0">
+    		<surface name="py1" sense="-1"/>
+  	</region>
+	
+	<region name="up outside" importance="0.0">
+    		<surface name="py3" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+  	<region_flux name="Flux" absorption="true">
+    		<region name="detector"/>
+  	</region_flux>
+</estimators>
+
+
+<sources>
+  	<isotropic_point x="1.5"  y="1.5"  z="0.0"/>
+</sources>

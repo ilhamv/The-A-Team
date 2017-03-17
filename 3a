@@ -1,0 +1,59 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 3a" histories="1e7"/>
+</simulation>
+
+
+<distributions>
+  	<uniform        name="uniform x" datatype="double" a="0.0" b="4.0" />
+  	<delta          name="delta y-z" datatype="double" a="0.0" />
+  	<independentXYZ name="pos"       datatype="point"  x = "uniform x" y = "delta y-z" z = "delta y-z" />
+  	<isotropic      name="dir"       datatype="point" />
+</distributions>
+
+
+<nuclides>
+	<nuclide name="nuc1">
+    		<scatter xs="1.5" distribution="isotropic"/>
+    		<capture xs="0.3"/>
+    		<fission xs="0.2" multiplicity="average" nubar="2.8"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="nuc1" density="0.1"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane name="px1" a="1.0" b="0.0" c="0.0" d="0.0" bc="reflect"/>
+	<plane name="px2" a="1.0" b="0.0" c="0.0" d="4.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="slab" material="mat1">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+	
+	<region name="right outside" importance="0.0">
+    		<surface name="px2" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+  	<surface_counting name="Leakage count">
+    		<surface name="px2"/>
+  	</surface_counting>
+</estimators>
+
+
+<sources>
+  	<usource position="pos" direction="dir"/>
+</sources>

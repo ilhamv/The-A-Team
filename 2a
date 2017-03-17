@@ -1,0 +1,60 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 2a" histories="1e7"/>
+</simulation>
+
+<distributions>
+  	<linear      name="ang source" datatype="double" a = "0.0"    b = "1.0" fa = "0.0" fb = "2.0" />
+  	<delta       name="pos"        datatype="point"  x = "1.0e-9" y = "0.0" z = "0.0" />
+  	<anisotropic name="dir"        datatype="point"  u = "1.0"    v = "0.0" w = "0.0" distribution="ang source" />
+</distributions>
+
+
+<nuclides>
+	<nuclide name="nuc1">
+    		<scatter xs="0.98" distribution="isotropic"/>
+    		<capture xs="0.02"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="nuc1" density="1.0"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane name="px1" a="1.0" b="0.0" c="0.0" d="0.0"/>
+	<plane name="px2" a="1.0" b="0.0" c="0.0" d="10.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="slab" material="mat1">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+	
+	<region name="left outside" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+  	</region>
+  	
+	<region name="right outside" importance="0.0">
+    		<surface name="px2" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+  	<surface_current name="Transmission">
+    		<surface name="px2"/>
+  	</surface_current>
+</estimators>
+
+
+<sources>
+  	<usource position="pos" direction="dir"/>
+</sources>
