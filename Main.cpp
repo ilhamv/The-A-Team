@@ -36,7 +36,7 @@ int main()
 	// Variable declarations
 	std::string                                   simName;    // Simulation name
 	unsigned long long                            nhist;      // Number of particle samples
-	double                                        trackTime;  // "Computation time" (particle track) for variance reduction
+	unsigned long long                            trackTime;  // "Computation time" (particle track) for variance reduction
 	Source_Bank                                   Sbank;      // Source bank
 	std::stack  < Particle_t >                    Pbank;      // Particle bank
 	std::vector < std::shared_ptr<Surface_t>    > Surface;    // Surfaces
@@ -772,7 +772,7 @@ int main()
 					R->moveParticle( P, SnD.second );
 					
 					// Accumulate "computation time" for variance reduction
-					trackTime += P.weight() * SnD.second;
+					trackTime++;
 
 					// Implement surface hit:
 					//  non-Reflective -> move epsilon distance, search new region
@@ -797,7 +797,7 @@ int main()
 					R->collision( P, Pbank );
 					
 					// Accumulate "computation time" for variance reduction
-					trackTime += P.weight() * dcol;
+					trackTime++;
 				}	
 
 			} // Particle is dead, end of particle loop
