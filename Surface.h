@@ -10,12 +10,13 @@
 #include "Estimator.h"
 #include "Point.h"
 
-// Forward declaration of Region_t class (#include "Region.h")
+
+// Forward declarations
 class Region_t;
 class Estimator_t;
 
 
-// Surface base class
+// Surface class base
 class Surface_t
 {
 	private:
@@ -48,6 +49,12 @@ class Surface_t
 		// (non-reflective)
 		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region );
 };
+
+
+////////////////////
+// Plane Surfaces //
+////////////////////
+
 
 
 // Plane surface
