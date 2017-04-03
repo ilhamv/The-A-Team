@@ -12,7 +12,7 @@ void Capture_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 
 // Scatter the working particle
 void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
-{ P.scatter( scatter_dist->sample() ); }
+{ P.scatter( scatter_dist->sample(), A ); }
 
 
 // Fission reaction sample

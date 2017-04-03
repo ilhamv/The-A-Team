@@ -5,6 +5,11 @@
 </simulation>
 
 
+<distributions>
+  	<delta name="dir" datatype="point" x = "0.0" y = "0.0" z = "1.0"/>
+</distributions>
+
+
 <nuclides>
 	<nuclide name="nuc1">
     		<scatter xs="19.0" distribution="linear" mubar="0.333333333333333333333333"/>
@@ -79,5 +84,5 @@
 
 
 <sources>
-  	<disk_z x="-1.0"  y="0.0" z="-5.0" r="2.0" sense="+1"/>
+  	<disk_z x="-1.0"  y="0.0" z="-5.0" r="2.0" direction="dir"/>
 </sources>

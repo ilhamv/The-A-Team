@@ -5,9 +5,8 @@
 </simulation>
 
 <distributions>
-  	<linear      name="ang source" datatype="double" a = "0.0"    b = "1.0" fa = "0.0" fb = "2.0" />
-  	<delta       name="pos"        datatype="point"  x = "1.0e-9" y = "0.0" z = "0.0" />
-  	<anisotropic name="dir"        datatype="point"  u = "1.0"    v = "0.0" w = "0.0" distribution="ang source" />
+  	<linear      name="ang source" datatype="double" a="0.0" b="1.0" fa ="0.0" fb="2.0"/>
+  	<anisotropic name="dir"        datatype="point"  u="1.0" v="0.0" w  ="0.0" distribution="ang source"/>
 </distributions>
 
 
@@ -56,5 +55,5 @@
 
 
 <sources>
-  	<usource position="pos" direction="dir"/>
+  	<point x="1.0e-9" y="0.0" z="0.0" direction="dir"/>
 </sources>

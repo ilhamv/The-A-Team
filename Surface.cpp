@@ -25,8 +25,12 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 //                 determines the mininum positive distance to intersection
 //                 (returns a very large number if no intersection for ease of calculation down the line)
 // reflective hit: Reflect angle corresponding to the grad of the S equation
-//                 [ still for plane types only ]
+//                 [ still for general plane only ]
 
+
+///////////
+// Plane //
+///////////
 
 // Plane-general
 double Plane_Surface::eval( const Point_t& p )
@@ -82,7 +86,7 @@ double Sphere_Surface::eval( const Point_t& p )
   	const double x_t = p.x - x0;
   	const double y_t = p.y - y0;
   	const double z_t = p.z - z0;
-	return x_t*x_t + y_t*y_t + z_t*z_t - rad*rad;
+	return x_t*x_t + y_t*y_t + z_t*z_t - rad_sq;
 }
 
 
@@ -109,7 +113,7 @@ double CylinderX_Surface::eval( const Point_t& p )
 {
 	const double y_t = p.y - y0;
 	const double z_t = p.z - z0;
-	return y_t*y_t + z_t*z_t - rad*rad;
+	return y_t*y_t + z_t*z_t - rad_sq;
 }
 
 double CylinderX_Surface::distance( const Particle_t& P )
@@ -118,11 +122,11 @@ double CylinderX_Surface::distance( const Particle_t& P )
   	Point_t u = P.dir();
 
   	// a*s^2 + b*s + c = 0
-  	double a = u.y*u.y + u.z*u.z;
+  	double a = 1.0 - u.x*u.x;
 	double b = 2.0 * ( ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return cylinder_quad( a, b, c );
+  	return solve_quad( a, b, c );
 }
 
 
@@ -131,7 +135,7 @@ double CylinderY_Surface::eval( const Point_t& p )
 {
 	const double x_t = p.x - x0;
 	const double z_t = p.y - z0;
-	return x_t*x_t + z_t*z_t - rad*rad;
+	return x_t*x_t + z_t*z_t - rad_sq;
 }
 
 double CylinderY_Surface::distance( const Particle_t& P )
@@ -140,11 +144,11 @@ double CylinderY_Surface::distance( const Particle_t& P )
   	Point_t u = P.dir();
 
   	// a*s^2 + b*s + c = 0
-  	double a = u.x*u.x + u.z*u.z;
+  	double a = 1.0 - u.y*u.y;
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.z - z0 ) * u.z );
   	double c = eval( p );
 
-  	return cylinder_quad( a, b, c );
+  	return solve_quad( a, b, c );
 }
 
 
@@ -153,7 +157,7 @@ double CylinderZ_Surface::eval( const Point_t& p )
 {
 	const double x_t = p.x - x0;
 	const double y_t = p.y - y0;
-	return x_t*x_t + y_t*y_t - rad*rad;
+	return x_t*x_t + y_t*y_t - rad_sq;
 }
 
 
@@ -163,9 +167,34 @@ double CylinderZ_Surface::distance( const Particle_t& P )
   	Point_t u = P.dir();
 
   	// a*s^2 + b*s + c = 0
-  	double a = u.x*u.x + u.y*u.y;
+  	double a = 1.0 - u.z*u.z;
 	double b = 2.0 * ( ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y );
   	double c = eval( p );
 
-  	return cylinder_quad( a, b, c );
+  	return solve_quad( a, b, c );
 }
+
+
+// Cone-X
+double ConeX_Surface::eval( const Point_t& p )
+{
+	const double x_t = p.x - x0;
+	const double y_t = p.y - y0;
+	const double z_t = p.z - z0;
+	return - rad_sq * x_t*x_t + y_t*y_t + z_t*z_t;
+}
+
+
+double ConeX_Surface::distance( const Particle_t& P )
+{
+  	Point_t p = P.pos();
+  	Point_t u = P.dir();
+
+  	// a*s^2 + b*s + c = 0
+  	double a = 1.0 - ( rad_sq + 1.0 ) * u.x*u.x;
+  	double b = 2.0 * ( - rad_sq * ( p.x - x0 ) * u.x + ( p.y - y0 ) * u.y + ( p.z - z0 ) * u.z );
+  	double c = eval( p );
+
+  	return solve_quad( a, b, c );
+}
+

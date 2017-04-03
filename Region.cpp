@@ -54,6 +54,8 @@ bool Region_t::testPoint( const Point_t& p )
 void Region_t::moveParticle( Particle_t& P, const double dmove )
 {
 	P.move( dmove );
+	// Advance particle time
+	P.setTime( P.time() + dmove / P.speed() );
 	for ( const auto& e : estimators ) { e->score( P.weight(), dmove ); }
 }
 

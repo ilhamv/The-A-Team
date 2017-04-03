@@ -33,7 +33,7 @@ double sphere_quad( const double b, const double c )
 
 // Quad solver for infinite cylinder surface
 // return smallest positive real root if it exists; if it does not, return very big number
-double cylinder_quad( const double a, const double b, const double c ) 
+double solve_quad( const double a, const double b, const double c ) 
 {
   	double d = b*b - 4.0 * a * c;
     	

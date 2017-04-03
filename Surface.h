@@ -20,7 +20,7 @@ class Estimator_t;
 class Surface_t
 {
 	private:
-		const std::string  s_name; // Surface name
+		const std::string  s_name;          // Surface name
 
 	protected:
 		std::vector< std::shared_ptr< Estimator_t > > estimators; // Estimators attached
@@ -42,22 +42,15 @@ class Surface_t
 		// Evaluate point location via the "S" equation
 		virtual double eval( const Point_t& p ) = 0;
 
-		// Get particle distance to surface
+		// Get moving particle distance to surface
     		virtual double distance( const Particle_t& P ) = 0;
 		
 		// Hit surface implementation
-		// (non-reflective)
 		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region );
 };
 
 
-////////////////////
-// Plane Surfaces //
-////////////////////
-
-
-
-// Plane surface
+// Generic Plane surface
 class Plane_Surface : public Surface_t
 {
   	protected:
@@ -67,14 +60,14 @@ class Plane_Surface : public Surface_t
 			 Surface_t(n), a(pa), b(pb), c(pc), d(pd) {};
     		~Plane_Surface() {};
 
-		// Employ the plane surface equation
 		double eval    ( const Point_t& p );
      		double distance( const Particle_t& P );
 };
 
 
-// Plane surface - Reflective
+// Generic Plane surface - Reflective
 // *Seems redundantly hard-coded, yet it avoids reflective flag check at every surface intersection
+// should other reflective surface type is needed, reflective flag will be considered for better maintainability
 class Plane_Reflective : public Plane_Surface
 {
 	private:
@@ -100,11 +93,11 @@ class Plane_Reflective : public Plane_Surface
 class Sphere_Surface : public Surface_t 
 {
 	private:
-    		const double x0, y0, z0, rad;
+    		const double x0, y0, z0, rad, rad_sq;
   	
 	public:
      		 Sphere_Surface( const std::string n, const double p1, const double p2, const double p3, const double p4 ) : 
-       			Surface_t(n), x0(p1), y0(p2), z0(p3), rad(p4) {};
+       			Surface_t(n), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
     		~Sphere_Surface() {};
 
      		double eval    ( const Point_t& p );
@@ -116,11 +109,11 @@ class Sphere_Surface : public Surface_t
 class CylinderX_Surface : public Surface_t
 {
 	private:
-		const double y0, z0, rad;
+		const double y0, z0, rad, rad_sq;
 
 	public:
 		 CylinderX_Surface( const std::string n, const double p1, const double p2, const double p3 ) :
-			Surface_t(n), y0(p1), z0(p2), rad(p3) {};
+			Surface_t(n), y0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderX_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -132,11 +125,11 @@ class CylinderX_Surface : public Surface_t
 class CylinderY_Surface : public Surface_t
 {
 	private:
-		const double x0, z0, rad;
+		const double x0, z0, rad, rad_sq;
 
 	public:
 		 CylinderY_Surface( const std::string n, const double p1, const double p2, const double p3 ) :
-			Surface_t(n), x0(p1), z0(p2), rad(p3) {};
+			Surface_t(n), x0(p1), z0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderY_Surface() {};
 
 		double eval    ( const Point_t& p );
@@ -148,12 +141,28 @@ class CylinderY_Surface : public Surface_t
 class CylinderZ_Surface : public Surface_t
 {
 	private:
-		const double x0, y0, rad;
+		const double x0, y0, rad, rad_sq;
 
 	public:
 		 CylinderZ_Surface( const std::string n, const double p1, const double p2, const double p3 ) :
-			Surface_t(n), x0(p1), y0(p2), rad(p3) {};
+			Surface_t(n), x0(p1), y0(p2), rad(p3), rad_sq(p3*p3) {};
 		~CylinderZ_Surface() {};
+
+		double eval    ( const Point_t& p );
+		double distance( const Particle_t& P );
+};
+
+
+// Infinite Cone-X surface
+class ConeX_Surface : public Surface_t
+{
+	private:
+		const double x0, y0, z0, rad, rad_sq;
+
+	public:
+		 ConeX_Surface( const std::string n, const double p1, const double p2, const double p3, const double p4 ) :
+       			Surface_t(n), x0(p1), y0(p2), z0(p3), rad(p4), rad_sq(p4*p4) {};
+		~ConeX_Surface() {};
 
 		double eval    ( const Point_t& p );
 		double distance( const Particle_t& P );

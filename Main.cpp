@@ -34,16 +34,16 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 int main()
 {
 	// Variable declarations
-	std::string                                   simName;    // Simulation name
-	unsigned long long                            nhist;      // Number of particle samples
-	unsigned long long                            trackTime;  // "Computation time" (particle track) for variance reduction
-	Source_Bank                                   Sbank;      // Source bank
-	std::stack  < Particle_t >                    Pbank;      // Particle bank
-	std::vector < std::shared_ptr<Surface_t>    > Surface;    // Surfaces
-	std::vector < std::shared_ptr<Region_t>     > Region;     // Regions
-	std::vector < std::shared_ptr<Nuclide_t>    > Nuclide;    // Nuclides
-	std::vector < std::shared_ptr<Material_t>   > Material;   // Materials
-	std::vector < std::shared_ptr<Estimator_t>  > Estimator;  // Estimators  	
+	std::string                                   simName;        // Simulation name
+	unsigned long long                            nhist;          // Number of particle samples
+	unsigned long long                            trackTime = 0;  // "Computation time" (particle track) for variance reduction
+	Source_Bank                                   Sbank;          // Source bank
+	std::stack  < Particle_t >                    Pbank;          // Particle bank
+	std::vector < std::shared_ptr<Surface_t>    > Surface;        // Surfaces
+	std::vector < std::shared_ptr<Region_t>     > Region;         // Regions
+	std::vector < std::shared_ptr<Nuclide_t>    > Nuclide;        // Nuclides
+	std::vector < std::shared_ptr<Material_t>   > Material;       // Materials
+	std::vector < std::shared_ptr<Estimator_t>  > Estimator;      // Estimators  	
 	// User-defined distributions
 	std::vector < std::shared_ptr<Distribution_t<double>> > double_distributions;
   	std::vector < std::shared_ptr<Distribution_t<int>>    > int_distributions;
@@ -102,8 +102,8 @@ int main()
 				// Delta-double
 				if ( type == "delta" ) 
 				{
-          				const double a = d.attribute("a").as_double();
-          				Dist = std::make_shared< Delta_Distribution< double > > ( a, name );
+          				const double val = d.attribute("val").as_double();
+          				Dist = std::make_shared< Delta_Distribution< double > > ( val, name );
 	        		}
 
         			// Uniform-double
@@ -219,15 +219,23 @@ int main()
 	pugi::xml_node input_nuclides = input_file.child("nuclides");
   	for ( const auto& n : input_nuclides )
 	{
-    		const std::string          name = n.attribute("name").value();
-		std::shared_ptr<Nuclide_t> Nuc  = std::make_shared<Nuclide_t> ( name );
+    		const std::string          name  = n.attribute("name").value();
+		double                     Amass = 1e9; // dedault nuclide mass
+    		
+		// Provided nuclide mass input
+		if ( n.attribute("A") ) 
+    		{
+	    		Amass = n.attribute("A").as_double();
+    		}
+
+		std::shared_ptr<Nuclide_t> Nuc   = std::make_shared<Nuclide_t> ( name, Amass );
 
     		// Add nuclide reactions
     		for ( const auto& r : n.children() ) 
 		{
       			const std::string           rxn_type = r.name();
       			const double                xs       = r.attribute("xs").as_double();
-      			
+			
 			// Capture
 			if ( rxn_type == "capture" )
 			{
@@ -248,7 +256,7 @@ int main()
 				// Isotropic
 				if ( dist_name == "isotropic" ) 
 				{
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< IsotropicScatter_Distribution > () ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
         			}
 				
 				// Henyey-Greenstein
@@ -260,14 +268,14 @@ int main()
 						throw;
 					}
 					const double g = r.attribute("g").as_double();
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( g ) ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
         			}
 				
 				// Linearly anisotropic
 				else if ( dist_name == "linear" )
 				{
 					const double mubar = r.attribute("mubar").as_double();
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( mubar ) ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( mubar ), Amass ) );
         			}
         			
 				// Unknown scattering distribution
@@ -402,7 +410,7 @@ int main()
       			const double x = s.attribute("x").as_double();
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
-      			const double r  = s.attribute("r").as_double();
+      			const double r = s.attribute("r").as_double();
       			S = std::make_shared< Sphere_Surface > ( name, x, y, z, r );
 		}
 		
@@ -411,7 +419,7 @@ int main()
 		{
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
-      			const double r  = s.attribute("r").as_double();
+      			const double r = s.attribute("r").as_double();
       			S = std::make_shared< CylinderX_Surface > ( name, y, z, r );
 		}
 		
@@ -420,8 +428,18 @@ int main()
 		{
       			const double x = s.attribute("x").as_double();
       			const double y = s.attribute("y").as_double();
-      			const double r  = s.attribute("r").as_double();
+      			const double r = s.attribute("r").as_double();
       			S = std::make_shared< CylinderZ_Surface > ( name, x, y, r );
+		}
+
+		// Cone-X
+		else if ( type == "cone_x" )
+		{
+      			const double x = s.attribute("x").as_double();
+      			const double y = s.attribute("y").as_double();
+      			const double z = s.attribute("z").as_double();
+      			const double r = s.attribute("r").as_double();
+      			S = std::make_shared< ConeX_Surface > ( name, x, y, z, r );
 		}
 		
 		// Unknown surface typw
@@ -639,49 +657,63 @@ int main()
   	pugi::xml_node input_sources = input_file.child("sources");
   	for ( const auto& s : input_sources )
 	{
-		double prob = 1.0; // default
-    		std::shared_ptr<Source_t> Src;
-
-		// Modify source probability
+		std::shared_ptr<Source_t> Src;
+		
+		// Default parameters
+		double prob = 1.0;                                                                                                          // probability or ratio
+  		std::shared_ptr< Distribution_t<Point_t> > dirDist  = std::make_shared< IsotropicDirection_Distribution > ();      // energy distribution
+  		std::string dir_dist_name;
+  		std::shared_ptr< Distribution_t<double> >  enrgDist = std::make_shared< Delta_Distribution<double> >               ( 2e6 ); // energy distribution
+  		std::string enrg_dist_name;
+  		std::shared_ptr< Distribution_t<double> >  timeDist = std::make_shared< Delta_Distribution<double> >               ( 0.0 ); // time distribution
+  		std::string time_dist_name;
+    		
+		// Input provided probability
     		if ( s.attribute("probability") )
     		{
 	    		prob = s.attribute("probability").as_double();
     		}
 
-		// 1D normal plane-x source
-		if ( (std::string) s.name() == "normal_plane_x" )
-		{
-			const double x     = s.attribute("x").as_double();
-			const int    sense = s.attribute("sense").as_double();
-			Src = std::make_shared<Normal_HPlanex_Source> ( x, sense );
-    		}
-		
-		// 1D isotropic plane-x source
-		else if ( (std::string) s.name() == "isotropic_plane_x" )
-		{
-			const double x     = s.attribute("x").as_double();
-			const int    sense = s.attribute("sense").as_double();
-			Src = std::make_shared<Isotropic_HPlanex_Source> ( x, sense );
+		// Input provided direction distribution
+    		if ( s.attribute("direction") )
+    		{
+  			dir_dist_name = s.attribute("direction").value();
+  			dirDist       = findByName( point_distributions, dir_dist_name );
     		}
     		
-		// 1D slab-x source
-		else if ( (std::string) s.name() == "isotropic_slab_x" )
-		{
-			const double a = s.attribute("a").as_double();
-			const double b = s.attribute("b").as_double();
-			Src = std::make_shared<Isotropic_Slabx_Source> ( a, b );
+		// Input provided energy distribution
+		if ( s.attribute("energy") )
+    		{
+  			enrg_dist_name = s.attribute("energy").value();
+  			enrgDist       = findByName( double_distributions, enrg_dist_name );
+    		}
+
+		// Input provided time distribution
+    		if ( s.attribute("time") )
+    		{
+  			time_dist_name = s.attribute("time").value();
+  			timeDist       = findByName( double_distributions, time_dist_name );
     		}
 		
-		// Isotropic point
-		else if ( (std::string) s.name() == "isotropic_point" )
+		// Check distribution availability
+            	if ( ! dirDist || ! enrgDist || ! timeDist ) 
+		{
+    			if ( ! dirDist )  { std::cout << " unknown direction distribution " << dir_dist_name  << " in source " << std::endl; }
+    			if ( ! enrgDist ) { std::cout << " unknown energy distribution "    << enrg_dist_name << " in source " << std::endl; }
+    			if ( ! timeDist ) { std::cout << " unknown time distribution "      << time_dist_name << " in source " << std::endl; }
+    			throw;
+ 		}
+
+		// Point source
+		if ( (std::string) s.name() == "point" )
 		{
 			const double x = s.attribute("x").as_double();
 			const double y = s.attribute("y").as_double();
 			const double z = s.attribute("z").as_double();
-			Src = std::make_shared<Isotropic_Point_Source> ( x, y, z );
+			Src = std::make_shared<Point_Source> ( x, y, z, dirDist, enrgDist, timeDist );
     		}
 		
-		// Isotropic spherical shell
+		// Spherical shell source
 		else if ( (std::string) s.name() == "sphere_shell" )
 		{
 			const double x  = s.attribute("x").as_double();
@@ -689,40 +721,34 @@ int main()
 			const double z  = s.attribute("z").as_double();
 			const double ri = s.attribute("ri").as_double();
 			const double ro = s.attribute("ro").as_double();
-			Src = std::make_shared<Sphere_Shell_Source> ( x, y, z, ri, ro );
+			Src = std::make_shared<Sphere_Shell_Source> ( x, y, z, ri, ro, dirDist, enrgDist, timeDist );
     		}
 
-		// Normal disk-z
+		// Disk-z
 		else if ( (std::string) s.name() == "disk_z" )
 		{
 			const double x     = s.attribute("x").as_double();
 			const double y     = s.attribute("y").as_double();
 			const double z     = s.attribute("z").as_double();
 			const double r     = s.attribute("r").as_double();
-			const int    sense = s.attribute("sense").as_double();
-			Src = std::make_shared<DiskZ_Source> ( x, y, z, r, sense );
+			Src = std::make_shared<DiskZ_Source> ( x, y, z, r, dirDist, enrgDist, timeDist );
     		}
 		
-		// User defined
-		else if ( (std::string) s.name() == "usource" )
+		// Generic source
+		else if ( (std::string) s.name() == "source" )
 		{
 		
-  			std::string pos_dist_name = s.attribute("position").value();
-  			std::string dir_dist_name = s.attribute("direction").value();
+  			std::string pos_dist_name  = s.attribute("position").value();
 
-  			std::shared_ptr< Distribution_t<Point_t> > posDist = findByName( point_distributions, pos_dist_name );
-  			std::shared_ptr< Distribution_t<Point_t> > dirDist = findByName( point_distributions, dir_dist_name );
+  			std::shared_ptr< Distribution_t<Point_t> > posDist  = findByName( point_distributions , pos_dist_name );
 
-            		if ( posDist && dirDist ) 
-			{
-				Src = std::make_shared<User_Source> ( posDist, dirDist );
-  			}
-  			else 
-			{
-    				if ( ! posDist ) { std::cout << " unknown position distribution "  << pos_dist_name << " in user-defined source " << std::endl; }
-    				if ( ! dirDist ) { std::cout << " unknown direction distribution " << dir_dist_name << " in user-defined source " << std::endl; }
+  			if ( ! posDist )
+			{ 
+				std::cout << " unknown position distribution "  << pos_dist_name  << " in source " << std::endl;
     				throw;
   			}
+			
+			Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
 		}
 
 		// Unknown source type
@@ -753,6 +779,10 @@ int main()
 			Particle_t                P = Pbank.top(); // Working particle
 			std::shared_ptr<Region_t> R = P.region();  // Working region
 			Pbank.pop();
+
+			//std::cout<<isample<<"\t"<<Region[5]->name()<<"\t"<<Region[5]->SigmaA()<<"\n";
+			//std::cout<<isample<<"\n"<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z;
+			//std::cin.get();
 			
 			// Particle loop
 			while ( P.alive() )

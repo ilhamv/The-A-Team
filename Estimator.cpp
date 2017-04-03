@@ -56,7 +56,7 @@ void Region_Flux_Estimator::report( const double tTime )
 	std::cout<< "Variance = " << var / volume / volume  << std::endl;
 	if ( vol == 0.0 ) { std::cout<<"..Note that region volume is not given, value above is not volume-averaged.." << std::endl; }
 	std::cout<< "[F.O.M.: " << 1.0 / ( r*r * tTime ) << "]" << std::endl;
-
+	
 	if (absorp)
 	{
 		std::cout<< std::endl;

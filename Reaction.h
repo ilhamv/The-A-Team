@@ -54,10 +54,11 @@ class Scatter_Reaction : public Reaction_t
 {
 	private:
 		std::shared_ptr< Distribution_t<double> > scatter_dist; // Scattering angle distribution
+		const double                              A;            // Nuclide mass
 	public:
 		// Constructor: Pass the microXs
-		 Scatter_Reaction( const double x, const std::shared_ptr< Distribution_t<double> >& D ) :
-			Reaction_t(x), scatter_dist(D) {}; // Pass the microXs and scattering angle distribution
+		 Scatter_Reaction( const double x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
+			Reaction_t(x), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
 		~Scatter_Reaction() {};
 
 		// Scatter the working particle

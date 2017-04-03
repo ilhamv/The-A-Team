@@ -1,0 +1,126 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Problem 6a" histories="1e8"/>
+</simulation>
+
+
+<distributions>
+  	<delta       name="enrg" datatype="double" val="1.0e6"/>
+  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" fa ="1.66666666" fb="0.5" fc="0.5" fd="0.33333333"/>
+  	<anisotropic name="dir"  datatype="point"  u = "1.0" v = "0.0" w = "0.0" distribution="ang source"/>
+</distributions>
+
+
+<nuclides>
+	<nuclide name="deuterium" A="2.0">
+    		<capture>
+			<xs type="over_v" a="0.0" b="100.0"/>
+    		</capture>
+		
+		<scatter xs="2.4" distribution="linear" mubar="0.2"/>
+  	</nuclide>
+
+	<nuclide name="nuc_detector" A="1.0">
+    		<scatter distribution="isotropic">
+			<xs type="over_v" a="1.0" b="500.0"/>
+		</scatter>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat_sphere">
+    		<nuclide name="deuterium" density="0.1"/>
+  	</material>
+  	
+	<material name="mat_detector">
+    		<nuclide name="nuc_detector" density="0.1"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<sphere     name="sp1"      x="0.0" y="0.0"   z="0.0" r="5.0"/>
+	<cone_x     name="conex1"   x="3.0" y="0.0"   z="0.0" r="0.125"/>
+	<cylinder_x name="cx1"      y="0.0" z="-10.0" r="1.0"/>
+	<plane      name="px1"      a="1.0" b="0.0" c="0.0" d="-25.0"/>
+	<plane      name="px2"      a="1.0" b="0.0" c="0.0" d="-20.0"/>
+	<plane      name="px split" a="1.0" b="0.0" c="0.0" d=" -1.0"/>
+	<plane      name="px3"      a="1.0" b="0.0" c="0.0" d=" 20.0"/>
+	<plane      name="px4"      a="1.0" b="0.0" c="0.0" d=" 25.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="sphere right" material="deuterium">
+    		<surface name="sp1"      sense="-1"/>
+    		<surface name="px split" sense="+1"/>
+  	</region>
+
+  	<region name="sphere left" material="deuterium">
+    		<surface name="sp1"      sense="-1"/>
+    		<surface name="px split" sense="-1"/>
+		<surface name="conex1"     sense="+1"/>
+  	</region>
+
+  	<region name="detector left" material="mat_detector">
+    		<surface name="cx1" sense="-1"/>
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+	
+  	<region name="detector right" material="mat_detector">
+    		<surface name="cx1" sense="-1"/>
+    		<surface name="px3" sense="+1"/>
+    		<surface name="px4" sense="-1"/>
+  	</region>
+
+	<region name="vacuum cone">
+    		<surface name="conex"    sense="-1"/>
+		<surface name="px split" sense="-1"/>
+    		<surface name="sp1"      sense="-1"/>
+  	</region>
+  	
+	<region name="vacuum left">
+		<surface name="px1" sense="+1"/>
+		<surface name="px2" sense="-1"/>
+		<surface name="cx1" sense="+1"/>
+	</region>	
+
+	<region name="vacuum right">
+		<surface name="px3" sense="+1"/>
+		<surface name="px4" sense="-1"/>
+		<surface name="cx1" sense="+1"/>
+	</region>	
+
+	<region name="vacuum middle">
+		<surface name="px2" sense="+1"/>
+		<surface name="px3" sense="-1"/>
+		<surface name="sp1" sense="+1"/>
+	</region>	
+	
+	<region name="universe left" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+	</region>
+	
+	<region name="universe right" importance="0.0">
+    		<surface name="px4" sense="+1"/>
+	</region>
+</regions>
+
+
+<estimators>
+  	<region_flux name="Flux left" scatter="true">
+    		<region name="detector left"/>
+  	</region_flux>
+  	
+	<region_flux name="Flux right" scatter="true">
+    		<region name="detector right"/>
+  	</region_flux>
+</estimators>
+
+
+<sources>
+  	<disk_x x="-1.000000001" y="0.0" z="0.0" r="0.5" distribution="dir" energy="enrg"/>
+</sources>

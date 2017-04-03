@@ -6,10 +6,10 @@
 
 
 <distributions>
-  	<uniform        name="uniform x" datatype="double" a="0.0" b="4.0" />
-  	<delta          name="delta y-z" datatype="double" a="0.0" />
-  	<independentXYZ name="pos"       datatype="point"  x = "uniform x" y = "delta y-z" z = "delta y-z" />
-  	<isotropic      name="dir"       datatype="point" />
+  	<uniform        name="uniform x" datatype="double" a="0.0" b="4.0"/>
+  	<delta          name="delta y-z" datatype="double" a="0.0"/>
+  	<independentXYZ name="pos"       datatype="point"  x = "uniform x" y = "delta y-z" z = "delta y-z"/>
+  	<isotropic      name="dir"       datatype="point"/>
 </distributions>
 
 
@@ -55,5 +55,5 @@
 
 
 <sources>
-  	<usource position="pos" direction="dir"/>
+  	<source position="pos" direction="dir"/>
 </sources>
