@@ -29,9 +29,8 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 		// bank all but last particle (skips if n = 1)
 		for ( int i = 0 ; i < n - 1 ; i++ ) 
 		{
-			Particle_t p( P.pos(), isotropic.sample() );
+			Particle_t p( P.pos(), isotropic.sample(), P.energy(), P.time(), P.weight() );
 			p.setRegion( P.region() );
-			p.setWeight( P.weight() );
 			Pbank.push( p );
 		}
 

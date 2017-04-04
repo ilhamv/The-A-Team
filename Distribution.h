@@ -112,6 +112,26 @@ class Linear_Distribution : public Distribution_t<double>
 };
 
 
+// Cubic distribution [rejection sampling]
+class Cubic_Distribution : public Distribution_t<double> 
+{
+  	private:
+    		const double a, b, fa, fb, fc, fd, fmin, fmax;
+  		double f( const double x )
+		{
+			double x_sq = x*x;
+			return fa * x_sq*x + fb * x_sq + fc * x + fd;
+		}	
+
+	public:
+    		Cubic_Distribution( const double p1, const double p2, const double p3, double const p4,
+			       const double p5, const double p6, const double p7, const double p8, const std::string label = "" )  
+      			: Distribution_t(label), a(p1), b(p2), fa(p3), fb(p4), fc(p5), fd(p6), fmin(p7), fmax(p8) {};
+   		~Cubic_Distribution() {};
+   		double sample();
+};
+
+
 // Rayleigh scattering distribution
 class RayleighScatter_Distribution : public Distribution_t<double>
 {

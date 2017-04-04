@@ -14,10 +14,6 @@ class Nuclide_t
 	private:
     		std::string                                  n_name;         // Name
 		const double                                 n_A;            // Nuclide mass
-		double                                       n_sigmaT = 0.0; // Total microXsec
-    		double                                       n_sigmaS = 0.0; // Scattering microXsec
-    		double                                       n_sigmaC = 0.0; // Capture microXsec
-    		double                                       n_sigmaF = 0.0; // Fission microXsec
 		std::vector< std::shared_ptr< Reaction_t > > reactions;      // Reactions
 
 	public:
@@ -27,16 +23,16 @@ class Nuclide_t
 		// Getters
 		std::string name(); // Name
 		// microXs
-		double      sigmaT();
-		double      sigmaS();
-		double      sigmaC();
-		double      sigmaF();
+		double      sigmaT( const double E );
+		double      sigmaS( const double E );
+		double      sigmaC( const double E );
+		double      sigmaF( const double E );
 
 		// Add reaction
 		void   addReaction( const std::shared_ptr< Reaction_t >& R );
 		
 		// Randomly sample a reaction type from the nuclide
-		std::shared_ptr<Reaction_t> reaction_sample();
+		std::shared_ptr<Reaction_t> reaction_sample( const double E );
 };
 
 

@@ -34,7 +34,7 @@ class Estimator_t
 		{ o_names.push_back( s );}
 		
 		// Score at events
-		virtual void score( const double w, const double p = 0.0 ) = 0; 
+		virtual void score( const Particle_t& P, const double p = 0.0 ) = 0; 
 		
 		// Closeout history
 		virtual void endHistory() = 0;              
@@ -84,7 +84,7 @@ class Single_Valued_Estimator : public Estimator_t
 		}
 
 		// Score at events
-		virtual void score( const double w, const double p = 0.0 ) = 0;
+		virtual void score( const Particle_t& P, const double p = 0.0 ) = 0;
 		
 		// Report results
 		virtual void report( const double tTime ) = 0;                   
@@ -100,7 +100,7 @@ class Surface_Current_Estimator : public Single_Valued_Estimator
 		~Surface_Current_Estimator() {};
 
 		// Score at events
-		void score( const double w, const double null = 0.0 ); 
+		void score( const Particle_t& P, const double null = 0.0 ); 
 
 		// Report results
 		void report( const double tTime );
@@ -121,7 +121,7 @@ class Region_Flux_Estimator : public Single_Valued_Estimator
     		~Region_Flux_Estimator() {};
 
     		// Score at events
-		void score( const double w, const double path_length = 0.0 );
+		void score( const Particle_t& P, const double path_length = 0.0 );
 
     		// Report results
 		void report( const double tTime ); 
@@ -180,8 +180,8 @@ class UInteger_PMF_Estimator : public Estimator_t
 		};
 
 		// Score at events
-		virtual void score( const double w, const double p = 0.0 ) = 0; 
-		
+		virtual void score( const Particle_t& P, const double p = 0.0 ) = 0; 
+	
 		// Report results
 		virtual void report( const double tTime ) = 0; 
 
@@ -200,7 +200,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 		~Surface_PMF_Estimator() {};
 
 		// Score at events
-		void score( const double w, const double null = 0.0 );
+		void score( const Particle_t& P, const double null = 0.0 );
 
 		// Report results
 		// output.txt file providing the PMF is created (or overwritten)

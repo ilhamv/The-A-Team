@@ -14,7 +14,7 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 	// Search and set new region
 	P.searchRegion( Region );
 	// Score estimators 
-	for ( auto e : estimators ) { e->score( P.weight() ); }
+	for ( auto e : estimators ) { e->score( P ); }
 }
 
 
@@ -72,7 +72,7 @@ void Plane_Reflective::hit( Particle_t& P, const std::vector<std::shared_ptr<Reg
 
 	// Cross the surface (Epsilon kick)
 	cross ( P );
-	for ( auto e : estimators ) { e->score( P.weight() ); }
+	for ( auto e : estimators ) { e->score( P ); }
 }
 
 

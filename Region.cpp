@@ -13,11 +13,10 @@ std::string Region_t::name()       { return r_name; }       // name
 double      Region_t::volume()     { return r_volume; }     // volume
 double      Region_t::importance() { return r_importance; } // importance
 // Get macroXsec of the contained material
-double      Region_t::SigmaT()  { return material->SigmaT(); }
-double      Region_t::SigmaS()  { return material->SigmaS(); }
-double      Region_t::SigmaC()  { return material->SigmaC(); }
-double      Region_t::SigmaF()  { return material->SigmaF(); }
-double      Region_t::SigmaA()  { return material->SigmaA(); }
+double      Region_t::SigmaT( const double E ) { return material->SigmaT( E ); }
+double      Region_t::SigmaS( const double E ) { return material->SigmaS( E ); }
+double      Region_t::SigmaC( const double E ) { return material->SigmaC( E ); }
+double      Region_t::SigmaF( const double E ) { return material->SigmaF( E ); }
 
 
 // Take in a pair of surface pointer and integer describing sense (must not be zero!)
@@ -56,7 +55,7 @@ void Region_t::moveParticle( Particle_t& P, const double dmove )
 	P.move( dmove );
 	// Advance particle time
 	P.setTime( P.time() + dmove / P.speed() );
-	for ( const auto& e : estimators ) { e->score( P.weight(), dmove ); }
+	for ( const auto& e : estimators ) { e->score( P, dmove ); }
 }
 
 
@@ -79,12 +78,12 @@ std::pair< std::shared_ptr< Surface_t >, double > Region_t::surface_intersect( c
 
 
 // Return particle collision distance
-double Region_t::collision_distance()
-{ return material->collision_distance_sample(); }
+double Region_t::collision_distance( const double E )
+{ return material->collision_distance_sample( E ); }
 //
 // Vacuum region: Return sligthly less than very large number for collision distance
 // to ensure collision if no surface intersection
-double Region_Vacuum::collision_distance()
+double Region_Vacuum::collision_distance( const double E )
 { return MAX_less; } // MAX_less = 0.9 MAX
 
 

@@ -43,6 +43,30 @@ class Point_Source : public Source_t
 };
 
 
+// DiskX Source
+class DiskX_Source : public Source_t
+{
+	private:
+		// Center position radius and direction sense of the source
+		const double x0, y0, z0, r;
+    		// Direction, energy and time distribution
+    		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
+    		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
+    		const std::shared_ptr< Distribution_t<double>  > dist_time;
+
+	public:
+		 DiskX_Source( const double p1, const double p2, const double p3, const double p4, const std::shared_ptr< Distribution_t<Point_t> > dir
+			,const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time  ) :
+			x0(p1), y0(p2), z0(p3), r(p4), dist_dir(dir), dist_enrg(enrg), dist_time(time) {};
+		~DiskX_Source() {};
+
+		// Get the particle source with rejection sampling
+		// Direct methods are way too costly (cos, sin, sqrt)
+		// Acceptance probability is pretty good ~3.14/4
+		Particle_t getSource();
+};
+
+
 // DiskZ Source
 class DiskZ_Source : public Source_t
 {

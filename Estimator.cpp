@@ -7,8 +7,8 @@
 
 // Surface current estimator //
 // Score at events
-void Surface_Current_Estimator::score( const double w, const double null /*= 0.0*/ ) 
-{ tally_hist += w; }
+void Surface_Current_Estimator::score( const Particle_t& P, const double null /*= 0.0*/ ) 
+{ tally_hist += P.weight(); }
 
 // Report results
 void Surface_Current_Estimator::report( const double tTime ) 
@@ -32,8 +32,8 @@ void Surface_Current_Estimator::report( const double tTime )
 
 // Region flux estimator //
 // Score at events
-void Region_Flux_Estimator::score( const double w, const double path_length /*= 0.0*/ )
-{ tally_hist += w * path_length; }
+void Region_Flux_Estimator::score( const Particle_t& P, const double path_length /*= 0.0*/ )
+{ tally_hist += P.weight() * path_length; }
 
 // Report results
 void Region_Flux_Estimator::report( const double tTime )
@@ -61,25 +61,25 @@ void Region_Flux_Estimator::report( const double tTime )
 	{
 		std::cout<< std::endl;
 		std::cout<< "Absorption rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaA() << "  +/-  " << meanUncer * R->SigmaA() << std::endl;
+		std::cout<< mean * ( R->SigmaC(1)+R->SigmaF(1) ) << "  +/-  " << meanUncer * ( R->SigmaC(1) + R->SigmaF(1) ) << std::endl;
 	}
 	if (scatter)
 	{
 		std::cout<< std::endl;
 		std::cout<< "Scattering rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaS() << "  +/-  " << meanUncer * R->SigmaS() << std::endl;
+		std::cout<< mean * R->SigmaS(1) << "  +/-  " << meanUncer * R->SigmaS(1) << std::endl;
 	}
 	if (capture)
 	{
 		std::cout<< std::endl;
 		std::cout<< "Capture rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaC() << "  +/-  " << meanUncer * R->SigmaC() << std::endl;
+		std::cout<< mean * R->SigmaC(1) << "  +/-  " << meanUncer * R->SigmaC(1) << std::endl;
 	}
 	if (fission)
 	{
 		std::cout<< std::endl;
 		std::cout<< "Fission rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaF() << "  +/-  " << meanUncer * R->SigmaF() << std::endl;
+		std::cout<< mean * R->SigmaF(1) << "  +/-  " << meanUncer * R->SigmaF(1) << std::endl;
 	}
 }
 
@@ -87,7 +87,7 @@ void Region_Flux_Estimator::report( const double tTime )
 
 // Surface PMF estimator
 // Score at events
-void Surface_PMF_Estimator::score( const double w, const double null /*= 0.0*/ ) 
+void Surface_PMF_Estimator::score( const Particle_t& P, const double null /*= 0.0*/ ) 
 { tally_hist++;}
 
 // Report results

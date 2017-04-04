@@ -17,6 +17,29 @@ Particle_t Point_Source::getSource()
 }
 
 
+Particle_t DiskX_Source::getSource()
+{
+  	Point_t p = dist_dir->sample();
+	p.normalize();
+
+	double z,y;
+	// Rejection sampling: square --> circle
+	do
+	{
+		z = 2.0 * Urand() - 1.0;
+		y = 2.0 * Urand() - 1.0;
+	}
+	while ( z*z + y*y > 1.0 );
+
+	z = z * r;
+	y = y * r;
+	Point_t pos( x0, y0 + y, z0 + z );
+	
+	Particle_t P( pos, p, dist_enrg->sample(), dist_time->sample() );
+	return P;
+}
+
+
 Particle_t DiskZ_Source::getSource()
 {
   	Point_t p = dist_dir->sample();

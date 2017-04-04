@@ -8,8 +8,8 @@
 class XSec_t
 {
 	public:
-     		 Xsec_t() {};
-    		~Xsec_t() {};
+     		 XSec_t() {};
+    		~XSec_t() {};
 		
 		// Get cross section in energy
 		virtual double xs( const double E ) const = 0;
@@ -17,7 +17,7 @@ class XSec_t
 
 
 // Constant cross section
-class Constant_XSec
+class Constant_XSec : public XSec_t
 {
 	const double val;
 
@@ -26,11 +26,11 @@ class Constant_XSec
 		~Constant_XSec() {};
 
 		double xs( const double E ) const { return val; }
-}
+};
 
 
 // 1/v cross section
-class OverV_XSec
+class OverV_XSec : public XSec_t
 {
 	const double a, b; // a + b / sqrt(E)
 	                   // E is in eV
@@ -40,7 +40,7 @@ class OverV_XSec
 		~OverV_XSec() {};
 
 		double xs( const double E ) const { return a + b / std::sqrt(E); }
-}
+};
 
 
 #endif

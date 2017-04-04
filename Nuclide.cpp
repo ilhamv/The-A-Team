@@ -8,32 +8,57 @@
 // Getters
 std::string Nuclide_t::name()   { return n_name; } // Name
 // microXs
-double      Nuclide_t::sigmaT() { return n_sigmaT; }
-double      Nuclide_t::sigmaS() { return n_sigmaS; }
-double      Nuclide_t::sigmaC() { return n_sigmaC; }
-double      Nuclide_t::sigmaF() { return n_sigmaF; }
+double Nuclide_t::sigmaS( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("scatter") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+double Nuclide_t::sigmaC( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("capture") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+double Nuclide_t::sigmaF( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("fission") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+double Nuclide_t::sigmaT( const double E )
+{ 
+	double sum = 0.0;
+
+	for ( auto& r : reactions )
+	{ sum += r->xs( E ); }
+
+	return sum; 
+}
 
 
 // Add reaction
 void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
-{ 
-	// Accumulate total microXsec
-	n_sigmaT += R->xs();
-	if      ( R->type("scatter") ) { n_sigmaS = R->xs(); }
-	else if ( R->type("capture") ) { n_sigmaC = R->xs(); }
-	else if ( R->type("fission") ) { n_sigmaF = R->xs(); }
-	reactions.push_back( R );
-}
+{ reactions.push_back( R ); }
 
 
 // Randomly sample a reaction type from the nuclide
-std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample() 
+std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E ) 
 {
-	double u = n_sigmaT * Urand();
+	double u = sigmaT( E ) * Urand();
 	double s = 0.0;
-	for ( auto r : reactions ) 
+	for ( auto& r : reactions ) 
 	{
-		s += r->xs();
+		s += r->xs( E );
 		if ( s > u ) { return r; }
 	}
 }

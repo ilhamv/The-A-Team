@@ -16,6 +16,7 @@
 #include "Material.h"
 #include "Reaction.h"
 #include "Estimator.h"
+#include "XSec.h"
 
 
 // Function that returns an item from a vector of objects of type T by name provided
@@ -124,6 +125,20 @@ int main()
           				Dist = std::make_shared< Linear_Distribution > ( a, b, fa, fb, name );
         			}
 	        		
+				// Cubic-double
+				else if ( type == "cubic" ) 
+				{
+          				const double a    = d.attribute("a").as_double();
+	          			const double b    = d.attribute("b").as_double();
+        	  			const double fa   = d.attribute("fa").as_double();
+          				const double fb   = d.attribute("fb").as_double();
+        	  			const double fc   = d.attribute("fc").as_double();
+          				const double fd   = d.attribute("fd").as_double();
+        	  			const double fmin = d.attribute("fmin").as_double();
+          				const double fmax = d.attribute("fmax").as_double();
+          				Dist = std::make_shared< Cubic_Distribution > ( a, b, fa, fb, fc, fd, fmin, fmax, name );
+        			}
+				
 				// Unknown
 				else 
 				{
@@ -233,13 +248,34 @@ int main()
     		// Add nuclide reactions
     		for ( const auto& r : n.children() ) 
 		{
-      			const std::string           rxn_type = r.name();
-      			const double                xs       = r.attribute("xs").as_double();
+      			const std::string       rxn_type = r.name();
+			const std::string       xs_type  = r.child("xs").attribute("type").value();
+			std::shared_ptr<XSec_t> XS;
+			
+			// Constant XSec
+			if ( r.attribute("xs") ) 
+    			{
+      				const double xs = r.attribute("xs").as_double();
+		    		XS = std::make_shared<Constant_XSec> ( xs );
+    			}
+			// E-dependent XSec
+			// 1/v
+			else if ( xs_type == "over_v" )
+			{
+				const double a = r.child("xs").attribute("a").as_double();
+				const double b = r.child("xs").attribute("b").as_double();
+		    		XS = std::make_shared<OverV_XSec> ( a, b );
+			}
+			else
+			{
+				std::cout << "appropriate cross section of reaction" << rxn_type << " is required" << std::endl;
+				throw;
+			}
 			
 			// Capture
 			if ( rxn_type == "capture" )
 			{
-        			Nuc->addReaction( std::make_shared<Capture_Reaction> ( xs ) );
+        			Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
       			}      
 			
 			// Scatter
@@ -256,7 +292,7 @@ int main()
 				// Isotropic
 				if ( dist_name == "isotropic" ) 
 				{
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
         			}
 				
 				// Henyey-Greenstein
@@ -268,14 +304,15 @@ int main()
 						throw;
 					}
 					const double g = r.attribute("g").as_double();
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
         			}
 				
 				// Linearly anisotropic
 				else if ( dist_name == "linear" )
 				{
 					const double mubar = r.attribute("mubar").as_double();
-					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( xs, std::make_shared< HGScatter_Distribution > ( mubar ), Amass ) );
+					//Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( mubar ), Amass ) );
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< LinearScatter_Distribution > ( mubar ), Amass ) );
         			}
         			
 				// Unknown scattering distribution
@@ -306,7 +343,7 @@ int main()
 						throw;
 					}
 					const double nubar = r.attribute("nubar").as_double();
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( xs, std::make_shared< Average_Multiplicity_Distribution > ( nubar ) ) );					
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ) ) );					
 				}
 
 				// Terrel
@@ -323,7 +360,7 @@ int main()
 					const double b     = r.attribute("b").as_double();
 					const int    nmax  = r.attribute("nmax").as_int();
 					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( xs, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ) ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ) ) );
 				}
 				
 				// Unknown multiplicity distribution
@@ -724,6 +761,16 @@ int main()
 			Src = std::make_shared<Sphere_Shell_Source> ( x, y, z, ri, ro, dirDist, enrgDist, timeDist );
     		}
 
+		// Disk-x
+		else if ( (std::string) s.name() == "disk_x" )
+		{
+			const double x     = s.attribute("x").as_double();
+			const double y     = s.attribute("y").as_double();
+			const double z     = s.attribute("z").as_double();
+			const double r     = s.attribute("r").as_double();
+			Src = std::make_shared<DiskX_Source> ( x, y, z, r, dirDist, enrgDist, timeDist );
+    		}
+
 		// Disk-z
 		else if ( (std::string) s.name() == "disk_z" )
 		{
@@ -780,9 +827,7 @@ int main()
 			std::shared_ptr<Region_t> R = P.region();  // Working region
 			Pbank.pop();
 
-			//std::cout<<isample<<"\t"<<Region[5]->name()<<"\t"<<Region[5]->SigmaA()<<"\n";
-			//std::cout<<isample<<"\n"<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z;
-			//std::cin.get();
+//std::cout<<isample<<"\n"<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z<<"\n"<<P.energy();
 			
 			// Particle loop
 			while ( P.alive() )
@@ -793,8 +838,11 @@ int main()
 				SnD = R->surface_intersect( P );
 
 				// determine collision distance
-				double dcol = R->collision_distance();
+				double dcol = R->collision_distance( P.energy() );
 				
+//std::cout<<"\ndcol "<< dcol <<std::endl;
+//std::cout<<"dsrf "<< SnD.second <<std::endl;
+//std::cin.get();
 				// hit surface?
 				if ( dcol > SnD.second )
 				{	

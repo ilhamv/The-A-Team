@@ -24,6 +24,22 @@ double Linear_Distribution::sample()
 }
 
 
+double Cubic_Distribution::sample() 
+{
+	double x;
+	double y;
+	
+	do
+	{
+		x    = a    + Urand() * ( b    - a );
+		y    = fmin + Urand() * ( fmax - fmin );
+	}
+	while ( y > f(x) );
+
+	return x;
+}
+
+
 double Normal_Distribution::sample() 
 {
   	return mean + sigma * std::sqrt( -2.0 * std::log( Urand() ) ) * std::cos( twopi * Urand() ); 

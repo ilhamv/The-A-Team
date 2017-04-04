@@ -11,42 +11,64 @@
 // Getters
 std::string Material_t::name()   { return m_name; }   // Name
 // macroXsec
-double      Material_t::SigmaT() { return m_SigmaT; }
-double      Material_t::SigmaS() { return m_SigmaS; }
-double      Material_t::SigmaC() { return m_SigmaC; }
-double      Material_t::SigmaF() { return m_SigmaF; }
-double      Material_t::SigmaA() { return m_SigmaA; }
-
-
-// Add a pair of nuclide and its total macroXs
-// the supplied variable are the nuclide and its nuclide density
-void Material_t::addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N ) 
+double Material_t::SigmaS( const double E ) 
 { 
-	double newSigmaT =  Nuclide->sigmaT() * N; // Nuclide total macroXs
-	m_SigmaT += newSigmaT;                // Accumulate material total macroXs
-	m_SigmaS += Nuclide->sigmaS() * N; // Accumulate material scatter macroXs
-	m_SigmaC += Nuclide->sigmaC() * N; // Accumulate material capture macroXs
-	m_SigmaF += Nuclide->sigmaF() * N; // Accumulate material fission macroXs
-	m_SigmaA  = m_SigmaF + m_SigmaC;          // Update absorption macroXs
-	lambda  = -1.0 / m_SigmaT;            // Update lambda
-	nuclides.push_back( std::make_pair( Nuclide, newSigmaT ) );
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->sigmaS( E ) * n.second;
+	}	
+	return sum;
+}
+double Material_t::SigmaC( const double E ) 
+{ 
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->sigmaC( E ) * n.second;
+	}	
+	return sum;
+}
+double Material_t::SigmaF( const double E ) 
+{ 
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->sigmaF( E ) * n.second;
+	}	
+	return sum;
+}
+double Material_t::SigmaT( const double E ) 
+{ 
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->sigmaT( E ) * n.second;
+	}	
+	return sum;
 }
 
 
+// Add a nuclide
+// the supplied variable are the nuclide and its nuclide density
+void Material_t::addNuclide( const std::shared_ptr< Nuclide_t >& Nuclide, double N ) 
+{ nuclides.push_back( std::make_pair( Nuclide, N ) ); }
+
+
 // Sample collision distance
-double Material_t::collision_distance_sample()
-{ return lambda * log( Urand() ); }
+double Material_t::collision_distance_sample( const double E )
+{ return - std::log( Urand() ) / SigmaT( E ); }
 
 
 // Sample collided nuclide
-std::shared_ptr< Nuclide_t > Material_t::nuclide_sample()
+std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 {
-	double u = m_SigmaT * Urand();
+	double u = SigmaT( E ) * Urand();
 	double s = 0.0;
 	for ( auto& n : nuclides ) 
 	{
-		// first is pointer to nuclide, second is nuclide total macros XS
-		s += n.second;
+		// first is pointer to nuclide, second is nuclide density
+		s += n.first->sigmaT( E ) * n.second;
 		if ( s > u ) { return n.first; }
 	}
 }
@@ -57,10 +79,10 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample()
 void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank ) 
 {
 	// First sample nuclide
-	std::shared_ptr< Nuclide_t >  N = nuclide_sample();
+	std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
 
 	// Now get the reaction
-	std::shared_ptr< Reaction_t > R = N->reaction_sample();
+	std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );
 	
 	// Finally process the reaction on the Particle
 	R->sample( P, Pbank );

@@ -9,21 +9,22 @@
 #include "Particle.h"
 #include "Distribution.h"
 #include "Point.h"
+#include "XSec.h"
 
 
 // Reaction base class
 class Reaction_t
 {
 	private:
-		const double r_xs; // Reaction microXs
+		std::shared_ptr<XSec_t> r_xs; // Reaction microXs in E[eV]
 	
 	public:
 		// Constructor: Pass the microXs
-	       	 Reaction_t( const double x ) : r_xs(x) {}; // Pass the microXs
+	       	 Reaction_t( std::shared_ptr<XSec_t> x ) : r_xs(x) {}; // Pass the microXs
 		~Reaction_t() {};
 
 		// Get the microXs
-		virtual double xs() final { return r_xs; };
+		virtual double xs( const double E ) final { return r_xs->xs(E); };
 
 		// Sample the reaction process on the working particle and the particle bank
 		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank ) = 0;
@@ -38,7 +39,7 @@ class Capture_Reaction : public Reaction_t
 {
 	public:
 		// Constructor: Pass the microXs
-		 Capture_Reaction( const double x ) : Reaction_t(x) {}; // Pass the microXs
+		 Capture_Reaction( std::shared_ptr<XSec_t> x ) : Reaction_t(x) {}; // Pass the microXs
 		~Capture_Reaction() {};
 
 		// Kill the working particle upon reaction sample
@@ -57,7 +58,7 @@ class Scatter_Reaction : public Reaction_t
 		const double                              A;            // Nuclide mass
 	public:
 		// Constructor: Pass the microXs
-		 Scatter_Reaction( const double x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
+		 Scatter_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<double> >& D, const double a ) :
 			Reaction_t(x), scatter_dist(D), A(a) {}; // Pass the microXs and scattering angle distribution
 		~Scatter_Reaction() {};
 
@@ -78,7 +79,7 @@ class Fission_Reaction : public Reaction_t
 		
 	public:
 		// Constructor: Pass the microXs
-		 Fission_Reaction( double x, const std::shared_ptr< Distribution_t<int> >& D ) :
+		 Fission_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<int> >& D ) :
 		 	Reaction_t(x), nu_dist(D) {}; // Pass the microXs and fission multiplicity distribution
 		~Fission_Reaction() {};
 

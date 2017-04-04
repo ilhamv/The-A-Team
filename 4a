@@ -7,7 +7,7 @@
 
 <nuclides>
 	<nuclide name="nuc1">
-    		<scatter xs="19.0" distribution="linear" mubar="0.333333333333333333333333"/>
+    		<scatter xs="19.0" distribution="linear" mubar="0.333333333"/>
     		<capture xs="1.0"/>
   	</nuclide>
 
@@ -25,8 +25,8 @@
 
 <materials>
   	<material name="mat1">
-    		<nuclide name="nuc1" density="0.066666666666666666666667"/>
-    		<nuclide name="nuc2" density="0.033333333333333333333333"/>
+    		<nuclide name="nuc1" density="0.066666666"/>
+    		<nuclide name="nuc2" density="0.033333333"/>
   	</material>
   	
 	<material name="mat_detector">

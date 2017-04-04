@@ -40,11 +40,10 @@ class Region_t
 		double      volume();     // volume
 		double      importance(); // importance
 		// MacroXsec of the contained material
-		double      SigmaT();
-		double      SigmaS();
-		double      SigmaC();
-		double      SigmaF();
-		double      SigmaA();
+		double      SigmaT( const double E );
+		double      SigmaS( const double E );
+		double      SigmaC( const double E );
+		double      SigmaF( const double E );
 		
 		// Set the material
     		void setMaterial( const std::shared_ptr< Material_t >& M );
@@ -65,7 +64,7 @@ class Region_t
 		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
 		
 		// Return particle collision distance
-		virtual double collision_distance();
+		virtual double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
 		virtual void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
@@ -84,7 +83,7 @@ class Region_Vacuum : public Region_t
 		
 		// Return sligthly less than very large number for collision distance
 		// to ensure collision if no surface intersection
-		double collision_distance();
+		double collision_distance( const double E );
 
 		// Kill particle at collision
 		void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
