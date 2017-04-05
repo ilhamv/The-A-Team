@@ -1,6 +1,6 @@
 #include <cmath>      // cos, sin, sqrt
 
-#include "Region.h"
+#include "Geometry.h"
 #include "Particle.h"
 #include "Random.h"
 #include "Point.h"
@@ -26,7 +26,7 @@ void Particle_t::setTime( const double t )                       { p_time   = t;
 void Particle_t::setEnergy( const double E )                                       // Energy, and speed
 { 
 	p_energy = E;
-	p_speed  = std::sqrt( p_energy * 191313184.022 ); 
+	p_speed  = std::sqrt( p_energy * 191313184.022 ) * 100.0; // cm/s
 	// note, the constant above is 2.0 * ( 1.60218e-19 J/eV ) / ( 1.674929e-27 kg )
 }
 void Particle_t::setSpeed( const double v )                                        // Speed, and energy
@@ -43,6 +43,9 @@ void Particle_t::move( const double dmove )
 	p_pos.x += p_dir.x * dmove;
 	p_pos.y += p_dir.y * dmove;
 	p_pos.z += p_dir.z * dmove;
+	
+	// Advance particle time
+	setTime( p_time + dmove / p_speed );
 }
 
 

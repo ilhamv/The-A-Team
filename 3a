@@ -30,7 +30,7 @@
 
 
 <surfaces>
-	<plane name="px1" a="1.0" b="0.0" c="0.0" d="0.0" bc="reflect"/>
+	<plane name="px1" a="1.0" b="0.0" c="0.0" d="0.0" bc="reflective"/>
 	<plane name="px2" a="1.0" b="0.0" c="0.0" d="4.0"/>
 </surfaces>
 
@@ -48,9 +48,9 @@
 
 
 <estimators>
-  	<surface_counting name="Leakage count">
+  	<estimator name="Leak out right" score="count">
     		<surface name="px2"/>
-  	</surface_counting>
+  	</estimator>
 </estimators>
 
 

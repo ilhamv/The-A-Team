@@ -1,85 +1,133 @@
 #include <cmath>
+#include <iostream>
 
 #include "Estimator.h"
-#include "Surface.h"
-#include "Region.h"
+#include "Geometry.h"
+#include "Solver.h"  // Binary_Search
 
 
-// Surface current estimator //
+///////////////
+/// Scoring ///
+///////////////
+
+// Current (crossing)
+double Current_Score::add_score( const Particle_t& P, const double l /*= 0.0*/ )
+{ return P.weight(); }
+
+// Flux (path length)
+double Flux_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return track * P.weight(); }
+
+// Absorption (path length)
+double Absorption_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return ( P.region()->SigmaC( P.energy() ) + P.region()->SigmaF( P.energy() ) ) * track * P.weight(); }
+
+// Scatter (path length)
+double Scatter_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return P.region()->SigmaS( P.energy() ) * track * P.weight(); }
+
+// Capture (path length)
+double Capture_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return P.region()->SigmaC( P.energy() ) * track * P.weight(); }
+
+// Fission (path length)
+double Fission_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return P.region()->SigmaF( P.energy() ) * track * P.weight(); }
+
+// Total (path length)
+double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return P.region()->SigmaT( P.energy() ) * track * P.weight(); }
+
+
 // Score at events
-void Surface_Current_Estimator::score( const Particle_t& P, const double null /*= 0.0*/ ) 
-{ tally_hist += P.weight(); }
-
-// Report results
-void Surface_Current_Estimator::report( const double tTime ) 
-{
-	stats();                           // Compute mean, variance, and uncertainty
-	const double r = meanUncer / mean; // relative uncertaianty of mean
-
-	std::cout<< std::endl;
-	std::cout<< e_name << " report" << std::endl;
-	for ( int i = 0 ; i < e_name.length()+7 ; i++ ) { std::cout<< "="; }
-	std::cout<< std::endl;
-	std::cout<< "Number of particles crossing surface ";
-	for ( int i = 0 ; i < o_names.size() ; i++ ) { std::cout<< o_names[i] << " "; }
-	std::cout<< ":" << std::endl;
-	std::cout<< "Mean     = " << mean << "  +/-  " << meanUncer << "  (" << r * 100.0 << "%)" << std::endl;
-	std::cout<< "Variance = " << var << std::endl;
-	std::cout<< "[F.O.M.: " << 1.0 / ( r*r * tTime ) << "]" << std::endl;
-}
-
-
-
-// Region flux estimator //
-// Score at events
-void Region_Flux_Estimator::score( const Particle_t& P, const double path_length /*= 0.0*/ )
-{ tally_hist += P.weight() * path_length; }
-
-// Report results
-void Region_Flux_Estimator::report( const double tTime )
-{
-      	stats();
+void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+{ 
+	// Total tallies
+	for ( int i = 0 ; i < Nscore ; i++ )
+	{
+		total_tally[i].hist += scores[i]->add_score( P, track );
+	}
+	
+	if ( bin_active )
+	{	
+		// In time binning case for region estimator, track might be distributed across bins
+		// Pair of bin location and corresponding track to be scored
+		std::vector< std::pair<int,double> > loc_track;
+		
+		// Energy bin [simply scored, assuming the energy grids span all possible enrgy in the problem]
+		if ( bin_type == "energy" ) 
+		{ 
+			int loc   = Binary_Search( P.energy(), bin_grid ); // Bin location
+			loc_track.push_back( std::make_pair( loc, track ) );
+		}
+		
+		else if ( bin_type == "time" )   
+		{ 
+			// Non region estimator [need to consider event outside the the time grid]
+			if ( ! reg_flag ) 
+			{ 
+				int loc   = Binary_Search( P.time(), bin_grid );
+				
+				if ( loc >= 0 && loc < Nbin )
+				{ loc_track.push_back( std::make_pair( loc, track ) ); }
+			}
 			
-	double volume;                      // to hold region volume
-	const double vol = R->volume();  // to hold dummy volume (if vol = 0 --> give note!)
-	if ( vol == 0.0 ) { volume = 1.0; }
-	else { volume == vol; }
-	
-	const double r = meanUncer / mean;        // relative uncertaianty of mean
-	
-	std::cout<< std::endl;
-	std::cout<< e_name << " report" << std::endl;
-	for ( int i = 0 ; i < e_name.length()+7 ; i++ ) { std::cout<< "="; }
-	std::cout<< std::endl;
-	std::cout << "Volume-averaged particle flux in region " << o_names[0] << ":" << std::endl;
-	std::cout<< "Mean     = " << mean / volume << "  +/-  " << meanUncer / volume << "  (" << r * 100.0 << "%)" << std::endl;
-	std::cout<< "Variance = " << var / volume / volume  << std::endl;
-	if ( vol == 0.0 ) { std::cout<<"..Note that region volume is not given, value above is not volume-averaged.." << std::endl; }
-	std::cout<< "[F.O.M.: " << 1.0 / ( r*r * tTime ) << "]" << std::endl;
-	
-	if (absorp)
-	{
-		std::cout<< std::endl;
-		std::cout<< "Absorption rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * ( R->SigmaC(1)+R->SigmaF(1) ) << "  +/-  " << meanUncer * ( R->SigmaC(1) + R->SigmaF(1) ) << std::endl;
-	}
-	if (scatter)
-	{
-		std::cout<< std::endl;
-		std::cout<< "Scattering rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaS(1) << "  +/-  " << meanUncer * R->SigmaS(1) << std::endl;
-	}
-	if (capture)
-	{
-		std::cout<< std::endl;
-		std::cout<< "Capture rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaC(1) << "  +/-  " << meanUncer * R->SigmaC(1) << std::endl;
-	}
-	if (fission)
-	{
-		std::cout<< std::endl;
-		std::cout<< "Fission rate in region " << o_names[0] << ":" << std::endl;
-		std::cout<< mean * R->SigmaF(1) << "  +/-  " << meanUncer * R->SigmaF(1) << std::endl;
+			// Region estimator!
+			else
+			{
+				int loc1    = Binary_Search( t_old, bin_grid );    // Bin location before track generation
+				int loc2    = Binary_Search( P.time(), bin_grid ); // after
+				
+				// 1 bin spanned [need to consider if it is outside the time grid]
+				if ( loc1 == loc2 ) 
+				{
+					if ( loc1 >= 0 && loc1 < Nbin )
+					{ loc_track.push_back( std::make_pair( loc1, track ) ); }
+					}
+				
+				// >1 bin spanned
+				else
+				{				
+					int num_bin = loc2 - loc1 + 1; // # of bins spanned
+					double new_track;              // to hold bin track
+					
+					// First partial bin [need to consider if it's outside]
+					if ( loc1 >= 0 )
+					{
+						new_track = ( bin_grid[loc1+1] - t_old ) * P.speed();
+						loc_track.push_back( std::make_pair( loc1, new_track ) );
+					}
+					
+					// Intermediate full bin
+					for ( int i = 1 ; i < num_bin - 1 ; i++ )
+					{
+						new_track = ( bin_grid[loc1+i+1] - bin_grid[loc1+i] ) * P.speed();
+						loc_track.push_back( std::make_pair( loc1+i, new_track ) );
+					}
+					
+					// Last partial bin [consider if it's outside]
+					if ( loc2 < Nbin )
+					{
+						new_track = ( P.time() - bin_grid[loc2] ) * P.speed();
+						loc_track.push_back( std::make_pair( loc2, new_track ) );
+					}
+				}
+			}
+		}
+		
+		for ( int i = 0 ; i < Nscore ; i++ )
+		{
+			// Total tally
+			total_tally[i].hist += scores[i]->add_score( P, track );
+			// Bin tally
+			for ( auto& LnT : loc_track )
+			{
+				bin_tally[LnT.first][i].hist += scores[i]->add_score( P, LnT.second );
+			}
+			// Note: In case of using cross section table, 
+			// might want to pass an index pointing to the location in XSec table
+			// to avoid XS search for each reaction score!
+		}
 	}
 }
 
@@ -87,26 +135,24 @@ void Region_Flux_Estimator::report( const double tTime )
 
 // Surface PMF estimator
 // Score at events
-void Surface_PMF_Estimator::score( const Particle_t& P, const double null /*= 0.0*/ ) 
+void Surface_PMF_Estimator::score( const Particle_t& P, const double null /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ ) 
 { tally_hist++;}
 
 // Report results
 // output.txt file providing the PMF is created (or overwritten)
-void Surface_PMF_Estimator::report( const double tTime ) 
+void Surface_PMF_Estimator::report( const std::string simName, const double tTime ) 
 {
 	normalize();                        // Normalize the recorded PMF
 	stats();                            // Compute mean, variance and PMF statistical uncertainty
-	std::ofstream file( "output.txt" ); // Create output.txt file
+	std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
 	
 	// Printouts (Uncertainty is only printed out in the output.txt file)
-	std::cout<<std::endl;
-	std::cout << e_name << " report" << std::endl;
-	for ( int i = 0 ; i < e_name.length()+7 ; i++ ) { std::cout<< "="; }
+	std::cout<< std::endl << std::endl;
+	std::cout<< "Estimator report: " << e_name << std::endl;
+	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { std::cout<< "="; }
 	std::cout<< std::endl;
 	std::cout << "PMF of # of particle crossing surface ";
 	     file << "PMF of # of particle crossing surface ";
-	for ( int i = 0 ; i < o_names.size() ; i++ ) { std::cout<< o_names[i] << " "; }
-	for ( int i = 0 ; i < o_names.size() ; i++ ) {      file<< o_names[i] << " "; }
 	std::cout << ":\nx\tP(x)\n---\t-------"                        << std::endl;
 	     file << ":\nx\tP(x)\t+/-\n---\t-------\t------------" << std::endl;
 	for ( int i = 0 ; i < pmf.size() ; i++ )

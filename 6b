@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Problem 6a" histories="1e8"/>
+	<description name="Problem 6b" histories="1e8"/>
 	<cut-off     time="1e-7"/>
 </simulation>
 
@@ -14,7 +14,7 @@
 
 
 <nuclides>
-	<nuclide name="deuterium" A="2.0">
+	<nuclide name="lithium-6" A="6.0">
     		<capture xs_v="0.0 100.0"/>
 		<scatter xs  ="2.4" distribution="linear" mubar="0.2"/>
   	</nuclide>
@@ -27,7 +27,7 @@
 
 <materials>
   	<material name="mat_sphere">
-    		<nuclide name="deuterium" density="0.1"/>
+    		<nuclide name="lithium-6" density="0.1"/>
   	</material>
   	
 	<material name="mat_detector">

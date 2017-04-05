@@ -48,9 +48,9 @@
 
 
 <estimators>
-  	<surface_current name="Transmission">
+  	<estimator name="Leak out right" score="current">
     		<surface name="px2"/>
-  	</surface_current>
+  	</estimator>
 </estimators>
 
 

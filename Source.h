@@ -6,8 +6,7 @@
 
 #include "Particle.h"
 #include "Const.h"    // EPSILON
-#include "Surface.h"
-#include "Region.h"
+#include "Geometry.h"
 
 
 // Particle source base class

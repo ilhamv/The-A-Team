@@ -8,7 +8,7 @@
 
 #include "Random.h"
 #include "Particle.h"
-#include "Region.h"
+#include "Geometry.h"
 
 
 // Perform Splitting & Rouletting variance reduction technique

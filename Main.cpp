@@ -4,13 +4,13 @@
 #include <memory>       // shared_ptr, make_shared
 #include <stack>        // stack
 #include <cmath>        // exp
+#include <sstream>      // istringstream
 
 #include "VReduction.h" // Split_Roulette
 #include "pugixml.hpp"
-#include "Surface.h"
+#include "Geometry.h"
 #include "Particle.h"
 #include "Distribution.h"
-#include "Region.h"
 #include "Source.h"
 #include "Nuclide.h"
 #include "Material.h"
@@ -24,7 +24,7 @@
 template< typename T >
 std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec, const std::string name ) 
 {
-	for ( auto v : vec ) 
+	for ( auto& v : vec ) 
 	{
 		if ( v->name() == name ) { return v; }
 	}
@@ -35,16 +35,18 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 int main()
 {
 	// Variable declarations
-	std::string                                   simName;        // Simulation name
-	unsigned long long                            nhist;          // Number of particle samples
-	unsigned long long                            trackTime = 0;  // "Computation time" (particle track) for variance reduction
-	Source_Bank                                   Sbank;          // Source bank
-	std::stack  < Particle_t >                    Pbank;          // Particle bank
-	std::vector < std::shared_ptr<Surface_t>    > Surface;        // Surfaces
-	std::vector < std::shared_ptr<Region_t>     > Region;         // Regions
-	std::vector < std::shared_ptr<Nuclide_t>    > Nuclide;        // Nuclides
-	std::vector < std::shared_ptr<Material_t>   > Material;       // Materials
-	std::vector < std::shared_ptr<Estimator_t>  > Estimator;      // Estimators  	
+	std::string                                   simName;           // Simulation name
+	unsigned long long                            nhist;             // Number of particle samples
+	double                                        Ecut_off  = 1e-99; // Energy cut-off
+	double                                        tcut_off  = 1e4;   // Time cut-off
+	unsigned long long                            trackTime = 0;     // "Computation time" (particle track) for variance reduction
+	Source_Bank                                   Sbank;             // Source bank
+	std::stack  < Particle_t >                    Pbank;             // Particle bank
+	std::vector < std::shared_ptr<Surface_t>    > Surface;           // Surfaces
+	std::vector < std::shared_ptr<Region_t>     > Region;            // Regions
+	std::vector < std::shared_ptr<Nuclide_t>    > Nuclide;           // Nuclides
+	std::vector < std::shared_ptr<Material_t>   > Material;          // Materials
+	std::vector < std::shared_ptr<Estimator_t>  > Estimator;         // Estimators  	
 	// User-defined distributions
 	std::vector < std::shared_ptr<Distribution_t<double>> > double_distributions;
   	std::vector < std::shared_ptr<Distribution_t<int>>    > int_distributions;
@@ -71,9 +73,21 @@ int main()
 	
 	// Set simulation description: name and # of histories
   	pugi::xml_node input_simulation = input_file.child("simulation");
-	simName = input_simulation.first_child().attribute("name").value();          // simulation name
-	nhist   = input_simulation.first_child().attribute("histories").as_double(); // # of histories
-	
+    	
+	for ( const auto& s : input_simulation )
+	{
+		if( (std::string) s.name() == "description" )
+		{
+			simName = s.attribute("name").value();          // simulation name
+			nhist   = s.attribute("histories").as_double(); // # of histories
+		}
+		else if ( (std::string) s.name() == "cut-off" )
+		{
+			if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
+			if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
+		}
+	}
+        
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");
 
@@ -249,7 +263,6 @@ int main()
     		for ( const auto& r : n.children() ) 
 		{
       			const std::string       rxn_type = r.name();
-			const std::string       xs_type  = r.child("xs").attribute("type").value();
 			std::shared_ptr<XSec_t> XS;
 			
 			// Constant XSec
@@ -258,12 +271,13 @@ int main()
       				const double xs = r.attribute("xs").as_double();
 		    		XS = std::make_shared<Constant_XSec> ( xs );
     			}
-			// E-dependent XSec
-			// 1/v
-			else if ( xs_type == "over_v" )
+			// 1/v XSec
+			else if ( r.attribute("xs_v") )
 			{
-				const double a = r.child("xs").attribute("a").as_double();
-				const double b = r.child("xs").attribute("b").as_double();
+				double a, b;
+				std::vector<std::string> scores;
+				std::istringstream iss( r.attribute("xs_v").value() );
+				iss >> a >> b;
 		    		XS = std::make_shared<OverV_XSec> ( a, b );
 			}
 			else
@@ -419,26 +433,30 @@ int main()
   	pugi::xml_node input_surfaces = input_file.child("surfaces");
   	for ( const auto& s : input_surfaces )
 	{
+    		std::shared_ptr< Surface_t > S;
     		const std::string type = s.name();
       		const std::string name = s.attribute("name").value();
-		const std::string bc   = s.attribute("bc").value();
-    		std::shared_ptr< Surface_t > S;
+		std::string bc   = "transmission"; // Default boundary condition
+		
+		// Provided B.C. input
+		if ( s.attribute("bc") ) 
+		{ 
+			bc = s.attribute("bc").value(); 
+			if ( bc != "transmission" && bc != "reflective" )
+			{
+				std::cout<< "unknown boundary condition " << bc << " for surface " << name << std::endl;
+				throw;
+			}
+		}
     		
-		// Plane
+		// Generic plane
 		if ( type == "plane" ) 
 		{
       			const double a = s.attribute("a").as_double();
       			const double b = s.attribute("b").as_double();
       			const double c = s.attribute("c").as_double();
       			const double d = s.attribute("d").as_double();
-      			if ( bc == "reflect" )
-			{
-				S = std::make_shared< Plane_Reflective > ( name, a, b, c, d );
-			}
-			else
-			{
-				S = std::make_shared< Plane_Surface > ( name, a, b, c, d );
-			}
+			S = std::make_shared< Plane_Surface > ( name, bc, a, b, c, d );
     		}
     		
 		// Sphere
@@ -448,7 +466,7 @@ int main()
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< Sphere_Surface > ( name, x, y, z, r );
+      			S = std::make_shared< Sphere_Surface > ( name, bc, x, y, z, r );
 		}
 		
 		// Cylinder-x
@@ -457,7 +475,7 @@ int main()
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderX_Surface > ( name, y, z, r );
+      			S = std::make_shared< CylinderX_Surface > ( name, bc, y, z, r );
 		}
 		
 		// Cylinder-z
@@ -466,7 +484,7 @@ int main()
       			const double x = s.attribute("x").as_double();
       			const double y = s.attribute("y").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< CylinderZ_Surface > ( name, x, y, r );
+      			S = std::make_shared< CylinderZ_Surface > ( name, bc, x, y, r );
 		}
 
 		// Cone-X
@@ -476,10 +494,30 @@ int main()
       			const double y = s.attribute("y").as_double();
       			const double z = s.attribute("z").as_double();
       			const double r = s.attribute("r").as_double();
-      			S = std::make_shared< ConeX_Surface > ( name, x, y, z, r );
+      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
 		}
 		
-		// Unknown surface typw
+		// Cone-Y
+		else if ( type == "cone_y" )
+		{
+      			const double x = s.attribute("x").as_double();
+      			const double y = s.attribute("y").as_double();
+      			const double z = s.attribute("z").as_double();
+      			const double r = s.attribute("r").as_double();
+      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
+		}
+
+		// Cone-Z
+		else if ( type == "cone_z" )
+		{
+      			const double x = s.attribute("x").as_double();
+      			const double y = s.attribute("y").as_double();
+      			const double z = s.attribute("z").as_double();
+      			const double r = s.attribute("r").as_double();
+      			S = std::make_shared< ConeX_Surface > ( name, bc, x, y, z, r );
+		}
+		
+		// Unknown surface type
 		else 
 		{
       			std::cout << " unkown surface type " << type << std::endl;
@@ -494,30 +532,21 @@ int main()
   	pugi::xml_node input_regions = input_file.child("regions");
   	for ( const auto& r : input_regions ) 
 	{
-    		const std::string name       = r.attribute("name").value();
-		double            importance = 1.0; // default
-		double            volume     = 0.0; // default
     		std::shared_ptr<Region_t> Reg;
+    		const std::string name       = r.attribute("name").value();
+		double            importance = 1.0;  // default
 
     		// Modify region importance
-    		if ( r.attribute("importance") ) 
-    		{
-	    		importance = r.attribute("importance").as_double();
-    		}
+    		if ( r.attribute("importance") ) { importance = r.attribute("importance").as_double(); }
     		
-		// Modify region volume
-    		if ( r.attribute("volume") ) 
-    		{
-	    		volume = r.attribute("volume").as_double();
-    		}
+    		Reg  = std::make_shared<Region_t> ( name, importance );
 
     		// Set region material
     		if ( r.attribute("material") ) 
 		{
-      			const std::shared_ptr<Material_t> matPtr = findByName( Material, r.attribute("material").value() );
+			const std::shared_ptr<Material_t> matPtr = findByName( Material, r.attribute("material").value() );
       			if ( matPtr ) 
 			{
-    				Reg  = std::make_shared<Region_t> ( name, importance, volume );
         			Reg->setMaterial( matPtr );
       			}
 			else
@@ -526,13 +555,6 @@ int main()
         			throw;
       			} 
    		}
-		
-		// Vacuum (no material)
-		else
-		{
-    			Reg  = std::make_shared<Region_Vacuum> ( name, importance, volume );
-		}
-
    
     		// Set region bounding surfaces
     		for ( const auto& s : r.children() ) 
@@ -569,123 +591,128 @@ int main()
   	pugi::xml_node input_estimators = input_file.child("estimators");
   	for ( const auto& e : input_estimators )
 	{
-    		const std::string type = e.name();
-    		const std::string name = e.attribute("name").value();
     		std::shared_ptr<Estimator_t> Est;
-    		
-		// Surface current estimator
-		if ( type == "surface_current" ) 
-		{
-      			Est = std::make_shared<Surface_Current_Estimator> ( name );
 
-      			// Get the surfaces
-      			for ( const auto& s : e.children() )
-			{
-        			if ( (std::string) s.name() == "surface" )
-				{
-          				const std::string                name    = s.attribute("name").value();
-          				const std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, name );
-          				
-					// Add estimator to surface
-					if ( SurfPtr ) 
-					{
-            					SurfPtr->addEstimator( Est );
-						Est->addName( SurfPtr->name() );
-          				}
-          				else 
-					{
-            					std::cout << "unknown surface label " << name << " in estimator " << e.attribute("name").value() << std::endl;
-						throw;
-          				}
-        			}
-      			}
-    		}
-    		
-		// Counting surface estimator (results Probability Mass Function)
-		else if ( type == "surface_counting" ) 
-		{
-      			Est = std::make_shared<Surface_PMF_Estimator > ( name );
-
-      			// Get the surfaces
-      			for ( const auto& s : e.children() ) 
-			{
-        			if ( (std::string) s.name() == "surface" ) 
-				{
-          				const std::string                 name    = s.attribute("name").value();
-          				const std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, name );
-          				
-					// Add estimator to surface and vice versa
-					if ( SurfPtr ) 
-					{
-            					SurfPtr->addEstimator( Est );
-						Est->addName( SurfPtr->name() );
-          				}
-          				else 
-					{
-            					std::cout << "unknown surface label " << name << " in estimator " << e.attribute("name").value() << std::endl;
-						throw;
-          				}
-        			}
-      			}			 
-    		}
+    		const std::string name       = e.attribute("name").value();
 		
-		// Region flux estimator
-		else if ( type == "region_flux" ) 
-		{
-      			bool scatter    = false; // defaults
-      			bool capture    = false;
-      			bool fission    = false;
-      			bool absorption = false;
-			
-			// Modify reaction rate flags
-    			if ( e.attribute("scatter") ) 
-    			{
-	    			scatter = e.attribute("scatter").as_bool();
-    			}
-    			if ( e.attribute("capture") ) 
-    			{
-	    			capture = e.attribute("capture").as_bool();
-    			}
-    			if ( e.attribute("fission") ) 
-    			{
-	    			fission = e.attribute("fission").as_bool();
-    			}
-    			if ( e.attribute("absorption") ) 
-    			{
-	    			absorption = e.attribute("absorption").as_bool();
-    			}
-			
-			// Get the region
-      			for ( const auto& r : e.children() )
+		const std::string        score_string = e.attribute("score").value();
+		std::vector<std::string> scores;
+		std::istringstream iss( score_string );
+		for(std::string s; iss >> s; )
+		{ scores.push_back(s); }
+		
+		// Miscellaneous estimator: Counting surface (results Probability Mass Function)
+		if ( scores[0] == "count" ) { Est = std::make_shared<Surface_PMF_Estimator> ( name ); }
+		
+		// Generic estimator
+		else                        
+		{ 
+			Est = std::make_shared<Generic_Estimator> ( name );
+		for ( auto& s : scores )
 			{
-        			if ( (std::string) r.name() == "region" )
+				if      ( s == "current" )    { Est->addScore( std::make_shared<Current_Score>()    ); }
+				else if ( s == "flux" )       { Est->addScore( std::make_shared<Flux_Score>()       ); }
+				else if ( s == "absorption" ) { Est->addScore( std::make_shared<Absorption_Score>() ); }
+				else if ( s == "scatter" )    { Est->addScore( std::make_shared<Scatter_Score>()    ); }
+				else if ( s == "capture" )    { Est->addScore( std::make_shared<Capture_Score>()    ); }
+				else if ( s == "fission" )    { Est->addScore( std::make_shared<Fission_Score>()    ); }
+				else if ( s == "total" )      { Est->addScore( std::make_shared<Total_Score>()      ); }
+				else if ( s == "count" )    
 				{
-          				const std::string          r_name  = r.attribute("name").value();
-          				std::shared_ptr<Region_t>  RegPtr  = findByName( Region, r_name );
+        				std::cout << "score 'count' in estimator " << name << " has to be the only score" << std::endl;
+					throw;
+       				}
+       				else 
+				{
+        				std::cout << "unsuported score type " << s << " in estimator " << name << std::endl;
+					throw;
+       				}
+			}
+		}
+
+      		for ( const auto& eChild : e.children() )
+		{
+			// Add estimator to surface
+        		if ( (std::string) eChild.name() == "surface" )
+			{
+          			const std::string                s_name  = eChild.attribute("name").value();
+          			const std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, s_name );
+          			
+				if ( SurfPtr ) 					
+				{
+       					SurfPtr->addEstimator( Est );
+       				}
+       				else 
+				{
+        				std::cout << "unknown surface label " << s_name << " in estimator " << name << std::endl;
+					throw;
+       				}
+       			}
+			
+			// Add estimator to region
+        		else if ( (std::string) eChild.name() == "region" )
+			{
+          			const std::string          r_name  = eChild.attribute("name").value();
+          			std::shared_ptr<Region_t>  RegPtr  = findByName( Region, r_name );
           				
-					// Add estimator to the region
-					if ( RegPtr ) 
+				if ( RegPtr ) 
+				{
+            				RegPtr->addEstimator( Est );
+          			}
+          			else 
+				{
+            				std::cout << "unknown region label " << r_name << " in estimator " << name << std::endl;
+					throw;
+          			}
+        		}
+			
+			// Set bin
+        		else if ( (std::string) eChild.name() == "bin" )
+			{
+				// Report result in monitor?
+				bool bin_report = false;	
+				if ( (std::string) eChild.attribute("report").value() == "yes" ) { bin_report = true; }
+        			
+				// Type
+				std::string type = eChild.attribute("type").value();
+        			if ( type != "energy" && type != "time" ) 
+				{
+            				std::cout << "unsuported bin type " << type << " in estimator " << name << std::endl;
+					throw;
+				}
+		
+				// Construct bin grid
+				std::vector<double> bin_grid;
+				// Just grids
+				if( eChild.attribute("grid") )
+				{
+					const std::string   bin_string = eChild.attribute("grid").value();
+					std::istringstream  iss( bin_string );
+					for( double s; iss >> s; )
+					{ bin_grid.push_back(s); }
+				}
+				// Linear spaced grid
+				if( eChild.attribute("grid_linear") )
+				{
+					const std::string   bin_string = eChild.attribute("grid_linear").value();
+					double a, b, range; // Begin, end, step size
+					std::istringstream  iss( bin_string );
+
+					iss >> a >> range >> b;
+
+					bin_grid.push_back(a);
+					while( bin_grid.back() < b )
 					{
-						Est = std::make_shared<Region_Flux_Estimator> ( name, RegPtr, scatter, capture, fission, absorption );
-            					RegPtr->addEstimator( Est );
-						Est->addName( RegPtr->name() );
-          				}
-          				else 
-					{
-            					std::cout << "unknown region label " << r_name << " in estimator " << name << std::endl;
-						throw;
-          				}
-        			}
-      			}
+						bin_grid.push_back( bin_grid.back() + range );
+					}
+					bin_grid.pop_back();
+					bin_grid.push_back(b);
+				}
+				
+				Est->setBin( type, bin_grid, bin_report ); 
+			}
     		}
     		
-		// Unknown estimator type
-		else 
-		{
-      			std::cout << "unknown estimator type " << name << std::endl;
-      			throw;
-    		}
-    
 		// Push new estimator
     		Estimator.push_back( Est );
   	}
@@ -815,6 +842,7 @@ int main()
 	std::cout.flush();
 
 
+bool debug = false;
 	// Simulation loop
 	for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 	{
@@ -827,7 +855,15 @@ int main()
 			std::shared_ptr<Region_t> R = P.region();  // Working region
 			Pbank.pop();
 
-//std::cout<<isample<<"\n"<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z<<"\n"<<P.energy();
+if (debug)
+{std::cout<<"==============================\n"<<isample<<"\n"<<
+	"reg "<<P.region()->name()<<"\n"<<
+	"pos "<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<
+		"dir "<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z<<"\n"<<
+		"enspeed "<<P.energy()<<"\t"<<P.speed()<<"\n"<<
+		"time "<<P.time();
+//	std::cin.get();
+	}
 			
 			// Particle loop
 			while ( P.alive() )
@@ -840,9 +876,6 @@ int main()
 				// determine collision distance
 				double dcol = R->collision_distance( P.energy() );
 				
-//std::cout<<"\ndcol "<< dcol <<std::endl;
-//std::cout<<"dsrf "<< SnD.second <<std::endl;
-//std::cin.get();
 				// hit surface?
 				if ( dcol > SnD.second )
 				{	
@@ -865,18 +898,42 @@ int main()
 					// Same importance: do nothing
 					// old working region has the previous region importance and will be updated
 					Split_Roulette( R, P, Pbank );
+
+if(debug)					
+{	std::cout<<"\n\nSurface Hit "<<SnD.first->name()<<"\n"<<
+	"reg "<<P.region()->name()<<"\n"<<
+	"pos "<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<
+		"dir "<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z<<"\n"<<
+		"enspeed "<<P.energy()<<"\t"<<P.speed()<<"\n"<<
+		"time "<<P.time();
+//	std::cin.get();
+	}
 				}
-					
+				
+				// Collide!!
 				else
 				{
-					// Collide!! Move to collision site and sample the collision
+					// Move to collision site and sample the collision
 					// tally if there is any region tally
 					R->moveParticle( P, dcol );
 					R->collision( P, Pbank );
 					
 					// Accumulate "computation time" for variance reduction
 					trackTime++;
-				}	
+
+if(debug)			
+{	std::cout<<"\n\nCollide\n"<<
+	"reg "<<P.region()->name()<<"\n"<<
+	"pos "<<P.pos().x<<"\t"<<P.pos().y<<"\t"<<P.pos().z<<"\n"<<
+		"dir "<<P.dir().x<<"\t"<<P.dir().y<<"\t"<<P.dir().z<<"\n"<<
+		"enspeed "<<P.energy()<<"\t"<<P.speed()<<"\n"<<
+		"time "<<P.time();
+//	std::cin.get();
+	}
+				}
+			
+			// Cut-off working particle?
+			if ( P.energy() < Ecut_off || P.time() > tcut_off ) { P.kill(); if(debug){std::cout<<"\nCut!\n";} }
 
 			} // Particle is dead, end of particle loop
 			
@@ -885,7 +942,7 @@ int main()
 		} // Particle bank is empty, end of history loop
 
 		// Estimator history closeout
-		for ( auto E : Estimator ) { E->endHistory(); }
+		for ( auto& E : Estimator ) { E->endHistory(); }
 		// Start next history
 
 	} // All histories are done, end of simulation loop
@@ -901,7 +958,7 @@ int main()
 	std::cout<< "Track time: " << trackTime << std::endl;
 
 	// Report tallies
-	for ( auto E : Estimator ) { E->report( trackTime ); }
+	for ( auto& E : Estimator ) { E->report( simName, trackTime ); }
 	
 	return 0;
 }

@@ -48,7 +48,7 @@
     		<surface name="sp1" sense="-1"/>
   	</region>
 	
-  	<region name="detector" material="mat_detector" volume="3.926990817">
+  	<region name="detector" material="mat_detector">
     		<surface name="px1" sense="+1"/>
     		<surface name="px2" sense="-1"/>
     		<surface name="cx1" sense="-1"/>
@@ -72,9 +72,9 @@
 
 
 <estimators>
-  	<region_flux name="Flux" absorption="true">
+  	<estimator name="Detector" score="flux absorption">
     		<region name="detector"/>
-  	</region_flux>
+  	</estimator>
 </estimators>
 
 
