@@ -31,9 +31,9 @@ void Particle_t::setEnergy( const double E )                                    
 }
 void Particle_t::setSpeed( const double v )                                        // Speed, and energy
 { 
-	p_speed  = v;
-	p_energy = 5.22703129e-9 * v * v;
-	// note, the constant above is 0.5 / ( 1.60218e-19 J/eV ) * ( 1.674929e-27 kg )
+	p_speed  = v; // cm/s
+	p_energy = 5.22703129e-13 * v * v;
+	// note, the constant above is 0.5 / ( 1.60218e-19 J/eV ) * ( 1.674929e-27 kg ) / ( 10000 m/cm )
 }
 
 
