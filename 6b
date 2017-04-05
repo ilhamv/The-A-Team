@@ -39,7 +39,7 @@
 <surfaces>
 	<sphere     name="sp1"      x="0.0" y="0.0"   z="0.0" r="5.0"/>
 	<cone_x     name="conex1"   x="3.0" y="0.0"   z="0.0" r="0.125"/>
-	<cylinder_x name="cx1"      y="0.0" z="-10.0" r="1.0"/>
+	<cylinder_x name="cx1"      y="0.0" z="-10.0" r="0.5"/>
 	<plane      name="px1"      a="1.0" b="0.0" c="0.0" d="-25.0"/>
 	<plane      name="px2"      a="1.0" b="0.0" c="0.0" d="-20.0"/>
 	<plane      name="px split" a="1.0" b="0.0" c="0.0" d=" -1.0"/>
