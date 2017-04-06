@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Problem 4b" histories="1e7"/>
+	<description name="Problem 4b" histories="1e8"/>
 </simulation>
 
 
@@ -37,8 +37,8 @@
 
 <surfaces>
 	<sphere     name="sp1" x="0.0" y="0.0" z="0.0" r="4.0"/>
-	<plane      name="px1" a="1.0" b="0.0" c="0.0" d="14.0"/>
-	<plane      name="px2" a="1.0" b="0.0" c="0.0" d="19.0"/>
+	<plane_x    name="px1" x="14.0"/>
+	<plane_x    name="px2" x="19.0"/>
 	<cylinder_x name="cx1" y="0.0" z="0.0" r="0.5"/>
 </surfaces>
 

@@ -14,7 +14,7 @@
 // Hit implementation
 void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region )
 {
-	// Note: new particle region search occurs only in Transmission
+	// Note: new particle region search is only performed in transmission
 	// Transmission
 	if ( bc == "transmission" )
 	{
@@ -37,6 +37,90 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 }
 
 
+// Plane-X
+double PlaneX_Surface::eval( const Point_t& p ) { return p.x - x; }
+
+double PlaneX_Surface::distance( const Particle_t& P )
+{
+	const double pos = P.pos().x;
+	const double dir = P.dir().x;
+
+	// Check if particle moves in a direction that is (or very close to) parallel to the surface
+  	if ( std::fabs( dir ) > EPSILON ) 
+	{
+    		const double dist = ( x - pos ) / dir;
+    		// Check if particle moves away from the surface
+		if ( dist > 0.0 ) { return dist; }
+    		else { return MAX; }
+  	}    	
+	// It does! (Parallel)
+  	else 
+	{ return MAX; }
+}
+
+void PlaneX_Surface::reflect( Particle_t& P )
+{
+	Point_t q( -P.dir().x, P.dir().y, P.dir().z );
+	P.setDirection(q);
+}
+
+
+// Plane-Y
+double PlaneY_Surface::eval( const Point_t& p ) { return p.y - y; }
+
+double PlaneY_Surface::distance( const Particle_t& P )
+{
+	const double pos = P.pos().y;
+	const double dir = P.dir().y;
+
+	// Check if particle moves in a direction that is (or very close to) parallel to the surface
+  	if ( std::fabs( dir ) > EPSILON ) 
+	{
+    		const double dist = ( y - pos ) / dir;
+    		// Check if particle moves away from the surface
+		if ( dist > 0.0 ) { return dist; }
+    		else { return MAX; }
+  	}    	
+	// It does! (Parallel)
+  	else 
+	{ return MAX; }
+}
+
+void PlaneY_Surface::reflect( Particle_t& P )
+{
+	Point_t q( P.dir().x, -P.dir().y, P.dir().z );
+	P.setDirection(q);
+}
+
+
+// Plane-Z
+double PlaneZ_Surface::eval( const Point_t& p ) { return p.z - z; }
+
+double PlaneZ_Surface::distance( const Particle_t& P )
+{
+	const double pos = P.pos().z;
+	const double dir = P.dir().z;
+
+	// Check if particle moves in a direction that is (or very close to) parallel to the surface
+  	if ( std::fabs( dir ) > EPSILON ) 
+	{
+    		const double dist = ( z - pos ) / dir;
+    		// Check if particle moves away from the surface
+		if ( dist > 0.0 ) { return dist; }
+    		else { return MAX; }
+  	}    	
+	// It does! (Parallel)
+  	else 
+	{ return MAX; }
+}
+
+void PlaneZ_Surface::reflect( Particle_t& P )
+{
+	Point_t q( P.dir().x, P.dir().y, -P.dir().z );
+	P.setDirection(q);
+}
+
+
 // Generic Plane
 double Plane_Surface::eval( const Point_t& p )
 {
@@ -53,7 +137,7 @@ double Plane_Surface::distance( const Particle_t& P )
 	// Check if particle moves in a direction that is (or very close to) parallel to the surface
   	if ( std::fabs( denom ) > EPSILON ) 
 	{
-    		double dist = ( d - a * pos.x - b * pos.y - c * pos.z ) / denom;
+    		const double dist = ( d - a * pos.x - b * pos.y - c * pos.z ) / denom;
     		// Check if particle moves away from the surface
 		if ( dist > 0.0 ) { return dist; }
     		else { return MAX; }

@@ -74,6 +74,63 @@ class Surface_t : public Geometry_t
 };
 
 
+// Plane-X
+class PlaneX_Surface : public Surface_t
+{
+  	private:
+    		const double x; // Parameters for S equation
+
+	protected:
+		void reflect ( Particle_t& P );
+
+  	public:
+     		 PlaneX_Surface( const std::string n, const std::string bc, const double loc ) : 
+			 Surface_t(n,bc), x(loc) {};
+    		~PlaneX_Surface() {};
+
+		double eval    ( const Point_t& p );
+     		double distance( const Particle_t& P );
+};
+
+
+// Plane-Y
+class PlaneY_Surface : public Surface_t
+{
+  	private:
+    		const double y; // Parameters for S equation
+
+	protected:
+		void reflect ( Particle_t& P );
+
+  	public:
+     		 PlaneY_Surface( const std::string n, const std::string bc, const double loc ) : 
+			 Surface_t(n,bc), y(loc) {};
+    		~PlaneY_Surface() {};
+
+		double eval    ( const Point_t& p );
+     		double distance( const Particle_t& P );
+};
+
+
+// Plane-Z
+class PlaneZ_Surface : public Surface_t
+{
+  	private:
+    		const double z; // Parameters for S equation
+
+	protected:
+		void reflect ( Particle_t& P );
+
+  	public:
+     		 PlaneZ_Surface( const std::string n, const std::string bc, const double loc ) : 
+			 Surface_t(n,bc), z(loc) {};
+    		~PlaneZ_Surface() {};
+
+		double eval    ( const Point_t& p );
+     		double distance( const Particle_t& P );
+};
+
+
 // Generic Plane
 class Plane_Surface : public Surface_t
 {

@@ -7,6 +7,7 @@
 #include <sstream>      // istringstream
 
 #include "VReduction.h" // Split_Roulette
+#include "Const.h"      // MAX
 #include "pugixml.hpp"
 #include "Geometry.h"
 #include "Particle.h"
@@ -37,8 +38,8 @@ int main()
 	// Variable declarations
 	std::string                                   simName;           // Simulation name
 	unsigned long long                            nhist;             // Number of particle samples
-	double                                        Ecut_off  = 1e-99; // Energy cut-off
-	double                                        tcut_off  = 1e4;   // Time cut-off
+	double                                        Ecut_off  = 0.0;   // Energy cut-off
+	double                                        tcut_off  = MAX;   // Time cut-off
 	unsigned long long                            trackTime = 0;     // "Computation time" (particle track) for variance reduction
 	Source_Bank                                   Sbank;             // Source bank
 	std::stack  < Particle_t >                    Pbank;             // Particle bank
@@ -449,8 +450,29 @@ int main()
 			}
 		}
     		
+		// Plane-x
+		if ( type == "plane_x" ) 
+		{
+      			const double x = s.attribute("x").as_double();
+			S = std::make_shared< PlaneX_Surface > ( name, bc, x );
+    		}
+
+		// Plane-y
+		else if ( type == "plane_y" ) 
+		{
+      			const double y = s.attribute("y").as_double();
+			S = std::make_shared< PlaneY_Surface > ( name, bc, y );
+    		}
+		
+		// Plane-z
+		else if ( type == "plane_z" ) 
+		{
+      			const double z = s.attribute("z").as_double();
+			S = std::make_shared< PlaneZ_Surface > ( name, bc, z );
+    		}
+
 		// Generic plane
-		if ( type == "plane" ) 
+		else if ( type == "plane" ) 
 		{
       			const double a = s.attribute("a").as_double();
       			const double b = s.attribute("b").as_double();

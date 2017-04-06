@@ -306,38 +306,41 @@ class Generic_Estimator : public Estimator_t
 				}
 			}
 
-			std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
-			// Printouts (Uncertainty is only printed out in the output file)
-			file << std::endl;
-			file << "Bin tallies," << std::endl;
+			if ( bin_active )
+			{
+				std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
+				// Printouts (Uncertainty is only printed out in the output file)
+				file << std::endl;
+				file << "Bin tallies," << std::endl;
 		
-			file <<"bin#\t";
-			if      ( bin_type == "energy" ) { file<<"lower(eV)\tupper(eV)\t"; }
-			else if ( bin_type == "time" )   { file<<"lower(sec)\tupper(sec)\t"; }
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				file<< scores[i]->name() << "\t";
-			}
-			file << std::endl;
-			
-			file << "----\t";
-			file << "----------\t";
-			file << "----------\t";
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				file << "------------\t";
-			}
-			file << std::endl;
-			
-			for ( int j = 0 ; j < Nbin ; j++ )
-			{
-				file<< j+1 << "\t";
-				file<< bin_grid[j] << "\t" << bin_grid[j+1] << "\t";
+				file <<"bin#\t";
+				if      ( bin_type == "energy" ) { file<<"lower(eV)\tupper(eV)\t"; }
+				else if ( bin_type == "time" )   { file<<"lower(sec)\tupper(sec)\t"; }
 				for ( int i = 0 ; i < Nscore ; i++ )
 				{
-					file << bin_tally[j][i].mean << "\t";
+					file<< scores[i]->name() << "\t";
 				}
 				file << std::endl;
+			
+				file << "----\t";
+				file << "----------\t";
+				file << "----------\t";
+				for ( int i = 0 ; i < Nscore ; i++ )
+				{
+					file << "------------\t";
+				}
+				file << std::endl;
+			
+				for ( int j = 0 ; j < Nbin ; j++ )
+				{
+					file<< j+1 << "\t";
+					file<< bin_grid[j] << "\t" << bin_grid[j+1] << "\t";
+					for ( int i = 0 ; i < Nscore ; i++ )
+					{
+						file << bin_tally[j][i].mean << "\t";
+					}
+					file << std::endl;
+				}
 			}
 		}
 };
