@@ -25,7 +25,10 @@ class Score_t
 		 Score_t( const std::string n ) : s_name(n) {};
 		~Score_t() {};
 
+		// Get score type name
 		virtual std::string name() final { return s_name; }
+
+		// Get score to be added at event
 		virtual double add_score( const Particle_t& P, const double l = 0.0 ) = 0;
 };
 
@@ -124,6 +127,67 @@ class Tally_t
 
 
 
+///////////
+/// Bin ///
+///////////
+
+// Bin base class
+class Bin_t
+{
+	protected:
+		const std::vector<double>         bin_grid;   // Bin grid
+		std::vector<std::vector<Tally_t>> bin_tally;  // Bin tallies [bin#][score#]
+		const int                         Nbin;       // # of bins
+		const int                         Ngrid;      // # of grids
+	
+	public:
+		// Constructor: pass grid points
+		 Bin_t( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : 
+			 bin_grid(grid), Ngrid(grid.size()), Nbin(grid.size() - 1)
+		{ 
+			// Each bin is set with the same # of score tallies as the total tally of the estimator
+			bin_tally.resize( Nbin, total_tally );
+		}
+		~Bin_t() {};
+
+		// Getters
+		double grid( const int i )                   { return bin_grid[i]; }               // Bin grid
+		double mean( const int i, const int j )      { return bin_tally[i][j].mean; }      // Bin-score mean
+		double var( const int i, const int j )       { return bin_tally[i][j].var; }       // Bin-score variance
+		double meanUncer( const int i, const int j ) { return bin_tally[i][j].meanUncer; } // Bin-score uncertainty
+		double relUncer( const int i, const int j )  { return bin_tally[i][j].meanUncer; } // Bin-score relative uncertainty
+
+		// Score bin
+		virtual void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+			bool reg_flag = false, const double t_old = 0.0 ) = 0;
+};
+
+// Energy bin
+class Energy_Bin : public Bin_t
+{
+	public:
+		// Constructor: pass grid points
+		 Energy_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : Bin_t(grid,total_tally) {};
+		~Energy_Bin() {};
+
+		void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+			bool reg_flag = false, const double t_old = 0.0 );
+};
+
+// Time bin
+class Time_Bin : public Bin_t
+{
+	public:
+		// Constructor: pass grid points
+		 Time_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : Bin_t(grid,total_tally) {};
+		~Time_Bin() {};
+
+		void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+			bool reg_flag = false, const double t_old = 0.0 );
+};
+
+
+
 /////////////////
 /// Estimator ///
 /////////////////
@@ -158,6 +222,8 @@ class Estimator_t
 
 
 // Generic estimator
+////////////////////
+
 class Generic_Estimator : public Estimator_t
 {
 	protected:
@@ -347,10 +413,8 @@ class Generic_Estimator : public Estimator_t
 
 
 
-/////////////////////
-/// Miscellaneous ///
-////////////////////
-
+/// Miscellaneous Estimator
+///////////////////////////
 
 // Unsigned integer PMF estimator base class
 class UInteger_PMF_Estimator : public Estimator_t 

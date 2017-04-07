@@ -39,6 +39,35 @@ double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/
 { return P.region()->SigmaT( P.energy() ) * track * P.weight(); }
 
 
+
+///////////
+/// Bin ///
+///////////
+
+// Energy Bin
+void Energy_Bin::score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track /*= 0.0*/, 
+			bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+{;
+}
+
+// Time Bin
+void Time_Bin::score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track /*= 0.0*/, 
+			bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+{
+
+;
+}
+
+
+
+
+/////////////////
+/// Estimator ///
+/////////////////
+
+// Generic estimator
+////////////////////
+
 // Score at events
 void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
 { 
@@ -83,13 +112,13 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 				{
 					if ( loc1 >= 0 && loc1 < Nbin )
 					{ loc_track.push_back( std::make_pair( loc1, track ) ); }
-					}
+				}
 				
 				// >1 bin spanned
 				else
 				{				
-					int num_bin = loc2 - loc1 + 1; // # of bins spanned
-					double new_track;              // to hold bin track
+					int    num_bin = loc2 - loc1 - 1; // # of full bins spanned
+					double new_track;                 // to hold bin track
 					
 					// First partial bin [need to consider if it's outside]
 					if ( loc1 >= 0 )
@@ -99,7 +128,7 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 					}
 					
 					// Intermediate full bin
-					for ( int i = 1 ; i < num_bin - 1 ; i++ )
+					for ( int i = 1 ; i <= num_bin ; i++ )
 					{
 						new_track = ( bin_grid[loc1+i+1] - bin_grid[loc1+i] ) * P.speed();
 						loc_track.push_back( std::make_pair( loc1+i, new_track ) );
@@ -111,6 +140,9 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 						new_track = ( P.time() - bin_grid[loc2] ) * P.speed();
 						loc_track.push_back( std::make_pair( loc2, new_track ) );
 					}
+					// Note: this algorithm covers the following "extreme" cases
+					// 	loc1 : <lowest_grid  or at grid point
+					// 	loc2 : >highest_grid or at grid point
 				}
 			}
 		}
@@ -133,13 +165,13 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 
 
 
-// Surface PMF estimator
-// Score at events
+// Miscellaneous Estimator
+//////////////////////////
+
+// Surface PMF estimator (surface counting)
 void Surface_PMF_Estimator::score( const Particle_t& P, const double null /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ ) 
 { tally_hist++;}
 
-// Report results
-// output.txt file providing the PMF is created (or overwritten)
 void Surface_PMF_Estimator::report( const std::string simName, const double tTime ) 
 {
 	normalize();                        // Normalize the recorded PMF
