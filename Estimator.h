@@ -136,14 +136,15 @@ class Bin_t
 {
 	protected:
 		const std::vector<double>         bin_grid;   // Bin grid
-		std::vector<std::vector<Tally_t>> bin_tally;  // Bin tallies [bin#][score#]
+		std::vector<std::vector<Tally_t>> bin_tally;  // Bin tallies ( indexing --> [bin#][score#] )
 		const int                         Nbin;       // # of bins
 		const int                         Ngrid;      // # of grids
+		const int                         Nscore;     // # of scores ( things to be scored )
 	
 	public:
-		// Constructor: pass grid points
+		// Constructor: pass grid points, number of bins and scores, and construct bin and their tallies
 		 Bin_t( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : 
-			 bin_grid(grid), Ngrid(grid.size()), Nbin(grid.size() - 1)
+			 bin_grid(grid), Ngrid(grid.size()), Nbin(grid.size() - 1), Nscore(total_tally.size())
 		{ 
 			// Each bin is set with the same # of score tallies as the total tally of the estimator
 			bin_tally.resize( Nbin, total_tally );
@@ -233,7 +234,7 @@ class Generic_Estimator : public Estimator_t
 		std::vector<double>                   bin_grid;           // Bin grid
 		std::vector<std::vector<Tally_t>>     bin_tally;          // Bin tallies   [(Ngrid-1) x Nscore]
 		std::string                           bin_type;           // Bin type (time or energy)
-		int                                   Nscore = 0;         // Score size
+		int                                   Nscore = 0;         // # of scores (things to be scored)
 		int                                   Nbin = 0;           // Bin size
 		bool                                  bin_report;         // Bin report on monitor flag
 
