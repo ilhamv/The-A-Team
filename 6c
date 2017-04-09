@@ -8,7 +8,7 @@
 
 <distributions>
   	<delta       name="enrg" datatype="double" val="1.0e6"/>
-  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" fa ="1.66666666" fb="0.5" fc="0.5" fd="0.33333333" fmin="0.166666666" fmax="1.5"/>
+  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" fa="0.166666666" fb="0.5" fc="0.5" fd="0.33333333" fmax="1.5"/>
   	<anisotropic name="dir"  datatype="point"  u = "1.0" v = "0.0" w = "0.0" distribution="ang source"/>
 </distributions>
 
@@ -40,11 +40,11 @@
 	<sphere     name="sp1"      x="0.0" y="0.0"   z="0.0" r="5.0"/>
 	<cone_x     name="conex1"   x="3.0" y="0.0"   z="0.0" r="0.125"/>
 	<cylinder_x name="cx1"      y="0.0" z="-10.0" r="0.5"/>
-	<plane      name="px1"      a="1.0" b="0.0" c="0.0" d="-25.0"/>
-	<plane      name="px2"      a="1.0" b="0.0" c="0.0" d="-20.0"/>
-	<plane      name="px split" a="1.0" b="0.0" c="0.0" d=" -1.0"/>
-	<plane      name="px3"      a="1.0" b="0.0" c="0.0" d=" 20.0"/>
-	<plane      name="px4"      a="1.0" b="0.0" c="0.0" d=" 25.0"/>
+	<plane_x    name="px1"      x="-25.0"/>
+	<plane_x    name="px2"      x="-20.0"/>
+	<plane_x    name="px split" x=" -1.0"/>
+	<plane_x    name="px3"      x=" 20.0"/>
+	<plane_x    name="px4"      x=" 25.0"/>
 </surfaces>
 
 
@@ -120,5 +120,5 @@
 
 
 <sources>
-  	<disk_x x="-0.999999999" y="0.0" z="0.0" r="0.5" distribution="dir" energy="enrg"/>
+  	<disk_x x="-1.000000001" y="0.0" z="0.0" r="0.5" distribution="dir" energy="enrg"/>
 </sources>

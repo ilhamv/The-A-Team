@@ -18,7 +18,7 @@ double Linear_Distribution::sample()
   	if ( r1 < p ) { return a + r2 * ( b - a ); }
   	else 
 	{
-    		if ( fb > fa ) { return a + ( b - a ) * std::sqrt( r2 ); }
+    		if ( fb < fa ) { return a + ( b - a ) * std::sqrt( r2 ); }
     		else           { return a + ( b - a ) * ( 1.0 - std::sqrt( r2 )); }
   	}
 }
@@ -31,8 +31,8 @@ double Cubic_Distribution::sample()
 	
 	do
 	{
-		x    = a    + Urand() * ( b    - a );
-		y    = fmin + Urand() * ( fmax - fmin );
+		x = a + Urand() * ( b - a );
+		y = Urand() * fmax;
 	}
 	while ( y > f(x) );
 

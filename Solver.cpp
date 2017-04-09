@@ -74,4 +74,9 @@ int Binary_Search( const double x, const std::vector<double>& vec )
 	}
 	
 	return right; 
+	// Note:
+	// 	value < lowest  grid --> -1
+	// 	value > highest grid --> vector.size - 1 (or number of bins)
+	// 	value = grid points  --> location of bin whose upper bound is the value
+	// 	                         (-1 if value = lowest grid)
 }

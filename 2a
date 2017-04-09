@@ -5,7 +5,7 @@
 </simulation>
 
 <distributions>
-  	<linear      name="ang source" datatype="double" a="0.0" b="1.0" fa ="0.0" fb="2.0"/>
+  	<linear      name="ang source" datatype="double" a="0.0" b="1.0" fa ="2.0" fb="0.0"/>
   	<anisotropic name="dir"        datatype="point"  u="1.0" v="0.0" w  ="0.0" distribution="ang source"/>
 </distributions>
 

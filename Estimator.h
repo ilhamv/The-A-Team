@@ -131,35 +131,33 @@ class Tally_t
 /// Bin ///
 ///////////
 
-// Bin base class
+// Bin base class 
 class Bin_t
 {
-	protected:
-		const std::vector<double>         bin_grid;   // Bin grid
-		std::vector<std::vector<Tally_t>> bin_tally;  // Bin tallies ( indexing --> [bin#][score#] )
-		const int                         Nbin;       // # of bins
-		const int                         Ngrid;      // # of grids
-		const int                         Nscore;     // # of scores ( things to be scored )
+	public:
+		std::vector<double>                   grid;   // Bin grid
+		std::vector<std::vector<Tally_t>>     tally;  // Bin tallies ( indexing --> [bin#][score#] )
+		const int                             Nbin;   // # of bins
+		std::vector<std::shared_ptr<Score_t>> scores; // Things to be scored
+		const int                             Nscore; // # of scores
+		const std::string                     unit;   // result unit, for report
 	
 	public:
-		// Constructor: pass grid points, number of bins and scores, and construct bin and their tallies
-		 Bin_t( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : 
-			 bin_grid(grid), Ngrid(grid.size()), Nbin(grid.size() - 1), Nscore(total_tally.size())
+		// Constructor: pass grid points and construct bin and their tallies
+		 Bin_t( const std::vector<double> gr, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s, 
+				 const std::string str ) : 
+			 grid(gr), Nbin(gr.size() - 1), unit(str), Nscore(s.size())
 		{ 
+			// Store scores
+			scores = s;
+			
 			// Each bin is set with the same # of score tallies as the total tally of the estimator
-			bin_tally.resize( Nbin, total_tally );
+			tally.resize( Nbin, total_tally );
 		}
 		~Bin_t() {};
 
-		// Getters
-		double grid( const int i )                   { return bin_grid[i]; }               // Bin grid
-		double mean( const int i, const int j )      { return bin_tally[i][j].mean; }      // Bin-score mean
-		double var( const int i, const int j )       { return bin_tally[i][j].var; }       // Bin-score variance
-		double meanUncer( const int i, const int j ) { return bin_tally[i][j].meanUncer; } // Bin-score uncertainty
-		double relUncer( const int i, const int j )  { return bin_tally[i][j].meanUncer; } // Bin-score relative uncertainty
-
 		// Score bin
-		virtual void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+		virtual void score( const Particle_t& P, const double track = 0.0, 
 			bool reg_flag = false, const double t_old = 0.0 ) = 0;
 };
 
@@ -168,10 +166,11 @@ class Energy_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Energy_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : Bin_t(grid,total_tally) {};
+		 Energy_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+			 Bin_t(grid,total_tally,s,"eV") {};
 		~Energy_Bin() {};
 
-		void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+		void score( const Particle_t& P, const double track = 0.0, 
 			bool reg_flag = false, const double t_old = 0.0 );
 };
 
@@ -180,10 +179,11 @@ class Time_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Time_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally ) : Bin_t(grid,total_tally) {};
+		 Time_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+			 Bin_t(grid,total_tally,s,"sec") {};
 		~Time_Bin() {};
 
-		void score( const Particle_t& P, const std::vector<std::shared_ptr<Score_t>>& scores, const double track = 0.0, 
+		void score( const Particle_t& P, const double track = 0.0, 
 			bool reg_flag = false, const double t_old = 0.0 );
 };
 
@@ -205,14 +205,17 @@ class Estimator_t
 		 Estimator_t( const std::string n ) : e_name(n) {};
 		~Estimator_t() {};
 
-		// Score at events
-		virtual void score( const Particle_t& P, const double p = 0.0, bool reg_flag = false, const double t_old = 0.0 ) = 0; 
-		
 		// Add thing to be scored
 		virtual void addScore( const std::shared_ptr<Score_t>& S ) = 0;
 
 		// Set bin grid and corresponding tallies
 		virtual void setBin( const std::string type, std::vector<double> bin, const bool br ) = 0;
+		
+		// Score at events
+		virtual void score( const Particle_t& P, const double p = 0.0, const bool reg_flag = false, const double t_old = 0.0 ) = 0; 
+		// 2nd arg --> track length
+		// 3rd arg --> flag if it's a region score
+		// 4th arg --> particle time before movement ( or track generation ) in region
 		
 		// Closeout history
 		virtual void endHistory() = 0;              
@@ -228,39 +231,39 @@ class Estimator_t
 class Generic_Estimator : public Estimator_t
 {
 	protected:
-		std::vector<std::shared_ptr<Score_t>> scores;             // Things to be scored
-		std::vector<Tally_t>                  total_tally;        // Total tallies [Nscore]
-		bool                                  bin_active = false; // Bin active flag
-		std::vector<double>                   bin_grid;           // Bin grid
-		std::vector<std::vector<Tally_t>>     bin_tally;          // Bin tallies   [(Ngrid-1) x Nscore]
-		std::string                           bin_type;           // Bin type (time or energy)
-		int                                   Nscore = 0;         // # of scores (things to be scored)
-		int                                   Nbin = 0;           // Bin size
-		bool                                  bin_report;         // Bin report on monitor flag
+		std::vector<std::shared_ptr<Score_t>> scores;      // Things to be scored
+		int                                   Nscore = 0;  // # of scores (things to be scored)
+		std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
+		
+		std::shared_ptr<Bin_t>                bin;         // Estimator bin
+		int                                   Nbin = 0;    // # of bins
+		bool                                  bin_report;  // Bin report on monitor flag
 
 	public:
-		// Constructor: pass the estimator name and bin grid
+		// Constructor: pass the estimator name
 		 Generic_Estimator( const std::string n ) : Estimator_t(n) {};
 		~Generic_Estimator() {};
 
 		// Add thing to be scored and push new total tally
 		void addScore( const std::shared_ptr<Score_t>& S )
 		{ 
+			// Push new score
 			scores.push_back( S );
+			Nscore++;
+			
+			// Push new total tally
 			Tally_t T;
 			total_tally.push_back( T );
-			Nscore++;
+			// Note: Index in total_tally corresponds to its score
 		}
 
-		// Set bin grid and corresponding tallies
-		void setBin( const std::string type, std::vector<double> bin, const bool br )
+		// Set bin
+		void setBin( const std::string type, const std::vector<double> grid, const bool br )
 		{
-			bin_active = true;
-			bin_type   = type;
+			Nbin = grid.size() - 1;
+			if      ( type == "energy" ) { bin = std::make_shared<Energy_Bin> ( grid, total_tally, scores ); }
+			else if ( type == "time" )   { bin = std::make_shared<Time_Bin>   ( grid, total_tally, scores ); }
 			bin_report = br;
-			bin_grid   = bin;
-			Nbin       = bin.size() - 1;
-			bin_tally.resize( Nbin, total_tally );
 		}
 		
 		// Update the sum and sum of squared, and restart history sum of a tally
@@ -296,10 +299,11 @@ class Generic_Estimator : public Estimator_t
 			{
 				// Total tally
 				tally_endHistory( total_tally[i] );
+				
 				// Bin tally
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
-					tally_endHistory( bin_tally[j][i] );
+					tally_endHistory( bin->tally[j][i] );
 				}
 			}
 		}
@@ -312,10 +316,11 @@ class Generic_Estimator : public Estimator_t
 			{
 				// Total tally
 				tally_stats( total_tally[i] );
+				
 				// Bin tally
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
-					tally_stats( bin_tally[j][i] );
+					tally_stats( bin->tally[j][i] );
 				}	
 			}
 			
@@ -344,8 +349,7 @@ class Generic_Estimator : public Estimator_t
 				std::cout << "Bin tallies," << std::endl;
 			
 				std::cout<<"bin#\t";
-				if      ( bin_type == "energy" ) { std::cout<<"lower(eV)\tupper(eV)\t"; }
-				else if ( bin_type == "time" )   { std::cout<<"lower(sec)\tupper(sec)\t"; }
+				std::cout<<"lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
 				for ( int i = 0 ; i < Nscore ; i++ )
 				{
 					std::cout << scores[i]->name() << "\t\t\t";
@@ -364,28 +368,41 @@ class Generic_Estimator : public Estimator_t
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
 					std::cout<< j+1 << "\t";
-					std::cout<< bin_grid[j] << "\t\t" << bin_grid[j+1] << "\t\t";
+					std::cout<< bin->grid[j] << "\t\t" << bin->grid[j+1] << "\t\t";
 					for ( int i = 0 ; i < Nscore ; i++ )
 					{
-						std::cout << bin_tally[j][i].mean << "\t\t";
+						std::cout << bin->tally[j][i].mean << "\t\t";
 					}
 					std::cout << std::endl;
 				}
 			}
 
-			if ( bin_active )
+			// Bin report file
+			if ( Nbin != 0 )
 			{
 				std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
-				// Printouts (Uncertainty is only printed out in the output file)
+				file<< "Estimator report: " << e_name << std::endl;
+				for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { file<< "="; }
+				file<< std::endl;
+			
+				// Total tallies
+				file<< "Total tallies," << std::endl;
+				for ( int i = 0 ; i < Nscore ; i++ )
+				{
+					file<< "  " << scores[i]->name() << ":" << std::endl;
+					file<< "  -> Mean     =\t" << total_tally[i].mean << "\t+/-\t" << total_tally[i].meanUncer << std::endl;
+					file<< "  -> Variance =\t" << total_tally[i].var << std::endl;
+					file<< "  F.O.M.:\t" << 1.0 / ( total_tally[i].relUncer*total_tally[i].relUncer * tTime ) << std::endl << std::endl;
+				}
+				
 				file << std::endl;
 				file << "Bin tallies," << std::endl;
 		
 				file <<"bin#\t";
-				if      ( bin_type == "energy" ) { file<<"lower(eV)\tupper(eV)\t"; }
-				else if ( bin_type == "time" )   { file<<"lower(sec)\tupper(sec)\t"; }
+				file <<"lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
 				for ( int i = 0 ; i < Nscore ; i++ )
 				{
-					file<< scores[i]->name() << "\t";
+					file<< scores[i]->name() << "\t\t";
 				}
 				file << std::endl;
 			
@@ -394,17 +411,17 @@ class Generic_Estimator : public Estimator_t
 				file << "----------\t";
 				for ( int i = 0 ; i < Nscore ; i++ )
 				{
-					file << "------------\t";
+					file << "------------\t\t";
 				}
 				file << std::endl;
 			
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
 					file<< j+1 << "\t";
-					file<< bin_grid[j] << "\t" << bin_grid[j+1] << "\t";
+					file<< bin->grid[j] << "\t" << bin->grid[j+1] << "\t";
 					for ( int i = 0 ; i < Nscore ; i++ )
 					{
-						file << bin_tally[j][i].mean << "\t";
+						file << bin->tally[j][i].mean << "\t" << bin->tally[j][i].meanUncer << "\t";
 					}
 					file << std::endl;
 				}
@@ -469,7 +486,7 @@ class UInteger_PMF_Estimator : public Estimator_t
 		};
 
 		// Score at events
-		virtual void score( const Particle_t& P, const double p = 0.0 , bool reg_flag = false, const double t_old = 0.0 ) = 0; 
+		virtual void score( const Particle_t& P, const double p = 0.0 , const bool reg_flag = false, const double t_old = 0.0 ) = 0; 
 	
 		// Report results
 		virtual void report( const std::string simName, const double tTime ) = 0; 
@@ -495,7 +512,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 		~Surface_PMF_Estimator() {};
 
 		// Score at events
-		void score( const Particle_t& P, const double null = 0.0, bool reg_flag = false, const double t_old = 0.0 );
+		void score( const Particle_t& P, const double null = 0.0, const bool reg_flag = false, const double t_old = 0.0 );
 
 		// Report results
 		// output.txt file providing the PMF is created (or overwritten)

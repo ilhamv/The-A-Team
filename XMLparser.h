@@ -149,9 +149,8 @@ void XML_input
           				const double fb   = d.attribute("fb").as_double();
         	  			const double fc   = d.attribute("fc").as_double();
           				const double fd   = d.attribute("fd").as_double();
-        	  			const double fmin = d.attribute("fmin").as_double();
           				const double fmax = d.attribute("fmax").as_double();
-          				Dist = std::make_shared< Cubic_Distribution > ( a, b, fa, fb, fc, fd, fmin, fmax, name );
+          				Dist = std::make_shared< Cubic_Distribution > ( a, b, fa, fb, fc, fd, fmax, name );
         			}
 				
 				// Unknown
