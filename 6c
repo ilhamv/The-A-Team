@@ -109,12 +109,12 @@
 <estimators>
   	<estimator name="Detector left" score="flux scatter">
     		<region name="detector left"/>
-		<bin    type="time" grid_linear="0 5e-9 1e-7" report="yes"/>
+		<bin    type="time" grid_linear="0 5e-9 1e-7"/>
   	</estimator>
   	
   	<estimator name="Detector right" score="flux scatter">
     		<region name="detector right"/>
-		<bin    type="time" grid_linear="0 5e-9 1e-7" report="yes"/>
+		<bin    type="time" grid_linear="0 5e-9 1e-7"/>
   	</estimator>
 </estimators>
 

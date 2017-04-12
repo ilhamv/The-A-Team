@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <sstream>  // ostringstream
 
 #include "Estimator.h"
 #include "Geometry.h"
@@ -162,29 +163,21 @@ void Generic_Estimator::score( const Particle_t& Pold, const Particle_t& P, cons
 void Surface_PMF_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
 { tally_hist++;}
 
-void Surface_PMF_Estimator::report( const std::string simName, const double tTime ) 
+void Surface_PMF_Estimator::report( std::ostringstream& output, const double tTime ) 
 {
 	normalize();                        // Normalize the recorded PMF
 	stats();                            // Compute mean, variance and PMF statistical uncertainty
-	std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
 	
 	// Printouts (Uncertainty is only printed out in the output.txt file)
-	std::cout<< std::endl << std::endl;
-	std::cout<< "Estimator report: " << e_name << std::endl;
-	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { std::cout<< "="; }
-	std::cout<< std::endl;
-	std::cout << "PMF of # of particle crossing surface ";
-	     file << "PMF of # of particle crossing surface ";
-	std::cout << ":\nx\tP(x)\n---\t-------"                        << std::endl;
-	     file << ":\nx\tP(x)\t+/-\n---\t-------\t------------" << std::endl;
+	output << "\n\n";
+	output << "Estimator report: " << e_name << "\n";
+	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
+	output << "\n";
+	output << "PMF of # of particle crossing surface ";
+	output << ":\nx\tP(x)\n---\t-------\n";
 	for ( int i = 0 ; i < pmf.size() ; i++ )
-	{ 
-		std::cout<< i << "\t" << pmf[i]                          << std::endl; 
-		     file<< i << "\t" << pmf[i] << "\t" << pmfUncer[i] << std::endl; 
-	}
+	{ output << i << "\t" << std::scientific << pmf[i] << std::endl;  }
 	
-	std::cout << "\nMean    : " << mean     << std::endl;
-	std::cout << "Variance: "   << var << std::endl;	
-	     file << "\nMean\t"     << mean     << std::endl;
-	     file << "Variance\t"   << var << std::endl;	
+	output << "\nMean    : " << std::scientific << mean << std::endl;
+	output << "Variance: "   << std::scientific << var  << std::endl;	
 }		

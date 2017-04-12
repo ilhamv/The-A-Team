@@ -282,7 +282,7 @@ void XML_input
 			}
 			else
 			{
-				std::cout << "appropriate cross section of reaction" << rxn_type << " is required" << std::endl;
+				std::cout << "appropriate cross section for reaction" << rxn_type << " is required" << std::endl;
 				throw;
 			}
 			
@@ -689,10 +689,6 @@ void XML_input
 			// Set bin
         		else if ( (std::string) eChild.name() == "bin" )
 			{
-				// Report result in monitor?
-				bool bin_report = false;	
-				if ( (std::string) eChild.attribute("report").value() == "yes" ) { bin_report = true; }
-        			
 				// Type
 				std::string type = eChild.attribute("type").value();
         			if ( type != "energy" && type != "time" ) 
@@ -729,7 +725,7 @@ void XML_input
 					bin_grid.push_back(b);
 				}
 				
-				Est->setBin( type, bin_grid, bin_report ); 
+				Est->setBin( type, bin_grid ); 
 			}
     		}
     		

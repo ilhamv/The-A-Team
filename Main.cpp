@@ -4,7 +4,7 @@
 #include <memory>       // shared_ptr, make_shared
 #include <stack>        // stack
 #include <cmath>        // exp
-#include <sstream>      // istringstream
+#include <sstream>      // ostringstream
 
 #include "VReduction.h" // Split_Roulette
 #include "Const.h"      // MAX
@@ -112,9 +112,8 @@ int main()
 			// Cut-off working particle?
 			if ( P.energy() < Ecut_off || P.time() > tcut_off ) { P.kill();}
 
-			} // Particle is dead, end of particle loop
-			
-			// Transport next Particle in the bank queue
+			} // Particle is dead, end of particle loop		
+			// Transport next Particle in the bank
 
 		} // Particle bank is empty, end of history loop
 
@@ -125,20 +124,26 @@ int main()
 	} // All histories are done, end of simulation loop
 
 
-	// Output header
-	std::string output_text = "\n";
-
-	std::cout<< std::endl;
-       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { std::cout<< "="; }
-	std::cout<< std::endl;
-	std::cout<< "== "<< simName << " ==" << std::endl;
-       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { std::cout<< "="; }
-	std::cout<< std::endl;
-	std::cout<< "Number of histories: " << nhist <<std::endl;
-	std::cout<< "Track time: " << trackTime << std::endl;
+	// Generate outputs
+	std::ostringstream output;                       // Output text
+	std::ofstream file( simName + " - output.txt" ); // .txt file
+	
+	// Header
+	output << "\n";
+       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
+	output << "\n";
+	output << "== " + simName + "==\n";
+       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
+	output << "\n";
+	output << "Number of histories: " << std::scientific << nhist << "\n";
+	output << "Track time: " << trackTime << "\n";
 
 	// Report tallies
-	for ( auto& E : Estimator ) { E->report( simName, trackTime ); }
+	for ( auto& E : Estimator ) { E->report( output, trackTime ); } // TrackTime is passed for F.O.M.
 	
+	// Print on monitor and file
+	std::cout<< output.str();
+	     file<< output.str();
+
 	return 0;
 }

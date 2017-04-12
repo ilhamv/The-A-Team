@@ -3,10 +3,12 @@
 
 #include <cmath>    // sqrt
 #include <iostream> // cout
+#include <iomanip>
 #include <vector>   // vector
 #include <fstream>  // ofstream
 #include <memory>   // shared_ptr
 #include <cstring>  // string
+#include <sstream>  // ostringstream
 
 #include "Particle.h"
 #include "Geometry.h"
@@ -119,6 +121,7 @@ class Tally_t
 		double meanUncer;     // Uncertainty of the estimated mean
 		                            // sqrt(variance of the estimated mean)
 		double relUncer;      // Relative uncertainty of estimated mean
+		double FOM;           // Figure of merit		
 	
 	public:
 		 Tally_t() {};
@@ -206,7 +209,7 @@ class Estimator_t
 		virtual void addScore( const std::shared_ptr<Score_t>& S ) = 0;
 
 		// Set bin grid and corresponding tallies
-		virtual void setBin( const std::string type, std::vector<double> bin, const bool br ) = 0;
+		virtual void setBin( const std::string type, std::vector<double> bin ) = 0;
 		
 		// Score at events
 		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
@@ -215,7 +218,7 @@ class Estimator_t
 		virtual void endHistory() = 0;              
 		
 		// Report results
-		virtual void report( const std::string simName, const double tTime ) = 0;
+		virtual void report( std::ostringstream& output, const double tTime ) = 0;
 };
 
 
@@ -231,7 +234,6 @@ class Generic_Estimator : public Estimator_t
 		
 		std::shared_ptr<Bin_t>                bin;         // Estimator bin
 		int                                   Nbin = 0;    // # of bins
-		bool                                  bin_report;  // Bin report on monitor flag
 
 	public:
 		// Constructor: pass the estimator name
@@ -252,12 +254,11 @@ class Generic_Estimator : public Estimator_t
 		}
 
 		// Set bin
-		void setBin( const std::string type, const std::vector<double> grid, const bool br )
+		void setBin( const std::string type, const std::vector<double> grid )
 		{
 			Nbin = grid.size() - 1;
 			if      ( type == "energy" ) { bin = std::make_shared<Energy_Bin> ( grid, total_tally, scores ); }
 			else if ( type == "time" )   { bin = std::make_shared<Time_Bin>   ( grid, total_tally, scores ); }
-			bin_report = br;
 		}
 		
 		// Update the sum and sum of squared, and restart history sum of a tally
@@ -269,7 +270,7 @@ class Generic_Estimator : public Estimator_t
 		}
 		
 		// Compute mean, variance and mean statistical uncertainty of a tally
-		void tally_stats( Tally_t& T )
+		void tally_stats( Tally_t& T, const double trackTime )
 		{
 			// Estimated mean of the population
 			T.mean      = T.sum / nhist;
@@ -279,6 +280,8 @@ class Generic_Estimator : public Estimator_t
 			T.meanUncer = sqrt( ( T.squared / nhist - T.mean*T.mean ) / ( nhist - 1.0 ) );
 			// Relative uncertainty of estimated mean
 			T.relUncer  = T.meanUncer / T.mean;
+			// Figure of merit
+			T.FOM       = 1.0 / ( T.relUncer*T.relUncer * trackTime );
 		};
 		
 		// Score at events
@@ -303,130 +306,76 @@ class Generic_Estimator : public Estimator_t
 		}
 
 		// Report results
-		void report( const std::string simName, const double tTime )
+		void report( std::ostringstream& output, const double trackTime )
 		{
 			// Compute mean, variance, and uncertainty of all tallies
 			for ( int i = 0 ; i < Nscore ; i++ )
 			{
 				// Total tally
-				tally_stats( total_tally[i] );
+				tally_stats( total_tally[i], trackTime );
 				
 				// Bin tally
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
-					tally_stats( bin->tally[j][i] );
+					tally_stats( bin->tally[j][i], trackTime );
 				}	
 			}
 			
-			std::cout<< std::endl << std::endl;
-			std::cout<< "Estimator report: " << e_name << std::endl;
-			for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { std::cout<< "="; }
-			std::cout<< std::endl;
+			output << "\n\n";
+			output << "Estimator report: " + e_name + "\n";
+			for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
+			output << "\n";
 			
 			// Total tallies
-			std::cout<< "Total tallies," << std::endl;
+			output << "Total tallies,\n";
 			for ( int i = 0 ; i < Nscore ; i++ )
 			{
-				std::cout<< "  " << scores[i]->name() << ":" << std::endl;
-				std::cout<< "  -> Mean     = " << total_tally[i].mean << "  +/-  " << total_tally[i].meanUncer
-					              << "  (" << total_tally[i].relUncer * 100.0 << "%)" << std::endl;
-				std::cout<< "  -> Variance = " << total_tally[i].var << std::endl;
-				std::cout<< "  [F.O.M.: " << 1.0 / ( total_tally[i].relUncer*total_tally[i].relUncer * tTime ) << "]" << std::endl << std::endl;
+				output << "  " + scores[i]->name() + ":\n";
+				output << "  -> Mean     = " << std::scientific << total_tally[i].mean;
+			       	output << "  +/-  " << std::scientific << total_tally[i].meanUncer;
+				output << "  (" << std::scientific << total_tally[i].relUncer * 100.0;
+				output << "%)\n";
+				output << "  -> Variance = " << std::scientific << total_tally[i].var;
+			       	output << "\n";
+				output << "  [F.O.M.: " << std::scientific << total_tally[i].FOM;
+			        output << "]\n\n\n";
 			}
 
-			// Bin tallies
-			if ( bin_report )
-			{
-	
-				// Printouts (Uncertainty is only printed out in the output file)
-				std::cout << std::endl;
-				std::cout << "Bin tallies," << std::endl;
-			
-				std::cout<<"bin#\t";
-				std::cout<<"lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
-				for ( int i = 0 ; i < Nscore ; i++ )
-				{
-					std::cout << scores[i]->name() << "\t\t\t";
-				}
-				std::cout << std::endl;
-				
-				std::cout << "----\t";
-				std::cout << "----------\t";
-				std::cout << "----------\t";
-				for ( int i = 0 ; i < Nscore ; i++ )
-				{
-					std::cout << "------------\t\t";
-				}
-				std::cout << std::endl;
-				
-				for ( int j = 0 ; j < Nbin ; j++ )
-				{
-					std::cout<< j+1 << "\t";
-					std::cout<< bin->grid[j] << "\t\t" << bin->grid[j+1] << "\t\t";
-					for ( int i = 0 ; i < Nscore ; i++ )
-					{
-						std::cout << bin->tally[j][i].mean << "\t\t";
-					}
-					std::cout << std::endl;
-				}
-			}
-
-			// OUTPUT FILE
-			std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
-			file<< std::endl;
-		       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { file<< "="; }
-			file<< std::endl;
-			file<< "== "<< simName << " ==" << std::endl;
-		       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { file<< "="; }
-			file << std::endl;
-			file<< "Number of histories: " << nhist <<std::endl;
-			file<< "Track time: " << tTime << std::endl << std::endl;
-			file<< "Estimator report: " << e_name << std::endl;
-			for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { file<< "="; }
-			file<< std::endl;
-		
-			// Total tallies
-			file<< "Total tallies," << std::endl;
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				file<< "  " << scores[i]->name() << ":" << std::endl;
-				file<< "  -> Mean     =\t" << total_tally[i].mean << "\t+/-\t" << total_tally[i].meanUncer << std::endl;
-				file<< "  -> Variance =\t" << total_tally[i].var << std::endl;
-				file<< "  F.O.M.:\t" << 1.0 / ( total_tally[i].relUncer*total_tally[i].relUncer * tTime ) << std::endl << std::endl;
-			}
-			
 			// Bin tallies
 			if ( Nbin != 0 )
 			{
-				file << std::endl;
-				file << "Bin tallies," << std::endl;
+				output << "Bin tallies," << std::endl;
 		
-				file <<"bin#\t";
-				file <<"lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
-				for ( int i = 0 ; i < Nscore ; i++ )
-				{
-					file<< scores[i]->name() << "\t\t";
+				output << "bin#\t";
+				output << "lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
+				for ( int i = 0 ; i < Nscore ; i++ ) 
+				{ 
+					output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
+					output << std::setw(12) << std::left << "_uncertainty\t"; 
 				}
-				file << std::endl;
+				output << "\n";
 			
-				file << "----\t";
-				file << "----------\t";
-				file << "----------\t";
-				for ( int i = 0 ; i < Nscore ; i++ )
-				{
-					file << "------------\t\t";
+				output << "----\t" << "------------\t" << "------------\t";
+				for ( int i = 0 ; i < Nscore ; i++ ) 
+				{ 
+					output << "------------\t" << "------------\t"; 
 				}
-				file << std::endl;
+				output << "\n";
 			
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
-					file<< j+1 << "\t";
-					file<< bin->grid[j] << "\t" << bin->grid[j+1] << "\t";
+					output << j+1 << "\t";
+					output << std::scientific << bin->grid[j];
+				        output << "\t" << std::scientific << bin->grid[j+1]; 
+					output << "\t";
+
 					for ( int i = 0 ; i < Nscore ; i++ )
 					{
-						file << bin->tally[j][i].mean << "\t" << bin->tally[j][i].meanUncer << "\t";
+						output << std::scientific << bin->tally[j][i].mean;
+					        output << "\t" << std::scientific << bin->tally[j][i].meanUncer;
+					        output << "\t";
 					}
-					file << std::endl;
+					output << "\n";
 				}
 			}
 		}
@@ -492,7 +441,7 @@ class UInteger_PMF_Estimator : public Estimator_t
 		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
 	
 		// Report results
-		virtual void report( const std::string simName, const double tTime ) = 0; 
+		virtual void report( std::ostringstream& output, const double tTime ) = 0; 
 
 		// Normalize the recorded PMF
 		virtual void normalize() final
@@ -502,7 +451,7 @@ class UInteger_PMF_Estimator : public Estimator_t
 		void addScore( const std::shared_ptr<Score_t>& S ) { return; }
 
 		// Set bin grid and corresponding tallies [unsuported]
-		void setBin( const std::string type, std::vector<double> bin, const bool br ) { return; };
+		void setBin( const std::string type, std::vector<double> bin ) { return; };
 };
 
 
@@ -519,7 +468,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 
 		// Report results
 		// output.txt file providing the PMF is created (or overwritten)
-		void report( const std::string simName, const double tTime );
+		void report( std::ostringstream& output, const double tTime );
 };
 
 #endif
