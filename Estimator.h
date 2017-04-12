@@ -157,8 +157,7 @@ class Bin_t
 		~Bin_t() {};
 
 		// Score bin
-		virtual void score( const Particle_t& P, const double track = 0.0, 
-			bool reg_flag = false, const double t_old = 0.0 ) = 0;
+		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
 };
 
 // Energy bin
@@ -170,8 +169,7 @@ class Energy_Bin : public Bin_t
 			 Bin_t(grid,total_tally,s,"eV") {};
 		~Energy_Bin() {};
 
-		void score( const Particle_t& P, const double track = 0.0, 
-			bool reg_flag = false, const double t_old = 0.0 );
+		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
 };
 
 // Time bin
@@ -183,8 +181,7 @@ class Time_Bin : public Bin_t
 			 Bin_t(grid,total_tally,s,"sec") {};
 		~Time_Bin() {};
 
-		void score( const Particle_t& P, const double track = 0.0, 
-			bool reg_flag = false, const double t_old = 0.0 );
+		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
 };
 
 
@@ -212,10 +209,7 @@ class Estimator_t
 		virtual void setBin( const std::string type, std::vector<double> bin, const bool br ) = 0;
 		
 		// Score at events
-		virtual void score( const Particle_t& P, const double p = 0.0, const bool reg_flag = false, const double t_old = 0.0 ) = 0; 
-		// 2nd arg --> track length
-		// 3rd arg --> flag if it's a region score
-		// 4th arg --> particle time before movement ( or track generation ) in region
+		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
 		
 		// Closeout history
 		virtual void endHistory() = 0;              
@@ -288,7 +282,7 @@ class Generic_Estimator : public Estimator_t
 		};
 		
 		// Score at events
-		void score( const Particle_t& P, const double track = 0.0, bool reg_flag = false, const double t_old = 0.0 );
+		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
 
 		// Closeout history
 		// Update the sum and sum of squared, and restart history sum of all tallies
@@ -377,24 +371,33 @@ class Generic_Estimator : public Estimator_t
 				}
 			}
 
-			// Bin report file
+			// OUTPUT FILE
+			std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
+			file<< std::endl;
+		       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { file<< "="; }
+			file<< std::endl;
+			file<< "== "<< simName << " ==" << std::endl;
+		       	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { file<< "="; }
+			file << std::endl;
+			file<< "Number of histories: " << nhist <<std::endl;
+			file<< "Track time: " << tTime << std::endl << std::endl;
+			file<< "Estimator report: " << e_name << std::endl;
+			for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { file<< "="; }
+			file<< std::endl;
+		
+			// Total tallies
+			file<< "Total tallies," << std::endl;
+			for ( int i = 0 ; i < Nscore ; i++ )
+			{
+				file<< "  " << scores[i]->name() << ":" << std::endl;
+				file<< "  -> Mean     =\t" << total_tally[i].mean << "\t+/-\t" << total_tally[i].meanUncer << std::endl;
+				file<< "  -> Variance =\t" << total_tally[i].var << std::endl;
+				file<< "  F.O.M.:\t" << 1.0 / ( total_tally[i].relUncer*total_tally[i].relUncer * tTime ) << std::endl << std::endl;
+			}
+			
+			// Bin tallies
 			if ( Nbin != 0 )
 			{
-				std::ofstream file( simName + " - " + e_name + ".txt" ); // Create .txt file
-				file<< "Estimator report: " << e_name << std::endl;
-				for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { file<< "="; }
-				file<< std::endl;
-			
-				// Total tallies
-				file<< "Total tallies," << std::endl;
-				for ( int i = 0 ; i < Nscore ; i++ )
-				{
-					file<< "  " << scores[i]->name() << ":" << std::endl;
-					file<< "  -> Mean     =\t" << total_tally[i].mean << "\t+/-\t" << total_tally[i].meanUncer << std::endl;
-					file<< "  -> Variance =\t" << total_tally[i].var << std::endl;
-					file<< "  F.O.M.:\t" << 1.0 / ( total_tally[i].relUncer*total_tally[i].relUncer * tTime ) << std::endl << std::endl;
-				}
-				
 				file << std::endl;
 				file << "Bin tallies," << std::endl;
 		
@@ -486,7 +489,7 @@ class UInteger_PMF_Estimator : public Estimator_t
 		};
 
 		// Score at events
-		virtual void score( const Particle_t& P, const double p = 0.0 , const bool reg_flag = false, const double t_old = 0.0 ) = 0; 
+		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
 	
 		// Report results
 		virtual void report( const std::string simName, const double tTime ) = 0; 
@@ -512,7 +515,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 		~Surface_PMF_Estimator() {};
 
 		// Score at events
-		void score( const Particle_t& P, const double null = 0.0, const bool reg_flag = false, const double t_old = 0.0 );
+		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
 
 		// Report results
 		// output.txt file providing the PMF is created (or overwritten)

@@ -33,7 +33,10 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 	}
 	
 	// Score estimators 
-	for ( auto& e : estimators ) { e->score( P ); }
+	Point_t pos; Point_t dir;
+	Particle_t Pold( pos, dir ); // Surface estimator does not support previous particle condition referring score
+	                             // (e.g. reaction rates, flux)
+	for ( auto& e : estimators ) { e->score( Pold, P ); }
 }
 
 
@@ -367,9 +370,9 @@ bool Region_t::testPoint( const Point_t& p )
 // Move particle and score any estimators
 void Region_t::moveParticle( Particle_t& P, const double dmove )
 {
-	double t_old = P.time();
+	Particle_t Pold = P;
 	P.move( dmove );
-	for ( const auto& e : estimators ) { e->score( P, dmove, true, t_old ); }
+	for ( const auto& e : estimators ) { e->score( Pold, P, dmove ); }
 }
 
 

@@ -45,8 +45,7 @@ double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/
 ///////////
 
 // Energy Bin
-void Energy_Bin::score( const Particle_t& P, const double track /*= 0.0*/, 
-			bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+void Energy_Bin::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
 {
 	// Search bin location	
 	const int loc = Binary_Search( P.energy(), grid );
@@ -67,89 +66,69 @@ void Energy_Bin::score( const Particle_t& P, const double track /*= 0.0*/,
 }
 
 // Time Bin
-void Time_Bin::score( const Particle_t& P, const double track /*= 0.0*/, 
-			bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+void Time_Bin::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
 {
-	// Non region estimator [score is not distributed across bins]
-	if ( ! reg_flag ) 
-	{ 
-		// Search bin location	
-		const int loc = Binary_Search( P.energy(), grid );
-		
-		// Check if inside the grids
-		if ( loc >= 0 && loc < Nbin )
-		{
-			// Iterate over scores
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				tally[loc][i].hist += scores[i]->add_score( P, track );
-			}
-		}
-		// Note: value exactly at the grid point constributes to bin whose upper bound is the value
+	// Since score migth be distributed across bins...
+	
+	// Pair of bin location and corresponding track to be scored
+	std::vector< std::pair<int,double> > loc_track;
+
+	// Search bin location
+	int loc1    = Binary_Search( Pold.time(), grid );    // before track generation
+	int loc2    = Binary_Search( P.time()   , grid ); // after
+	
+	// 1 bin spanned [need to consider if it is outside the time grid]
+	if ( loc1 == loc2 ) 
+	{
+		if ( loc1 >= 0 && loc1 < Nbin )
+		{ loc_track.push_back( std::make_pair( loc1, track ) ); }
 	}
 	
-	// Region estimator [score migth be distributed across bins]
+	// >1 bin spanned
 	else
-	{
-		// Pair of bin location and corresponding track to be scored
-		std::vector< std::pair<int,double> > loc_track;
+	{				
+		int    num_bin = loc2 - loc1 - 1; // # of full bins spanned
+		double new_track;                 // to hold bin track
+		
+		// First partial bin [need to consider if it's outside]
+		if ( loc1 >= 0 )
+		{
+			new_track = ( grid[loc1+1] - Pold.time() ) * P.speed();
+			loc_track.push_back( std::make_pair( loc1, new_track ) );
+		}
+		
+		// Intermediate full bin
+		for ( int i = 1 ; i <= num_bin ; i++ )
+		{
+			new_track = ( grid[loc1+i+1] - grid[loc1+i] ) * P.speed();
+			loc_track.push_back( std::make_pair( loc1+i, new_track ) );
+		}
+		
+		// Last partial bin [consider if it's outside]
+		if ( loc2 < Nbin )
+		{
+			new_track = ( P.time() - grid[loc2] ) * P.speed();
+			loc_track.push_back( std::make_pair( loc2, new_track ) );
+		}
+		// Note: this algorithm covers the following "extreme" cases
+		// 	loc1 : <lowest_grid  or at grid point
+		// 	loc2 : >highest_grid or at grid point
+	}
 
-		// Search bin location
-		int loc1    = Binary_Search( t_old, grid );    // before track generation
-		int loc2    = Binary_Search( P.time(), grid ); // after
-		
-		// 1 bin spanned [need to consider if it is outside the time grid]
-		if ( loc1 == loc2 ) 
+	// Iterate over scores
+	for ( int i = 0 ; i < Nscore ; i++ )
+	{
+		// Iterate over scored bins
+		for ( auto& LnT : loc_track )
 		{
-			if ( loc1 >= 0 && loc1 < Nbin )
-			{ loc_track.push_back( std::make_pair( loc1, track ) ); }
-		}
-		
-		// >1 bin spanned
-		else
-		{				
-			int    num_bin = loc2 - loc1 - 1; // # of full bins spanned
-			double new_track;                 // to hold bin track
-			
-			// First partial bin [need to consider if it's outside]
-			if ( loc1 >= 0 )
-			{
-				new_track = ( grid[loc1+1] - t_old ) * P.speed();
-				loc_track.push_back( std::make_pair( loc1, new_track ) );
-			}
-			
-			// Intermediate full bin
-			for ( int i = 1 ; i <= num_bin ; i++ )
-			{
-				new_track = ( grid[loc1+i+1] - grid[loc1+i] ) * P.speed();
-				loc_track.push_back( std::make_pair( loc1+i, new_track ) );
-			}
-			
-			// Last partial bin [consider if it's outside]
-			if ( loc2 < Nbin )
-			{
-				new_track = ( P.time() - grid[loc2] ) * P.speed();
-				loc_track.push_back( std::make_pair( loc2, new_track ) );
-			}
-			// Note: this algorithm covers the following "extreme" cases
-			// 	loc1 : <lowest_grid  or at grid point
-			// 	loc2 : >highest_grid or at grid point
-		}
-	
-		// Iterate over scores
-		for ( int i = 0 ; i < Nscore ; i++ )
-		{
-			// Iterate over scored bins
-			for ( auto& LnT : loc_track )
-			{
-				tally[LnT.first][i].hist += scores[i]->add_score( P, LnT.second );
-			}	
-			// Note: In case of using cross section table, 
-			// might want to pass an index pointing to the location in XSec table
-			// to avoid XS search for each reaction score!
-		}
+			tally[LnT.first][i].hist += scores[i]->add_score( P, LnT.second );
+		}	
+		// Note: In case of using cross section table, 
+		// might want to pass an index pointing to the location in XSec table
+		// to avoid XS search for each reaction score!
 	}
 }
+
 
 
 
@@ -161,7 +140,7 @@ void Time_Bin::score( const Particle_t& P, const double track /*= 0.0*/,
 ////////////////////
 
 // Score at events
-void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ )
+void Generic_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
 {
         // Total tallies
         for ( int i = 0 ; i < Nscore ; i++ )
@@ -171,7 +150,7 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 
 	// Bin tallies, if any
 	if ( Nbin != 0 )
-	{ bin->score( P, track, reg_flag, t_old ); }
+	{ bin->score( Pold, P, track ); }
 }
 
 
@@ -180,7 +159,7 @@ void Generic_Estimator::score( const Particle_t& P, const double track /*= 0.0*/
 //////////////////////////
 
 // Surface PMF estimator (surface counting)
-void Surface_PMF_Estimator::score( const Particle_t& P, const double null /*= 0.0*/, bool reg_flag /*= false*/, const double t_old /*= 0.0*/ ) 
+void Surface_PMF_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
 { tally_hist++;}
 
 void Surface_PMF_Estimator::report( const std::string simName, const double tTime ) 

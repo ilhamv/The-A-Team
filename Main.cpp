@@ -124,7 +124,10 @@ int main()
 
 	} // All histories are done, end of simulation loop
 
+
 	// Output header
+	std::string output_text = "\n";
+
 	std::cout<< std::endl;
        	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { std::cout<< "="; }
 	std::cout<< std::endl;
