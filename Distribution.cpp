@@ -18,7 +18,7 @@ double Linear_Distribution::sample()
   	if ( r1 < p ) { return a + r2 * ( b - a ); }
   	else 
 	{
-    		if ( fb < fa ) { return a + ( b - a ) * std::sqrt( r2 ); }
+    		if ( fb > fa ) { return a + ( b - a ) * std::sqrt( r2 ); }
     		else           { return a + ( b - a ) * ( 1.0 - std::sqrt( r2 )); }
   	}
 }

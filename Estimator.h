@@ -331,13 +331,15 @@ class Generic_Estimator : public Estimator_t
 			for ( int i = 0 ; i < Nscore ; i++ )
 			{
 				output << "  " + scores[i]->name() + ":\n";
-				output << "  -> Mean     = " << std::scientific << total_tally[i].mean;
-			       	output << "  +/-  " << std::scientific << total_tally[i].meanUncer;
-				output << "  (" << std::scientific << total_tally[i].relUncer * 100.0;
+				output << "  -> Mean     = " << total_tally[i].mean;
+			       	output << "  +/-  " << total_tally[i].meanUncer;
+				/*output << "  -> Mean     = " << std::scientific << total_tally[i].mean;
+			       	output << "  +/-  " << std::scientific << total_tally[i].meanUncer;*/
+				output << "  (" << std::defaultfloat << total_tally[i].relUncer * 100.0;
 				output << "%)\n";
-				output << "  -> Variance = " << std::scientific << total_tally[i].var;
+				output << "  -> Variance = " << total_tally[i].var;
 			       	output << "\n";
-				output << "  [F.O.M.: " << std::scientific << total_tally[i].FOM;
+				output << "  [F.O.M.: " << total_tally[i].FOM;
 			        output << "]\n\n\n";
 			}
 
@@ -351,7 +353,7 @@ class Generic_Estimator : public Estimator_t
 				for ( int i = 0 ; i < Nscore ; i++ ) 
 				{ 
 					output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
-					output << std::setw(12) << std::left << "_uncertainty\t"; 
+					output << std::setw(12) << std::left << "uncertainty\t"; 
 				}
 				output << "\n";
 			
@@ -364,16 +366,15 @@ class Generic_Estimator : public Estimator_t
 			
 				for ( int j = 0 ; j < Nbin ; j++ )
 				{
-					output << j+1 << "\t";
-					output << std::scientific << bin->grid[j];
-				        output << "\t" << std::scientific << bin->grid[j+1]; 
+					output << j+1;
+					output << "\t" << std::setw(12) << std::left << bin->grid[j];
+				        output << "\t" << std::setw(12) << std::left << bin->grid[j+1]; 
 					output << "\t";
 
 					for ( int i = 0 ; i < Nscore ; i++ )
 					{
-						output << std::scientific << bin->tally[j][i].mean;
-					        output << "\t" << std::scientific << bin->tally[j][i].meanUncer;
-					        output << "\t";
+						output << std::setw(12) << bin->tally[j][i].mean << "\t";
+					        output << std::setw(12) << bin->tally[j][i].meanUncer << "\t";
 					}
 					output << "\n";
 				}

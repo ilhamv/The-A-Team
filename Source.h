@@ -135,8 +135,8 @@ class Generic_Source : public Source_t
 
 
 // Source Bank
-// collection of sources and its probability (or ratio)
-// interface for every individual sources to the simulation
+// A collection of sources and its probability (or ratio) 
+// An interface for every individual sources to the simulation
 class Source_Bank
 {
 	private:

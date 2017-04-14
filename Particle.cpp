@@ -25,15 +25,15 @@ void Particle_t::setRegion( const std::shared_ptr<Region_t>& R ) { p_region = R;
 void Particle_t::setTime( const double t )                       { p_time   = t; } // Elapsed time
 void Particle_t::setEnergy( const double E )                                       // Energy, and speed
 { 
-	p_energy = E;
-	p_speed  = std::sqrt( p_energy * 191313184.022 ) * 100.0; // cm/s
-	// note, the constant above is 2.0 * ( 1.60218e-19 J/eV ) / ( 1.674929e-27 kg )
+	p_energy = E; // eV
+	p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0; // cm/s
+	// note, the constant above is 2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
 }
 void Particle_t::setSpeed( const double v )                                        // Speed, and energy
 { 
 	p_speed  = v; // cm/s
-	p_energy = 5.22703129e-13 * v * v;
-	// note, the constant above is 0.5 / ( 1.60218e-19 J/eV ) * ( 1.674929e-27 kg ) / ( 10000 m/cm )
+	p_energy = 5.2270376e-13 * v * v; // eV
+	// note, the constant above is 0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) / ( 10000 cm^2/m^2 )
 }
 
 
@@ -50,7 +50,6 @@ void Particle_t::move( const double dmove )
 
 
 // Scatter particle with scattering angle mu0, with nucleus having mass A
-// Sample azimuth angle azi to get new direction x
 // Scattering angle mu0 is sampled in and passed by the Reaction (see Reaction.h)
 // Scattering is trated in Center of mass (COM) frame
 void Particle_t::scatter( const double mu0, const double A )

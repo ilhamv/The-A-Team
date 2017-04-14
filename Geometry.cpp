@@ -33,9 +33,7 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 	}
 	
 	// Score estimators 
-	Point_t pos; Point_t dir;
-	Particle_t Pold( pos, dir ); // Surface estimator does not support previous particle condition referring score
-	                             // (e.g. reaction rates, flux)
+	Particle_t Pold = P; // Old particle information is not required in surface estimator
 	for ( auto& e : estimators ) { e->score( Pold, P ); }
 }
 

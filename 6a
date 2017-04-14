@@ -8,7 +8,7 @@
 
 <distributions>
   	<delta       name="enrg" datatype="double" val="1.0e6"/>
-  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" fa="0.166666666" fb="0.5" fc="0.5" fd="0.33333333" fmax="1.5"/>
+  	<cubic       name="ang source" datatype="double" a="-1.0" b="1.0" c3="0.166666666" c2="0.5" c1="0.5" c0="0.33333333" fmax="1.5"/>
   	<anisotropic name="dir"  datatype="point"  u = "1.0" v = "0.0" w = "0.0" distribution="ang source"/>
 </distributions>
 

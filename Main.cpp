@@ -132,10 +132,10 @@ int main()
 	output << "\n";
        	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
 	output << "\n";
-	output << "== " + simName + "==\n";
+	output << "== " + simName + " ==\n";
        	for ( int i = 0 ; i < simName.length()+6 ; i++ ) { output << "="; }
 	output << "\n";
-	output << "Number of histories: " << std::scientific << nhist << "\n";
+	output << "Number of histories: " << nhist << "\n";
 	output << "Track time: " << trackTime << "\n";
 
 	// Report tallies

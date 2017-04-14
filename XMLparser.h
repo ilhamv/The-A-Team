@@ -145,12 +145,12 @@ void XML_input
 				{
           				const double a    = d.attribute("a").as_double();
 	          			const double b    = d.attribute("b").as_double();
-        	  			const double fa   = d.attribute("fa").as_double();
-          				const double fb   = d.attribute("fb").as_double();
-        	  			const double fc   = d.attribute("fc").as_double();
-          				const double fd   = d.attribute("fd").as_double();
+        	  			const double c3   = d.attribute("c3").as_double();
+          				const double c2   = d.attribute("c2").as_double();
+        	  			const double c1   = d.attribute("c1").as_double();
+          				const double c0   = d.attribute("c0").as_double();
           				const double fmax = d.attribute("fmax").as_double();
-          				Dist = std::make_shared< Cubic_Distribution > ( a, b, fa, fb, fc, fd, fmax, name );
+          				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
         			}
 				
 				// Unknown
@@ -444,6 +444,12 @@ void XML_input
 			if ( bc != "transmission" && bc != "reflective" )
 			{
 				std::cout<< "unknown boundary condition " << bc << " for surface " << name << std::endl;
+				throw;
+			}
+
+			if ( bc == "reflective" && type != "plane_x" && type != "plane_y" && type != "plane_z" && type != "plane" )
+			{
+				std::cout<< "reflective boundary condition is only supported by plane surfaces";
 				throw;
 			}
 		}
@@ -740,12 +746,12 @@ void XML_input
 		std::shared_ptr<Source_t> Src;
 		
 		// Default parameters
-		double prob = 1.0;                                                                                                          // probability or ratio
-  		std::shared_ptr< Distribution_t<Point_t> > dirDist  = std::make_shared< IsotropicDirection_Distribution > ();      // energy distribution
+		double prob = 1.0;                                                                                            // probability or ratio
+  		std::shared_ptr< Distribution_t<Point_t> > dirDist  = std::make_shared< IsotropicDirection_Distribution > (); // direction distribution
   		std::string dir_dist_name;
-  		std::shared_ptr< Distribution_t<double> >  enrgDist = std::make_shared< Delta_Distribution<double> >               ( 2e6 ); // energy distribution
+  		std::shared_ptr< Distribution_t<double> >  enrgDist = std::make_shared< Delta_Distribution<double> > ( 2e6 ); // energy distribution
   		std::string enrg_dist_name;
-  		std::shared_ptr< Distribution_t<double> >  timeDist = std::make_shared< Delta_Distribution<double> >               ( 0.0 ); // time distribution
+  		std::shared_ptr< Distribution_t<double> >  timeDist = std::make_shared< Delta_Distribution<double> > ( 0.0 ); // time distribution
   		std::string time_dist_name;
     		
 		// Input provided probability

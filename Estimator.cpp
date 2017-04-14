@@ -75,7 +75,7 @@ void Time_Bin::score( const Particle_t& Pold, const Particle_t& P, const double 
 	std::vector< std::pair<int,double> > loc_track;
 
 	// Search bin location
-	int loc1    = Binary_Search( Pold.time(), grid );    // before track generation
+	int loc1    = Binary_Search( Pold.time(), grid ); // before track generation
 	int loc2    = Binary_Search( P.time()   , grid ); // after
 	
 	// 1 bin spanned [need to consider if it is outside the time grid]
@@ -174,10 +174,11 @@ void Surface_PMF_Estimator::report( std::ostringstream& output, const double tTi
 	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
 	output << "\n";
 	output << "PMF of # of particle crossing surface ";
-	output << ":\nx\tP(x)\n---\t-------\n";
+	output << ":\nx\t" << std::setw(12) << std::left << "P(x)\t" << "uncertainty\n";
+	output << "---\t------------\t------------\n";
 	for ( int i = 0 ; i < pmf.size() ; i++ )
-	{ output << i << "\t" << std::scientific << pmf[i] << std::endl;  }
+	{ output << i << "\t" << std::setw(12) << std::left << pmf[i] << "\t" << pmfUncer[i] << std::endl;  }
 	
-	output << "\nMean    : " << std::scientific << mean << std::endl;
-	output << "Variance: "   << std::scientific << var  << std::endl;	
+	output << "\nMean    : " << mean << std::endl;
+	output << "Variance: "   << var  << std::endl;	
 }		
