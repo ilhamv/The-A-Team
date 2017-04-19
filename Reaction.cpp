@@ -1,22 +1,25 @@
 #include <stack> // stack
+#include <iostream>
 
 #include "Reaction.h"
 #include "Particle.h"
 #include "Distribution.h"
+#include "Solver.h"
+#include <vector>
 
 
 // Capture kills the working particle
-void Capture_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Capture_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank , std::vector<double>evChi, std::vector<double>cdfChi)
 { P.kill(); }
 
 
 // Scatter the working particle
-void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Scatter_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi )
 { P.scatter( scatter_dist->sample(), A ); }
 
 
 // Fission reaction sample
-void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi )
 {
 	// create random number of secondaries from multiplicity distributon nu_dist and
 	// push all but one of them into the Particle bank, and reset the top particle 
@@ -29,7 +32,14 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 		// bank all but last particle (skips if n = 1)
 		for ( int i = 0 ; i < n - 1 ; i++ ) 
 		{
-			Particle_t p( P.pos(), isotropic.sample(), P.energy(), P.time(), P.weight() );
+            //sample the energy from watt spectrum
+            double tempCdf = Urand();
+            int in = Binary_Search( tempCdf, cdfChi );
+            //extrapolate the energy (binary serach gives the index of the upper bound)
+            double theEnergy = evChi[in-1] + (evChi[in]-evChi[in-1])/(cdfChi[in]-cdfChi[in-1])*(tempCdf-cdfChi[in-1]);
+            
+			//Particle_t p( P.pos(), isotropic.sample(), P.energy(), P.time(), P.weight() );
+            Particle_t p( P.pos(), isotropic.sample(), theEnergy, P.time(), P.weight() );
 			p.setRegion( P.region() );
 			Pbank.push( p );
 		}

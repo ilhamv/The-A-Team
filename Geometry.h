@@ -336,7 +336,7 @@ class Region_t : public Geometry_t
 		virtual double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
-		virtual void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
+		virtual void collision( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double> evChi, std::vector<double>cdfChi );
 };
 
 

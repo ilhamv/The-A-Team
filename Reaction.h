@@ -27,7 +27,7 @@ class Reaction_t
 		virtual double xs( const double E ) final { return r_xs->xs(E); };
 
 		// Sample the reaction process on the working particle and the particle bank
-		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank ) = 0;
+		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi ) = 0;
 		
 		// Check type
 		virtual bool type( const std::string s ) = 0;
@@ -43,7 +43,7 @@ class Capture_Reaction : public Reaction_t
 		~Capture_Reaction() {};
 
 		// Kill the working particle upon reaction sample
-		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
 		
 		// Check type
 		bool type( const std::string s );
@@ -63,7 +63,7 @@ class Scatter_Reaction : public Reaction_t
 		~Scatter_Reaction() {};
 
 		// Scatter the working particle
-		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
 		
 		// Check type
 		bool type( const std::string s ); 
@@ -85,7 +85,7 @@ class Fission_Reaction : public Reaction_t
 
 		// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
 		// --> Reaction.cpp
-		void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
 		
 		// Check type
 		bool type( const std::string s );

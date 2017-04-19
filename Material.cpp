@@ -76,7 +76,7 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 
 // Sample entire collision (nuclide, then nuclide reaction)
 // Then, process the reaction on the Particle 
-void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank ) 
+void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank, std::vector<double> evChi, std::vector<double>cdfChi )
 {
 	// First sample nuclide
 	std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
@@ -85,5 +85,5 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank 
 	std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );
 	
 	// Finally process the reaction on the Particle
-	R->sample( P, Pbank );
+	R->sample( P, Pbank, evChi, cdfChi );
 }
