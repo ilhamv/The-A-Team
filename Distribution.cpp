@@ -97,6 +97,7 @@ double Watt_Distribution::sample()
         evChi.push_back(x);
         probChi.push_back(y);
     }
+    
     //create the cdf vector
     double cdfNow = 0.0;
     cdfChi.push_back(cdfNow);
@@ -104,11 +105,13 @@ double Watt_Distribution::sample()
         cdfNow += (probChi[a] * (evChi[a+1]-evChi[a]) ) + (0.5* (evChi[a+1]-evChi[a]) * (probChi[a+1]-probChi[a]) );
         cdfChi.push_back(cdfNow);
     }
+    
     //sample the neuton fission energy from the cdf
     double tempCdf = Urand();
     int in = Binary_Search( tempCdf, cdfChi );
+    
     //extrapolate the energy (binary serach gives the index of the upper bound)
-    double theEnergy = evChi[in-1] + (evChi[in]-evChi[in-1])/(cdfChi[in]-cdfChi[in-1])*(tempCdf-cdfChi[in-1]);
+    double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
     
     return theEnergy; //this is in eV
 }
