@@ -80,3 +80,40 @@ int Binary_Search( const double x, const std::vector<double>& vec )
 	// 	value = grid points  --> location of bin whose upper bound is the value
 	// 	                         (-1 if value = lowest grid)
 }
+
+
+// Scatter direction
+// Return final direction dir_f after scatter initial direction dir_i with scattering polar angle mu
+Point_t scatter_direction( const Point_t dir_i, const double mu0 )
+{
+	// Sample azimuthal direction
+	const double     azi = PI2 * Urand();
+	const double cos_azi = std::cos(azi);
+	const double sin_azi = std::sin(azi);
+	const double      Ac = std::sqrt( 1.0 - mu0 * mu0 );
+	Point_t      dir_f; // Final direction
+
+	if( dir_i.z != 1.0 )
+	{
+		const double       B = std::sqrt( 1.0 - dir_i.z * dir_i.z );
+		const double       C = Ac / B;
+		
+		dir_f.x = dir_i.x * mu0 + ( dir_i.x * dir_i.z * cos_azi - dir_i.y * sin_azi ) * C;
+		dir_f.y = dir_i.y * mu0 + ( dir_i.y * dir_i.z * cos_azi + dir_i.x * sin_azi ) * C;
+		dir_f.z = dir_i.z * mu0 - cos_azi * Ac * B;
+	}
+	
+	// If dir_i = k, interchange z and y in the scattering formula
+	else
+	{
+		const double       B = std::sqrt( 1.0 - dir_i.y * dir_i.y );
+		const double       C = Ac / B;
+		
+		Point_t            q; // to store new direction point
+        
+		dir_f.x = dir_i.x * mu0 + ( dir_i.x * dir_i.y * cos_azi - dir_i.z * sin_azi ) * C;
+		dir_f.z = dir_i.z * mu0 + ( dir_i.z * dir_i.y * cos_azi + dir_i.x * sin_azi ) * C;
+		dir_f.y = dir_i.y * mu0 - cos_azi * Ac * B;
+	}
+	return dir_f;
+}
