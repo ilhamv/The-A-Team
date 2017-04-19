@@ -111,6 +111,18 @@ class Linear_Distribution : public Distribution_t<double>
    		double sample();
 };
 
+//watt distribution
+class Watt_Distribution : public Distribution_t <double>
+{
+private:
+    std::string nameFile;
+public:
+    Watt_Distribution( std::string theFile ): nameFile(theFile) {};
+    ~Watt_Distribution() {};
+    
+    double sample();
+};
+
 
 // Cubic distribution [rejection sampling]
 class Cubic_Distribution : public Distribution_t<double> 

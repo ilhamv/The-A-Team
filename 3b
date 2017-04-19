@@ -17,7 +17,7 @@
 	<nuclide name="nuc1">
     		<scatter xs="1.5" distribution="isotropic"/>
     		<capture xs="0.3"/>
-    		<fission xs="0.2" multiplicity="terrel" nubar="2.8" gamma="1.1" b="1.41e-3" nmax="10"/>
+    		<fission xs="0.2" multiplicity="terrel" nubar="2.8" gamma="1.1" b="1.41e-3" nmax="10" ergDist="watt" inputFile="Chi_better.txt" />
   	</nuclide>
 </nuclides>
 

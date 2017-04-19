@@ -339,16 +339,18 @@ void XML_input
 			// Fission
 			else if ( rxn_type == "fission" )
 			{
-				if ( !r.attribute("multiplicity") ) 
+                
+				if ( !r.attribute("multiplicity")  || !r.attribute("ergDist") )
 				{ 
-					std::cout << "multiplicity is required for fission reaction" << std::endl;
+					std::cout << "multiplicity and fission energy distribution is required for fission reaction" << std::endl;
 					throw;
 				}
 
-				const std::string mult_dist_name = r.attribute("multiplicity").value();
+				const std::string mult_dist_name   = r.attribute("multiplicity").value();
+                const std::string energy_dist_name = r.attribute("ergDist").value();
 				
 				// Average
-				if ( mult_dist_name == "average" )
+				if ( mult_dist_name == "average" && energy_dist_name == "watt" )
 				{
 					if ( !r.attribute("nubar") ) 
 					{ 
@@ -356,11 +358,13 @@ void XML_input
 						throw;
 					}
 					const double nubar = r.attribute("nubar").as_double();
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ) ) );					
+                    const std::string inputFile = r.attribute("inputFile").value();
+                    
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), std::make_shared< Watt_Distribution > (inputFile) ) );
 				}
 
 				// Terrel
-				else if ( mult_dist_name == "terrel" )
+				else if ( mult_dist_name == "terrel" && energy_dist_name == "watt" )
 				{
 					if ( !r.attribute("nubar") || !r.attribute("gamma") || !r.attribute("b") || !r.attribute("nmax") ) 
 					{ 
@@ -368,20 +372,22 @@ void XML_input
 						throw;
 					}
 
+                    const std::string inputFile = r.attribute("inputFile").value();
 					const double nubar = r.attribute("nubar").as_double();
 					const double gamma = r.attribute("gamma").as_double();
 					const double b     = r.attribute("b").as_double();
 					const int    nmax  = r.attribute("nmax").as_int();
 					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ) ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), std::make_shared< Watt_Distribution > (inputFile) ) );
 				}
 				
 				// Unknown multiplicity distribution
 				else 
 				{
-          				std::cout << "unknown fission multiplicity distribution " << mult_dist_name << " in nuclide " << name << std::endl;
+          				std::cout << "unknown fission multiplicity or fission neutron energy distribution " << mult_dist_name <<" or "<<energy_dist_name<< " in nuclide " << name << std::endl;
           				throw;
         			}
+
 			}
       			
 			// Unknown reaction
