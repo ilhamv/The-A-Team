@@ -74,9 +74,9 @@ class Scatter_Reaction : public Reaction_t
 class Fission_Reaction : public Reaction_t 
 {
 	private:
-		std::shared_ptr< Distribution_t<int> > nu_dist; // Fission multiplicity distribution
-		IsotropicDirection_Distribution isotropic;      // Isotropic distribution for emerging neutron
-    std::shared_ptr< Distribution_t<double> > fissionEnergy_dist;
+		std::shared_ptr< Distribution_t<int> > nu_dist;               // Fission multiplicity distribution
+		IsotropicDirection_Distribution isotropic;                    // Isotropic distribution for emerging neutron
+		std::shared_ptr< Distribution_t<double> > fissionEnergy_dist; // Fission watt spectrum
 		
 	public:
 		// Constructor: Pass the microXs
