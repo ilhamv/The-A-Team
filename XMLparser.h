@@ -152,6 +152,12 @@ void XML_input
           				const double fmax = d.attribute("fmax").as_double();
           				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
         			}
+                
+                //watt spectrum
+                else if (type == "watt" )
+                {
+                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
+                }
 				
 				// Unknown
 				else 

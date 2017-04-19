@@ -117,7 +117,7 @@ class Watt_Distribution : public Distribution_t <double>
 private:
     std::string nameFile;
 public:
-    Watt_Distribution( std::string theFile ): nameFile(theFile) {};
+    Watt_Distribution( std::string theFile, const std::string label = "" ): nameFile(theFile), Distribution_t(label) {};
     ~Watt_Distribution() {};
     
     double sample();
