@@ -48,25 +48,6 @@ int main()
 	
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
 	std::cout.flush();
-    
-    //read watt spectrum text file
-    std::ifstream inputFile("Chi_better.txt");
-    std::string line;
-    std::vector<double> evChi, probChi, cdfChi;
-    while(getline(inputFile, line)) {
-        if (!line.length() )
-            continue;
-        double x = 0.0, y = 0.0;
-        sscanf(line.c_str(), "%lf %lf", &x, &y);
-        evChi.push_back(x);
-        probChi.push_back(y);
-    }
-    double cdfNow = 0.0;
-    cdfChi.push_back(cdfNow);
-    for(int a = 0 ; a<probChi.size()-1 ; a++){
-        cdfNow += (probChi[a] * (evChi[a+1]-evChi[a]) ) + (0.5* (evChi[a+1]-evChi[a]) * (probChi[a+1]-probChi[a]) );
-        cdfChi.push_back(cdfNow);
-    }
 
 
 	// Simulation loop
@@ -122,7 +103,7 @@ int main()
 				{
 					// Move particle to collision site and sample the collision and tally if there is any region tally
 					R->moveParticle( P, dcol );
-					R->collision( P, Pbank, evChi, cdfChi );
+					R->collision( P, Pbank );
 					
 					// Accumulate "computation time"
 					trackTime++;

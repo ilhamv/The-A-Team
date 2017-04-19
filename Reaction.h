@@ -27,7 +27,7 @@ class Reaction_t
 		virtual double xs( const double E ) final { return r_xs->xs(E); };
 
 		// Sample the reaction process on the working particle and the particle bank
-		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi ) = 0;
+		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank ) = 0;
 		
 		// Check type
 		virtual bool type( const std::string s ) = 0;
@@ -43,7 +43,7 @@ class Capture_Reaction : public Reaction_t
 		~Capture_Reaction() {};
 
 		// Kill the working particle upon reaction sample
-		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 		
 		// Check type
 		bool type( const std::string s );
@@ -63,7 +63,7 @@ class Scatter_Reaction : public Reaction_t
 		~Scatter_Reaction() {};
 
 		// Scatter the working particle
-		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 		
 		// Check type
 		bool type( const std::string s ); 
@@ -76,16 +76,17 @@ class Fission_Reaction : public Reaction_t
 	private:
 		std::shared_ptr< Distribution_t<int> > nu_dist; // Fission multiplicity distribution
 		IsotropicDirection_Distribution isotropic;      // Isotropic distribution for emerging neutron
+    std::shared_ptr< Distribution_t<double> > fissionEnergy_dist;
 		
 	public:
 		// Constructor: Pass the microXs
-		 Fission_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<int> >& D ) :
-		 	Reaction_t(x), nu_dist(D) {}; // Pass the microXs and fission multiplicity distribution
+		 Fission_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<int> >& D, const std::shared_ptr< Distribution_t<double> >& W ) :
+		 	Reaction_t(x), nu_dist(D), fissionEnergy_dist(W) {}; // Pass the microXs and fission multiplicity distribution
 		~Fission_Reaction() {};
 
 		// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
 		// --> Reaction.cpp
-		void sample( Particle_t& P, std::stack< Particle_t >& Pbank, std::vector<double>evChi, std::vector<double>cdfChi );
+		void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 		
 		// Check type
 		bool type( const std::string s );
