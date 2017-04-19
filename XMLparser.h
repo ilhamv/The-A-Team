@@ -156,7 +156,7 @@ void XML_input
                 //watt spectrum
                 else if (type == "watt" )
                 {
-                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
+                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name ); 
                 }
 				
 				// Unknown
