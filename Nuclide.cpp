@@ -1,5 +1,6 @@
 #include <vector> // vector
 #include <memory> // shared_ptr
+#include <cassert>
 
 #include "Random.h"
 #include "Nuclide.h"
@@ -61,4 +62,6 @@ std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E )
 		s += r->xs( E );
 		if ( s > u ) { return r; }
 	}
+    assert( false ); // should never reach here
+    return nullptr;
 }

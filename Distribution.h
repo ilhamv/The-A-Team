@@ -5,6 +5,7 @@
 #include <cmath>    // erf, floor
 #include <string>
 #include <memory>
+#include <cassert>
 
 #include "Const.h" // PI
 #include "Random.h" // Urand
@@ -82,6 +83,7 @@ T Discrete_Distribution<T>::sample()
 		// first is pointer to data type T and second is cdf
 		if ( r < c.second ) { return c.first; };
 	}
+    assert( false ); // should never reach here
 }
 
 

@@ -1,5 +1,6 @@
 #include <vector>  // vector
 #include <memory>  // shared_ptr
+#include <cassert>
 
 #include "Random.h"
 #include "Particle.h"
@@ -71,6 +72,8 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 		s += n.first->sigmaT( E ) * n.second;
 		if ( s > u ) { return n.first; }
 	}
+    assert( false ); // should never reach here
+    return nullptr;
 }
 
 
