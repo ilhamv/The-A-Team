@@ -4,7 +4,8 @@
 #include "Particle.h"
 #include "Random.h"
 #include "Point.h"
-#include "Const.h"    // PI2
+#include "Const.h"    // PI2, PI_sqrt, PI_half
+#include "Solver.h"   // scatter_direction
 
 
 // Getters
@@ -52,13 +53,58 @@ void Particle_t::move( const double dmove )
 // Scatter particle with scattering angle mu0, with nucleus having mass A
 // Scattering angle mu0 is sampled in and passed by the Reaction (see Reaction.h)
 // Scattering is trated in Center of mass (COM) frame
+// Current model: Free gas scattering with constant cross section
 void Particle_t::scatter( const double mu0, const double A )
 {
+	///////////////////////////////
+	// Sampling nuclide velocity //
+	
+	double V_tilda;  // Nuclide speed candidate
+	double mu_tilda; // Nuclide-neutron polar cosine candidate
+
+	const double beta = std::sqrt( 2.0659834e-11 * A ); // Eq. 19
+	// note, the constant above is (1.674927471e-27 kg) / (1.38064852e-19 cm^2 kg s^-2 K^-1) / (293.6 K) / 2
+	// 	293.6 comes from JANIS data temperature
+	
+	const double y = beta * p_speed; // Eq. 32
+	
+	// Sample candidate V_tilda and mu_tilda?
+	do
+	{
+		double x;
+		if ( Urand() < 2.0 / ( 2.0 + PI_sqrt * y ) ) // Eq. 37
+		{
+			// w2 -> sample g2
+			x = std::sqrt( -std::log( Urand()*Urand() ) ); // Eq. 39
+		}
+		else
+		{
+			// w1 --> sample g1
+			const double cos_arg = PI_half * Urand();
+			const double cos_val = std::cos( cos_arg );
+		 	x = std::sqrt( -std::log( Urand() ) - std::log( Urand() ) * cos_val*cos_val ); // Eq. 38
+		}
+
+		V_tilda  = x / beta; // Eq. 32
+		mu_tilda = 2.0*Urand() -1.0; // Eq. 40
+	}
+	
+	// Accept candidate V_tilda and mu_tilda?
+	while ( Urand() > std::sqrt( p_speed*p_speed + V_tilda*V_tilda - 2.0 * p_speed * V_tilda * mu_tilda ) / ( p_speed + V_tilda ) ); // Eq. 41
+
+	
+	Point_t nuclide_dir = scatter_direction( p_dir, mu_tilda );                            // Nuclide direction, Eq. 42
+	Point_t V_lab ( nuclide_dir.x*V_tilda, nuclide_dir.y*V_tilda, nuclide_dir.z*V_tilda ); // Nuclide velocity - LAB, Eq. 43
+
+	// Sampling nuclide velocity done //
+	////////////////////////////////////
+
+
 	// Particle velocity - LAB
 	Point_t v_lab( p_speed * p_dir.x, p_speed * p_dir.y, p_speed * p_dir.z );
 	
 	// COM velocity
-	const Point_t u( v_lab.x / ( 1.0 + A ), v_lab.y / ( 1.0 + A ), v_lab.z / ( 1.0 + A ) );
+	const Point_t u ( ( v_lab.x + A*V_lab.x ) / ( 1.0 + A ), ( v_lab.y + A*V_lab.y ) / ( 1.0 + A ), ( v_lab.z + A*V_lab.z ) / ( 1.0 + A ) ); // Eq. 6
 	
 	// Particle velocity - COM
 	Point_t v_c( v_lab.x - u.x, v_lab.y - u.y, v_lab.z - u.z );
@@ -69,39 +115,8 @@ void Particle_t::scatter( const double mu0, const double A )
 	// Particle initial direction - COM
 	const Point_t dir_c( v_c.x / speed_c, v_c.y / speed_c, v_c.z / speed_c );
 	
-	// Sample azimuthal direction and prepare for scattering the direction in COM
-	const double     azi = PI2 * Urand();
-	const double cos_azi = std::cos(azi);
-	const double sin_azi = std::sin(azi);
-	const double      Ac = std::sqrt( 1.0 - mu0 * mu0 );
-	Point_t dir_cNew; // To store final direction - COM
-
-	if( dir_c.z != 1.0 )
-	{
-		const double       B = std::sqrt( 1.0 - dir_c.z * dir_c.z );
-		const double       C = Ac / B;
-		
-		dir_cNew.x = dir_c.x * mu0 + ( dir_c.x * dir_c.z * cos_azi - dir_c.y * sin_azi ) * C;
-		dir_cNew.y = dir_c.y * mu0 + ( dir_c.y * dir_c.z * cos_azi + dir_c.x * sin_azi ) * C;
-		dir_cNew.z = dir_c.z * mu0 - cos_azi * Ac * B;
-	}
-	
-	// If dir_c = k, interchange z and y in the scattering formula
-	else
-	{
-		const double       B = std::sqrt( 1.0 - dir_c.y * dir_c.y );
-		const double       C = Ac / B;
-		
-		Point_t            q; // to store new direction point
-        
-		q.x = dir_c.x * mu0 + ( dir_c.x * dir_c.y * cos_azi - dir_c.z * sin_azi ) * C;
-		q.z = dir_c.z * mu0 + ( dir_c.z * dir_c.y * cos_azi + dir_c.x * sin_azi ) * C;
-		q.y = dir_c.y * mu0 - cos_azi * Ac * B;
-		
-		dir_cNew.x = q.x;
-		dir_cNew.y = q.y;
-		dir_cNew.z = q.z;
-	}
+	// Scattering the direction in COM
+	Point_t dir_cNew = scatter_direction( dir_c, mu0 ); // Final direction - COM
 
 	// Final velocity - COM
 	v_c.x = speed_c * dir_cNew.x;
