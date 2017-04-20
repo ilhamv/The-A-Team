@@ -90,3 +90,23 @@ void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank 
 	// Finally process the reaction on the Particle
 	R->sample( P, Pbank );
 }
+		
+
+// Simulate scattering for scattering matrix MGXS
+void Material_t::simulate_scatter( Particle_t& P )
+{
+	// Sample the scattering nuclide
+	double u = SigmaS( P.energy() ) * Urand();
+	double s = 0.0;
+	for ( auto& n : nuclides ) 
+	{
+		// first is pointer to nuclide, second is nuclide density
+		s += n.first->sigmaS( P.energy() ) * n.second;
+		if ( s > u ) 
+		{ 
+			// Simulate the scatter
+			return n.first->simulate_scatter( P );
+	       	}
+	}
+	// There is no scattering nuclide
+}

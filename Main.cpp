@@ -54,7 +54,7 @@ int main()
 	for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 	{
 		Pbank.push( Sbank.getSource( Region ) );
-
+		
 		// History loop
 		while ( !Pbank.empty() )
 		{

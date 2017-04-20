@@ -1,0 +1,60 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="MG" histories="1e5"/>
+</simulation>
+
+
+<distributions>
+  	<uniform        name="uniform x" datatype="double" a="0.0" b="4.0"/>
+  	<delta          name="delta y-z" datatype="double" a="0.0"/>
+  	<independentXYZ name="pos"       datatype="point"  x = "uniform x" y = "delta y-z" z = "delta y-z"/>
+  	<isotropic      name="dir"       datatype="point"/>
+</distributions>
+
+
+<nuclides>
+	<nuclide name="nuc1" A="1">
+    		<scatter xs="1.5" distribution="isotropic"/>
+    		<capture xs="0.3"/>
+    		<fission xs="0.2" multiplicity="average" nubar="2.8"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="nuc1" density="0.1"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane_x name="px1" x="0.0" bc="reflective"/>
+	<plane_x name="px2" x="4.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="slab" material="mat1">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+	
+	<region name="right outside" importance="0.0">
+    		<surface name="px2" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+  	<mgxs name="MG">
+		<group grid="0 1 10000 10000000000000000"/>
+    		<region name="slab"/>
+  	</mgxs>
+</estimators>
+
+
+<sources>
+  	<source position="pos" direction="dir"/>
+</sources>

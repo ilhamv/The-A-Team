@@ -50,6 +50,8 @@ class Material_t
 		// Then, process the reaction on the Particle
 		void collision_sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 		
+		// Simulate scattering for scattering matrix MGXS
+		void simulate_scatter( Particle_t& P );
 };
 
 
