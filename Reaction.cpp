@@ -1,4 +1,5 @@
 #include <stack> // stack
+#include <iostream>
 
 #include "Reaction.h"
 #include "Particle.h"
@@ -23,13 +24,14 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	// if no secondaries, kill the particle
 
 	int n = nu_dist->sample(); // sampled multiplicity
-
+    
 	if ( n != 0 ) 
 	{
 		// bank all but last particle (skips if n = 1)
 		for ( int i = 0 ; i < n - 1 ; i++ ) 
 		{
-			Particle_t p( P.pos(), isotropic.sample(), P.energy(), P.time(), P.weight() );
+            		double e = fissionEnergy_dist->sample(); //sample neutron fission energy
+            		Particle_t p( P.pos(), isotropic.sample(), e, P.time(), P.weight() );
 			p.setRegion( P.region() );
 			Pbank.push( p );
 		}

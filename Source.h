@@ -3,6 +3,7 @@
 
 #include <vector>     // vector
 #include <memory>     // shared_ptr
+#include <cassert>
 
 #include "Particle.h"
 #include "Const.h"    // EPSILON
@@ -166,12 +167,14 @@ class Source_Bank
 				s += So.second;
 				if ( s > xi ) 
 				{ 
-					Particle_t P = So.first->getSource();
-					P.searchRegion( Region );
-					return P;
-				}
-			}
-		}
+                    Particle_t P = So.first->getSource();
+                    P.searchRegion( Region );
+                    return P;
+                }
+            }
+            //this is added because there is a possibility that this class does not return anything.
+            assert( false );
+        }
 };
 
 

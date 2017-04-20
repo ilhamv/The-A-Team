@@ -152,6 +152,12 @@ void XML_input
           				const double fmax = d.attribute("fmax").as_double();
           				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
         			}
+                
+                //watt spectrum
+                else if (type == "watt" )
+                {
+                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name ); 
+                }
 				
 				// Unknown
 				else 
@@ -339,13 +345,14 @@ void XML_input
 			// Fission
 			else if ( rxn_type == "fission" )
 			{
-				if ( !r.attribute("multiplicity") ) 
+                
+				if ( !r.attribute("multiplicity")  )
 				{ 
 					std::cout << "multiplicity is required for fission reaction" << std::endl;
 					throw;
 				}
 
-				const std::string mult_dist_name = r.attribute("multiplicity").value();
+				const std::string mult_dist_name   = r.attribute("multiplicity").value();
 				
 				// Average
 				if ( mult_dist_name == "average" )
@@ -356,7 +363,8 @@ void XML_input
 						throw;
 					}
 					const double nubar = r.attribute("nubar").as_double();
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ) ) );					
+                    
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
 				}
 
 				// Terrel
@@ -367,21 +375,21 @@ void XML_input
 						std::cout << "parameter nubar, gamma, b, and nmax are required for terrel fission multiplicity" << std::endl;
 						throw;
 					}
-
 					const double nubar = r.attribute("nubar").as_double();
 					const double gamma = r.attribute("gamma").as_double();
 					const double b     = r.attribute("b").as_double();
 					const int    nmax  = r.attribute("nmax").as_int();
 					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ) ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
 				}
 				
 				// Unknown multiplicity distribution
 				else 
 				{
-          				std::cout << "unknown fission multiplicity distribution " << mult_dist_name << " in nuclide " << name << std::endl;
+          				std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
           				throw;
         			}
+
 			}
       			
 			// Unknown reaction

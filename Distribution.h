@@ -5,6 +5,7 @@
 #include <cmath>    // erf, floor
 #include <string>
 #include <memory>
+#include <cassert>
 
 #include "Const.h" // PI
 #include "Random.h" // Urand
@@ -82,6 +83,7 @@ T Discrete_Distribution<T>::sample()
 		// first is pointer to data type T and second is cdf
 		if ( r < c.second ) { return c.first; };
 	}
+    assert( false ); // should never reach here
 }
 
 
@@ -109,6 +111,18 @@ class Linear_Distribution : public Distribution_t<double>
       			: Distribution_t(label), a(x1), b(x2), fa(y1), fb(y2) {};
    		~Linear_Distribution() {};
    		double sample();
+};
+
+//watt distribution
+class Watt_Distribution : public Distribution_t <double>
+{
+private:
+    std::string nameFile;
+public:
+    Watt_Distribution( std::string theFile, const std::string label = "" ): nameFile(theFile), Distribution_t(label) {};
+    ~Watt_Distribution() {};
+    
+    double sample();
 };
 
 
