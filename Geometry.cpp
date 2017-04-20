@@ -33,8 +33,8 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 	}
 	
 	// Score estimators 
-	Particle_t Pold = P; // Old particle information is not required in surface estimator
-	for ( auto& e : estimators ) { e->score( Pold, P ); }
+	const double told = P.time(); // crossing surface happends instantly
+	for ( auto& e : estimators ) { e->score( P, told ); }
 }
 
 
@@ -368,9 +368,9 @@ bool Region_t::testPoint( const Point_t& p )
 // Move particle and score any estimators
 void Region_t::moveParticle( Particle_t& P, const double dmove )
 {
-	Particle_t Pold = P;
+	const double told = P.time();
 	P.move( dmove );
-	for ( const auto& e : estimators ) { e->score( Pold, P, dmove ); }
+	for ( const auto& e : estimators ) { e->score( P, told, dmove ); }
 }
 
 

@@ -50,7 +50,7 @@ double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/
 ///////////
 
 // Energy Bin (multi-score)
-void Energy_Bin::score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track /*= 0.0*/ )
+void Energy_Bin::score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track /*= 0.0*/ )
 {
 	// Search bin location	
 	const int loc = Binary_Search( P.energy(), grid );
@@ -71,7 +71,7 @@ void Energy_Bin::score( const Particle_t& Pold, const Particle_t& P, const std::
 }
 
 // Time Bin (multi-score)
-void Time_Bin::score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track /*= 0.0*/ )
+void Time_Bin::score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track /*= 0.0*/ )
 {
 	// Since score migth be distributed across bins...
 	
@@ -79,7 +79,7 @@ void Time_Bin::score( const Particle_t& Pold, const Particle_t& P, const std::ve
 	std::vector< std::pair<int,double> > loc_track;
 
 	// Search bin location
-	int loc1    = Binary_Search( Pold.time(), grid ); // before track generation
+	int loc1    = Binary_Search( told, grid ); // before track generation
 	int loc2    = Binary_Search( P.time()   , grid ); // after
 	
 	// 1 bin spanned [need to consider if it is outside the time grid]
@@ -98,7 +98,7 @@ void Time_Bin::score( const Particle_t& Pold, const Particle_t& P, const std::ve
 		// First partial bin [need to consider if it's outside]
 		if ( loc1 >= 0 )
 		{
-			new_track = ( grid[loc1+1] - Pold.time() ) * P.speed();
+			new_track = ( grid[loc1+1] - told ) * P.speed();
 			loc_track.push_back( std::make_pair( loc1, new_track ) );
 		}
 		
@@ -190,7 +190,7 @@ void Generic_Estimator::tally_stats( Tally_t& T, const double trackTime )
 };
 
 // Score at events
-void Generic_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
+void Generic_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
 {
         // Total tallies
         for ( int i = 0 ; i < Nscore ; i++ )
@@ -200,7 +200,7 @@ void Generic_Estimator::score( const Particle_t& Pold, const Particle_t& P, cons
 
 	// Bin tallies, if any
 	if ( Nbin != 0 )
-	{ bin->score( Pold, P, grid, track ); }
+	{ bin->score( P, grid, told, track ); }
 }
 
 // Closeout history
@@ -301,10 +301,10 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 ////////////////////////////////////
 
 // Score at events
-void MGXS_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
+void MGXS_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
 {
 	// Flux, Capture, Fission, nuFission, Total, Scater Tallies
-	bin->score( Pold, P, grid, track );
+	bin->score( P, grid, told, track );
 	
 	// Scattering matrix Tallies
 	// First, simulate scattering reaction to get post-scattering particle information
@@ -315,7 +315,7 @@ void MGXS_Estimator::score( const Particle_t& Pold, const Particle_t& P, const d
 	const int loc = Binary_Search( P_final.energy(), grid );
 	
 	// Final energy bin location is set, now score into the initial energy bin location
-	matrix_bin[loc]->score( Pold, P, grid, track );
+	matrix_bin[loc]->score( P, grid, told, track );
 }
 
 
@@ -394,13 +394,13 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 	for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
 	output << "\n";
 	
-	// Bin tallies
+	// Note energy group number is reversed for convenience
 	if ( Nbin != 0 )
 	{
 		output << "Homogenized MG Constants," << std::endl;
 
 		output << "g\t";
-		output << "lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
+		output << "upper(" + bin->unit + ")\tlower(" + bin->unit + ")\t";
 		for ( int i = 1 ; i < Nscore ; i++ ) 
 		{ 
 			output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
@@ -428,19 +428,19 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			output << j+1;
-			output << "\t" << std::setw(12) << std::left << grid[j];
-		        output << "\t" << std::setw(12) << std::left << grid[j+1]; 
+			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
+		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
 			output << "\t";
 
 			for ( int i = 1 ; i < Nscore ; i++ )
 			{
-				output << std::setw(12) << bin->tally[j][i].mean << "\t";
-			        output << std::setw(12) << bin->tally[j][i].meanUncer << "\t";
+				output << std::setw(12) << bin->tally[Nbin-j-1][i].mean << "\t";
+			        output << std::setw(12) << bin->tally[Nbin-j-1][i].meanUncer << "\t";
 			}
 			for ( int i = 0 ; i < Nbin ; i++ )
 			{
-				output << std::setw(12) << matrix_bin[i]->tally[j][0].mean << "\t"; 
-				output << std::setw(12) << matrix_bin[i]->tally[j][0].meanUncer << "\t"; 
+				output << std::setw(12) << matrix_bin[Nbin-i-1]->tally[Nbin-j-1][0].mean << "\t"; 
+				output << std::setw(12) << matrix_bin[Nbin-i-1]->tally[Nbin-j-1][0].meanUncer << "\t"; 
 			}
 			output << "\n";
 		}
@@ -452,7 +452,7 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 //////////////////////////
 
 // Surface PMF estimator (surface counting)
-void Surface_PMF_Estimator::score( const Particle_t& Pold, const Particle_t& P, const double track /*= 0.0*/ )
+void Surface_PMF_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
 { tally_hist++;}
 
 void Surface_PMF_Estimator::report( std::ostringstream& output, const double tTime ) 

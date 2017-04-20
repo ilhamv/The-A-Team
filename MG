@@ -49,8 +49,8 @@
 
 <estimators>
   	<mgxs name="MG">
+		<group grid="0 1 10000 10000000000000000"/>
     		<region name="slab"/>
-		<bin type="energy" grid="0 10000 10000000000000000"/>
   	</mgxs>
 </estimators>
 

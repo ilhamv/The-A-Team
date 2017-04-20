@@ -170,7 +170,7 @@ class Bin_t
 		~Bin_t() {};
 
 		// Score bin
-		virtual void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 ) = 0;
+		virtual void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 ) = 0;
 };
 
 // Energy bin (multi score)
@@ -182,7 +182,7 @@ class Energy_Bin : public Bin_t
 			 Bin_t(grid,total_tally,s,"eV") {};
 		~Energy_Bin() {};
 
-		void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 );
+		void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 );
 }; 
 
 // Time bin (multi score)
@@ -194,7 +194,7 @@ class Time_Bin : public Bin_t
 			 Bin_t(grid,total_tally,s,"sec") {};
 		~Time_Bin() {};
 
-		void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 );
+		void score( const Particle_t& P, const std::vector<double>& grid, const double told, const double track = 0.0 );
 };
 
 
@@ -222,7 +222,7 @@ class Estimator_t
 		virtual void setBin( const std::string type, std::vector<double> bin ) = 0;
 		
 		// Score at events
-		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
+		virtual void score( const Particle_t& P, const double told, const double track = 0.0  ) = 0;
 		
 		// Closeout history
 		virtual void endHistory() = 0;              
@@ -264,7 +264,7 @@ class Generic_Estimator : public Estimator_t
 		void tally_stats( Tally_t& T, const double trackTime );
 		
 		// Score at events
-		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		virtual void score( const Particle_t& P, const double told, const double track = 0.0 );
 
 		// Closeout history
 		// Update the sum and sum of squared, and restart history sum of all tallies
@@ -327,7 +327,7 @@ class MGXS_Estimator : public Generic_Estimator
 		}
 		
 		// Score at events
-		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		void score( const Particle_t& P, const double told, const double track = 0.0 );
 		
 		// Closeout history
 		// Update the sum and sum of squared, and restart history sum of all tallies
@@ -393,7 +393,7 @@ class UInteger_PMF_Estimator : public Estimator_t
 		};
 
 		// Score at events
-		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
+		virtual void score( const Particle_t& P, const double told, const double track = 0.0 ) = 0;
 	
 		// Report results
 		virtual void report( std::ostringstream& output, const double tTime ) = 0; 
@@ -419,7 +419,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 		~Surface_PMF_Estimator() {};
 
 		// Score at events
-		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		void score( const Particle_t& P, const double told, const double track = 0.0 );
 
 		// Report results
 		// output.txt file providing the PMF is created (or overwritten)

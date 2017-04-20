@@ -699,17 +699,9 @@ void XML_input
           			}
         		}
 			
-			// Set bin
-        		else if ( (std::string) eChild.name() == "bin" )
+			// Set bin (for generic estimator) or group (for MGXS)
+        		else if ( (std::string) eChild.name() == "bin" || (std::string) eChild.name() == "group" )
 			{
-				// Type
-				std::string type = eChild.attribute("type").value();
-        			if ( type != "energy" && type != "time" ) 
-				{
-            				std::cout << "unsuported bin type " << type << " in estimator " << name << std::endl;
-					throw;
-				}
-		
 				// Construct bin grid
 				std::vector<double> bin_grid;
 				// Just grids
@@ -738,7 +730,23 @@ void XML_input
 					bin_grid.push_back(b);
 				}
 				
-				Est->setBin( type, bin_grid ); 
+        			// Generic estimator bin type
+				if ( (std::string) eChild.name() == "bin" )
+				{
+					// Type
+					std::string type = eChild.attribute("type").value();
+        				if ( type != "energy" && type != "time" ) 
+					{
+            					std::cout << "unsuported bin type " << type << " in estimator " << name << std::endl;
+						throw;
+					}
+					Est->setBin( type, bin_grid ); 
+				}
+        			// MGXS group
+				else
+				{
+					Est->setBin( "energy", bin_grid ); 
+				}
 			}
     		}
     		
