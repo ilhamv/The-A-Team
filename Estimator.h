@@ -94,6 +94,18 @@ class Fission_Score : public Score_t
 		double add_score( const Particle_t& P, const double track = 0.0 );
 };
 
+/*
+// Nu Fission (path length)
+class Production_Score : public Score_t
+{
+	public:
+		 Production_Score() : Score_t( "Prod. Rate" ) {};
+		~Production_Score() {};
+
+		double add_score( const Particle_t& P, const double track = 0.0 );
+};
+*/
+
 // Total (path length)
 class Total_Score : public Score_t
 {
@@ -138,7 +150,6 @@ class Tally_t
 class Bin_t
 {
 	public:
-		std::vector<double>                   grid;   // Bin grid
 		std::vector<std::vector<Tally_t>>     tally;  // Bin tallies ( indexing --> [bin#][score#] )
 		const int                             Nbin;   // # of bins
 		std::vector<std::shared_ptr<Score_t>> scores; // Things to be scored
@@ -147,9 +158,8 @@ class Bin_t
 	
 	public:
 		// Constructor: pass grid points and construct bin and their tallies
-		 Bin_t( const std::vector<double> gr, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s, 
-				 const std::string str ) : 
-			 grid(gr), Nbin(gr.size() - 1), unit(str), Nscore(s.size())
+		Bin_t( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s, 
+				 const std::string str ) : Nbin(grid.size() - 1), unit(str), Nscore(s.size())
 		{ 
 			// Store scores
 			scores = s;
@@ -160,31 +170,31 @@ class Bin_t
 		~Bin_t() {};
 
 		// Score bin
-		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 ) = 0;
+		virtual void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 ) = 0;
 };
 
-// Energy bin
+// Energy bin (multi score)
 class Energy_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Energy_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+		 Energy_Bin( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
 			 Bin_t(grid,total_tally,s,"eV") {};
 		~Energy_Bin() {};
 
-		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
-};
+		void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 );
+}; 
 
-// Time bin
+// Time bin (multi score)
 class Time_Bin : public Bin_t
 {
 	public:
 		// Constructor: pass grid points
-		 Time_Bin( const std::vector<double> grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
+		 Time_Bin( const std::vector<double>& grid, const std::vector<Tally_t> total_tally, std::vector<std::shared_ptr<Score_t>>& s ) : 
 			 Bin_t(grid,total_tally,s,"sec") {};
 		~Time_Bin() {};
 
-		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		void score( const Particle_t& Pold, const Particle_t& P, const std::vector<double>& grid, const double track = 0.0 );
 };
 
 
@@ -232,6 +242,7 @@ class Generic_Estimator : public Estimator_t
 		int                                   Nscore = 0;  // # of scores (things to be scored)
 		std::vector<Tally_t>                  total_tally; // Total tallies [Nscore]
 		
+		std::vector<double>                   grid;        // Bin grid
 		std::shared_ptr<Bin_t>                bin;         // Estimator bin
 		int                                   Nbin = 0;    // # of bins
 
@@ -241,147 +252,90 @@ class Generic_Estimator : public Estimator_t
 		~Generic_Estimator() {};
 
 		// Add thing to be scored and push new total tally
-		void addScore( const std::shared_ptr<Score_t>& S )
-		{ 
-			// Push new score
-			scores.push_back( S );
-			Nscore++;
-			
-			// Push new total tally
-			Tally_t T;
-			total_tally.push_back( T );
-			// Note: Index in total_tally corresponds to its score
-		}
+		void addScore( const std::shared_ptr<Score_t>& S );
 
 		// Set bin
-		void setBin( const std::string type, const std::vector<double> grid )
-		{
-			Nbin = grid.size() - 1;
-			if      ( type == "energy" ) { bin = std::make_shared<Energy_Bin> ( grid, total_tally, scores ); }
-			else if ( type == "time" )   { bin = std::make_shared<Time_Bin>   ( grid, total_tally, scores ); }
-		}
+		virtual void setBin( const std::string type, const std::vector<double> gr );
 		
 		// Update the sum and sum of squared, and restart history sum of a tally
-		void tally_endHistory( Tally_t& T )
-		{ 
-			T.sum     += T.hist;
-			T.squared += T.hist * T.hist;
-			T.hist     = 0.0; 
-		}
+		void tally_endHistory( Tally_t& T );
 		
 		// Compute mean, variance and mean statistical uncertainty of a tally
-		void tally_stats( Tally_t& T, const double trackTime )
-		{
-			// Estimated mean of the population
-			T.mean      = T.sum / nhist;
-			// Estimated variance of the population
-			T.var       = ( T.squared - nhist * T.mean*T.mean ) / ( nhist - 1.0 );
-			// Uncertainty of the estimated mean
-			T.meanUncer = sqrt( ( T.squared / nhist - T.mean*T.mean ) / ( nhist - 1.0 ) );
-			// Relative uncertainty of estimated mean
-			T.relUncer  = T.meanUncer / T.mean;
-			// Figure of merit
-			T.FOM       = 1.0 / ( T.relUncer*T.relUncer * trackTime );
-		};
+		void tally_stats( Tally_t& T, const double trackTime );
 		
 		// Score at events
-		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		virtual void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
 
 		// Closeout history
 		// Update the sum and sum of squared, and restart history sum of all tallies
-		void endHistory()
-		{
-			nhist++;
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				// Total tally
-				tally_endHistory( total_tally[i] );
-				
-				// Bin tally
-				for ( int j = 0 ; j < Nbin ; j++ )
-				{
-					tally_endHistory( bin->tally[j][i] );
-				}
-			}
-		}
+		virtual void endHistory();
 
 		// Report results
-		void report( std::ostringstream& output, const double trackTime )
-		{
-			// Compute mean, variance, and uncertainty of all tallies
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				// Total tally
-				tally_stats( total_tally[i], trackTime );
-				
-				// Bin tally
-				for ( int j = 0 ; j < Nbin ; j++ )
-				{
-					tally_stats( bin->tally[j][i], trackTime );
-				}	
-			}
-			
-			output << "\n\n";
-			output << "Estimator report: " + e_name + "\n";
-			for ( int i = 0 ; i < e_name.length()+18 ; i++ ) { output << "="; }
-			output << "\n";
-			
-			// Total tallies
-			output << "Total tallies,\n";
-			for ( int i = 0 ; i < Nscore ; i++ )
-			{
-				output << "  " + scores[i]->name() + ":\n";
-				output << "  -> Mean     = " << total_tally[i].mean;
-			       	output << "  +/-  " << total_tally[i].meanUncer;
-				/*output << "  -> Mean     = " << std::scientific << total_tally[i].mean;
-			       	output << "  +/-  " << std::scientific << total_tally[i].meanUncer;*/
-				output << "  (" << std::defaultfloat << total_tally[i].relUncer * 100.0;
-				output << "%)\n";
-				output << "  -> Variance = " << total_tally[i].var;
-			       	output << "\n";
-				output << "  [F.O.M.: " << total_tally[i].FOM;
-			        output << "]\n\n\n";
-			}
-
-			// Bin tallies
-			if ( Nbin != 0 )
-			{
-				output << "Bin tallies," << std::endl;
-		
-				output << "bin#\t";
-				output << "lower(" + bin->unit + ")\tupper(" + bin->unit + ")\t";
-				for ( int i = 0 ; i < Nscore ; i++ ) 
-				{ 
-					output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
-					output << std::setw(12) << std::left << "uncertainty\t"; 
-				}
-				output << "\n";
-			
-				output << "----\t" << "------------\t" << "------------\t";
-				for ( int i = 0 ; i < Nscore ; i++ ) 
-				{ 
-					output << "------------\t" << "------------\t"; 
-				}
-				output << "\n";
-			
-				for ( int j = 0 ; j < Nbin ; j++ )
-				{
-					output << j+1;
-					output << "\t" << std::setw(12) << std::left << bin->grid[j];
-				        output << "\t" << std::setw(12) << std::left << bin->grid[j+1]; 
-					output << "\t";
-
-					for ( int i = 0 ; i < Nscore ; i++ )
-					{
-						output << std::setw(12) << bin->tally[j][i].mean << "\t";
-					        output << std::setw(12) << bin->tally[j][i].meanUncer << "\t";
-					}
-					output << "\n";
-				}
-			}
-		}
+		virtual void report( std::ostringstream& output, const double trackTime );
 };
 
+
+// Homogenized MG Constant Generator
+////////////////////////////////////
+
+class MGXS_Estimator : public Generic_Estimator
+{
+	protected:
+		std::vector<std::shared_ptr<Bin_t>>   matrix_bin; // Vector of energy bin for scattering matrix scores
+		std::vector<double>                   Chi;        // Fission neutron energy group fraction
+
+	public:
+		// Constructor: pass the estimator name and energy grids
+		MGXS_Estimator( const std::string n ) : Generic_Estimator(n) {};
+		~MGXS_Estimator() {};
+		
+		// Set bin
+		void setBin( const std::string type, const std::vector<double> gr )
+		{
+			// Set energy grid points
+			grid = gr; // Note: energy grid points have to span all possible energy in the problem
+
+			// Set scores = Flux, Capture, Fission, nuFission, Total, Scatter
+			scores.push_back( std::make_shared<Flux_Score>()      );
+			scores.push_back( std::make_shared<Capture_Score>()   );
+			scores.push_back( std::make_shared<Fission_Score>()   );
+			//scores.push_back( std::make_shared<nuFission_Score>() );
+			scores.push_back( std::make_shared<Total_Score>()     );
+			scores.push_back( std::make_shared<Scatter_Score>()   );
+			Nscore = scores.size();
+		
+			// Set energy bin for scores
+			std::vector<Tally_t> Tvec; // Vector of tallies corresponding to each score
+			Tally_t T;
+			Tvec.resize( Nscore, T );
+			
+			bin = std::make_shared<Energy_Bin> ( grid, Tvec, scores );
+			Nbin = grid.size() - 1.0;
+
+			// Set vector of energy bins scoring scattering only --> scattering matrix
+			std::vector<std::shared_ptr<Score_t>> temp_scores;          // Scattering score
+			temp_scores.push_back( std::make_shared<Scatter_Score>() );
+			
+			Tally_t Tsingle; // Single tally
+			Tvec.resize( 1.0, Tsingle );
+
+			for ( int i = 0 ; i < Nbin ; i++ )
+			{
+				std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
+				matrix_bin.push_back( temp_bin ); // Generate the matrix whose column vectors are the initial energy bins
+			}
+		}
+		
+		// Score at events
+		void score( const Particle_t& Pold, const Particle_t& P, const double track = 0.0 );
+		
+		// Closeout history
+		// Update the sum and sum of squared, and restart history sum of all tallies
+		void endHistory();
+
+		// Report results
+		void report( std::ostringstream& output, const double trackTime );
+};
 
 
 /// Miscellaneous Estimator

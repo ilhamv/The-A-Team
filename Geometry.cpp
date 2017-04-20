@@ -412,3 +412,8 @@ void Region_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank )
 	// Vacuum --> Kill particle at collision
 	else { return P.kill(); }
 }	
+
+
+// Simulate scattering for scattering matrix MGXS
+void Region_t::simulate_scatter( Particle_t& P )
+{ material->simulate_scatter( P ); }

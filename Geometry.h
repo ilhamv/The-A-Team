@@ -333,10 +333,13 @@ class Region_t : public Geometry_t
 		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
 		
 		// Return particle collision distance
-		virtual double collision_distance( const double E );
+		double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
-		virtual void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
+
+		// Simulate scattering for scattering matrix MGXS
+		void simulate_scatter( Particle_t& P );
 };
 
 

@@ -619,42 +619,49 @@ void XML_input
 	{
     		std::shared_ptr<Estimator_t> Est;
 
-    		const std::string name       = e.attribute("name").value();
+    		const std::string e_type     = e.name();
+		const std::string name       = e.attribute("name").value();
 		
-		const std::string        score_string = e.attribute("score").value();
-		std::vector<std::string> scores;
-		std::istringstream iss( score_string );
-		for(std::string s; iss >> s; )
-		{ scores.push_back(s); }
+		if ( e_type == "estimator" )
+		{
+			const std::string        score_string = e.attribute("score").value();
+			std::vector<std::string> scores;
+			std::istringstream iss( score_string );
+			for(std::string s; iss >> s; )
+			{ scores.push_back(s); }
 		
-		// Miscellaneous estimator: Counting surface (results Probability Mass Function)
-		if ( scores[0] == "count" ) { Est = std::make_shared<Surface_PMF_Estimator> ( name ); }
+			// Miscellaneous estimator: Counting surface (results Probability Mass Function)
+			if ( scores[0] == "count" ) { Est = std::make_shared<Surface_PMF_Estimator> ( name ); }
 		
-		// Generic estimator
-		else                        
-		{ 
-			Est = std::make_shared<Generic_Estimator> ( name );
-		for ( auto& s : scores )
-			{
-				if      ( s == "current" )    { Est->addScore( std::make_shared<Current_Score>()    ); }
-				else if ( s == "flux" )       { Est->addScore( std::make_shared<Flux_Score>()       ); }
-				else if ( s == "absorption" ) { Est->addScore( std::make_shared<Absorption_Score>() ); }
-				else if ( s == "scatter" )    { Est->addScore( std::make_shared<Scatter_Score>()    ); }
-				else if ( s == "capture" )    { Est->addScore( std::make_shared<Capture_Score>()    ); }
-				else if ( s == "fission" )    { Est->addScore( std::make_shared<Fission_Score>()    ); }
-				else if ( s == "total" )      { Est->addScore( std::make_shared<Total_Score>()      ); }
-				else if ( s == "count" )    
+			// Generic estimator
+			else                        
+			{ 
+				Est = std::make_shared<Generic_Estimator> ( name );
+				for ( auto& s : scores )
 				{
-        				std::cout << "score 'count' in estimator " << name << " has to be the only score" << std::endl;
-					throw;
-       				}
-       				else 
-				{
-        				std::cout << "unsuported score type " << s << " in estimator " << name << std::endl;
-					throw;
-       				}
+					if      ( s == "current" )    { Est->addScore( std::make_shared<Current_Score>()    ); }
+					else if ( s == "flux" )       { Est->addScore( std::make_shared<Flux_Score>()       ); }
+					else if ( s == "absorption" ) { Est->addScore( std::make_shared<Absorption_Score>() ); }
+					else if ( s == "scatter" )    { Est->addScore( std::make_shared<Scatter_Score>()    ); }
+					else if ( s == "capture" )    { Est->addScore( std::make_shared<Capture_Score>()    ); }
+					else if ( s == "fission" )    { Est->addScore( std::make_shared<Fission_Score>()    ); }
+					else if ( s == "total" )      { Est->addScore( std::make_shared<Total_Score>()      ); }
+					else if ( s == "count" )    
+					{
+        					std::cout << "score 'count' in estimator " << name << " has to be the only score" << std::endl;
+						throw;
+	       				}
+       					else 
+					{
+        					std::cout << "unsuported score type " << s << " in estimator " << name << std::endl;
+						throw;
+	       				}
+				}
 			}
 		}
+
+		else if ( e_type == "mgxs" ) { Est = std::make_shared<MGXS_Estimator> ( name ); }
+		else { std::cout << "unknown estimator type " << name << std::endl; throw; }
 
       		for ( const auto& eChild : e.children() )
 		{

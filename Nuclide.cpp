@@ -48,7 +48,10 @@ double Nuclide_t::sigmaT( const double E )
 
 // Add reaction
 void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
-{ reactions.push_back( R ); }
+{ 
+	if ( R->type("scatter") ) { scatter = R; } // Attach pointer on scattering reaction
+	reactions.push_back( R ); 
+}
 
 
 // Randomly sample a reaction type from the nuclide
@@ -61,4 +64,12 @@ std::shared_ptr< Reaction_t > Nuclide_t::reaction_sample( const double E )
 		s += r->xs( E );
 		if ( s > u ) { return r; }
 	}
+}
+
+
+// Simulate scattering for scattering matrix MGXS
+void Nuclide_t::simulate_scatter( Particle_t& P )
+{
+	std::stack<Particle_t> null;
+	scatter->sample(P,null);
 }
