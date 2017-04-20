@@ -1,12 +1,11 @@
 #include <cmath>
+#include <vector>
+#include <iostream>
 
 #include "Distribution.h"
 #include "Random.h"
 #include "Point.h"
 #include "Const.h"       // PI2
-#include <vector>
-#include <fstream>
-#include <iostream>
 #include "Solver.h"
 
 double Uniform_Distribution::sample() 
@@ -85,35 +84,14 @@ double LinearScatter_Distribution::sample()
 
 double Watt_Distribution::sample()
 {
-    //read watt spectrum text file
-    std::ifstream inputFile(nameFile);
-    std::string line;
-    std::vector<double> evChi, probChi, cdfChi;
-    while(getline(inputFile, line)) {
-        if (!line.length() )
-            continue;
-        double x = 0.0, y = 0.0;
-        sscanf(line.c_str(), "%lf %lf", &x, &y);
-        evChi.push_back(x);
-        probChi.push_back(y);
-    }
+    	// sample the neuton fission energy from the cdf
+    	const double tempCdf = Urand();
+    	const int    in      = Binary_Search( tempCdf, cdfChi );
     
-    //create the cdf vector
-    double cdfNow = 0.0;
-    cdfChi.push_back(cdfNow);
-    for(int a = 0 ; a<probChi.size()-1 ; a++){
-        cdfNow += (probChi[a] * (evChi[a+1]-evChi[a]) ) + (0.5* (evChi[a+1]-evChi[a]) * (probChi[a+1]-probChi[a]) );
-        cdfChi.push_back(cdfNow);
-    }
+    	// interpolate the energy (binary serach gives the index of the lower bound)
+    	double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
     
-    //sample the neuton fission energy from the cdf
-    double tempCdf = Urand();
-    int in = Binary_Search( tempCdf, cdfChi );
-    
-    //extrapolate the energy (binary serach gives the index of the upper bound)
-    double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
-    
-    return theEnergy; //this is in eV
+    	return theEnergy; //this is in eV
 }
 
 

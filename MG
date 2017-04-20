@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="MG" histories="1e5"/>
+	<description name="Infinite Fuel Cell MG XS Generation" histories="1e5"/>
 </simulation>
 
 

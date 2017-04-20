@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <cassert>
+#include <fstream>
 
 #include "Const.h" // PI
 #include "Random.h" // Urand
@@ -113,16 +114,41 @@ class Linear_Distribution : public Distribution_t<double>
    		double sample();
 };
 
-//watt distribution
+// Watt distribution
 class Watt_Distribution : public Distribution_t <double>
 {
-private:
-    std::string nameFile;
-public:
-    Watt_Distribution( std::string theFile, const std::string label = "" ): nameFile(theFile), Distribution_t(label) {};
-    ~Watt_Distribution() {};
+	private:
+		std::vector<double> cdfChi; // The CDF
+		std::vector<double> evChi;  // The energy grid
+
+	public:
+	    	Watt_Distribution( const std::string nameFile, const std::string label = "" ): Distribution_t(label) 
+		{
+			// Read watt spectrum text file
+		    	std::ifstream inputFile(nameFile);
+		    	std::string line;
+		    	std::vector<double> probChi;
+		    	while(getline(inputFile, line))
+			{
+        			if (!line.length() )
+            				continue;
+        			double x = 0.0, y = 0.0;
+	        		sscanf(line.c_str(), "%lf %lf", &x, &y);
+        			evChi.push_back(x);
+        			probChi.push_back(y);
+    			}
     
-    double sample();
+    			// Create the cdf vector
+    			double cdfNow = probChi[0];
+    			cdfChi.push_back(cdfNow);
+    			for(int a = 0 ; a<probChi.size()-1 ; a++)
+			{
+        			cdfNow += 0.5 * ( evChi[a+1]-evChi[a] ) * ( probChi[a+1]+probChi[a] ) ;
+        			cdfChi.push_back(cdfNow);
+    			}
+		}
+	    	~Watt_Distribution() {};
+		double sample();
 };
 
 

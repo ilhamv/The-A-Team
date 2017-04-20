@@ -283,7 +283,7 @@ class MGXS_Estimator : public Generic_Estimator
 	protected:
 		std::vector<std::shared_ptr<Bin_t>>   matrix_bin; // Vector of energy bin for scattering matrix scores
 		std::vector<double>                   Chi;        // Fission neutron energy group fraction
-
+		// Simple group constants are handled by generic estimator bin
 	public:
 		// Constructor: pass the estimator name and energy grids
 		MGXS_Estimator( const std::string n ) : Generic_Estimator(n) {};
