@@ -92,6 +92,11 @@ void XML_input
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");
 
+	// Current Chi fission spectrum model is universal table
+	// 	the following parameters are used to effectively handle the shared pointer
+	bool        watt_available = false; // watt spectrum availability flag
+	std::string watt_name;              // watt spectrum distribution name if available
+
   	// Find total number of distributions
   	unsigned int num_distributions = 0;
   	for ( const auto& d : input_distributions ) { num_distributions++; }
@@ -153,11 +158,13 @@ void XML_input
           				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
         			}
                 
-                //watt spectrum
-                else if (type == "watt" )
-                {
-                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name ); 
-                }
+		                // Watt spectrum
+		                else if (type == "watt" )
+		                {
+		                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
+				    watt_available = true;
+				    watt_name      = name;
+                		}
 				
 				// Unknown
 				else 
@@ -345,7 +352,15 @@ void XML_input
 			// Fission
 			else if ( rxn_type == "fission" )
 			{
-                
+               			// Check if Chi is already available
+				std::shared_ptr<Distribution_t<double>> watt;
+				
+				if ( watt_available )
+				{
+					watt = findByName( double_distributions, watt_name );
+				}
+				else { watt = std::make_shared< Watt_Distribution > ("Chi.txt"); }
+
 				if ( !r.attribute("multiplicity")  )
 				{ 
 					std::cout << "multiplicity is required for fission reaction" << std::endl;
@@ -364,7 +379,7 @@ void XML_input
 					}
 					const double nubar = r.attribute("nubar").as_double();
                     
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), watt ) );
 				}
 
 				// Terrel
@@ -380,7 +395,7 @@ void XML_input
 					const double b     = r.attribute("b").as_double();
 					const int    nmax  = r.attribute("nmax").as_int();
 					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
 				}
 				
 				// Unknown multiplicity distribution
@@ -753,6 +768,8 @@ void XML_input
         			// MGXS group
 				else
 				{
+					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
+					if ( bin_grid.back() > 2e7 ) { bin_grid[bin_grid.size()-1] = 2e7; }
 					Est->setBin( "energy", bin_grid ); 
 				}
 			}

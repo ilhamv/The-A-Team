@@ -118,16 +118,15 @@ class Linear_Distribution : public Distribution_t<double>
 class Watt_Distribution : public Distribution_t <double>
 {
 	private:
-		std::vector<double> cdfChi; // The CDF
-		std::vector<double> evChi;  // The energy grid
+		std::vector<double> evChi;   // Energy grid 
+		std::vector<double> probChi; // PDF
+		std::vector<double> cdfChi;  // CDF
 
 	public:
-	    	Watt_Distribution( const std::string nameFile, const std::string label = "" ): Distribution_t(label) 
+	    	Watt_Distribution( const std::string nameFile, const std::string label = "" ): Distribution_t(label) // Construct cdf from watt spectrum text file
 		{
-			// Read watt spectrum text file
 		    	std::ifstream inputFile(nameFile);
 		    	std::string line;
-		    	std::vector<double> probChi;
 		    	while(getline(inputFile, line))
 			{
         			if (!line.length() )
