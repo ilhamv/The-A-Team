@@ -249,7 +249,7 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 		output << "  " + scores[i]->name() + ":\n";
 		output << "  -> Mean     = " << total_tally[i].mean;
 	       	output << "  +/-  " << total_tally[i].meanUncer;
-		output << "  (" << std::fixed << total_tally[i].relUncer * 100.0;
+		output << "  (" << total_tally[i].relUncer * 100.0;
 		output << "%)\n";
 		output << "  -> Variance = " << total_tally[i].var;
 	       	output << "\n";
