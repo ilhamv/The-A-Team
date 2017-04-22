@@ -1,0 +1,78 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="Pulse Height Test Problem" histories="1e4"/>
+</simulation>
+
+<distributions>
+    <delta       name="enrg"       datatype="double" val="1.0e6"/>
+  	<linear      name="ang source" datatype="double" a="0.0" b="1.0" fa ="0.0" fb="2.0"/>
+  	<anisotropic name="dir"        datatype="point"  u="1.0" v="0.0" w  ="0.0" distribution="ang source"/>
+</distributions>
+
+
+<nuclides>
+	<nuclide name="nuc1" A="2.0" > <!-- deuterium -->
+    		<scatter xs="0.90" distribution="isotropic"/>
+    		<capture xs="0.01"/>
+  	</nuclide>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="nuc1" density="1.0"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane_x name="px1" x="0.0"/>
+    <plane_x name="px2" x="5.0"/>
+    <plane_x name="px3" x="10.0"/>
+	<plane_x name="px4" x="15.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="slab left" material="mat1">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+    
+    <region name="slab middle" material="mat1"> <!-- this will be our detector -->
+        <surface name="px2" sense="+1"/>
+        <surface name="px3" sense="-1"/>
+    </region>
+    
+    <region name="slab right" material="mat1">
+        <surface name="px3" sense="+1"/>
+        <surface name="px4" sense="-1"/>
+    </region>
+	
+	<region name="left outside" importance="0.0">
+    		<surface name="px1" sense="-1"/>
+  	</region>
+  	
+	<region name="right outside" importance="0.0">
+    		<surface name="px4" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+    
+    <estimator name="Leak out right" score="current">
+        <surface name="px2"/>
+    </estimator>
+    
+    <pulseHeight name="pulse height" >
+        <region  name="slab middle"/>
+        <bin     type="energy" grid_linear="0 1e5 1.20e6"/> <!-- from 0 eV to 1.2 MeV, increment 0.01 MeV -->
+    </pulseHeight>
+    
+</estimators>
+
+<sources>
+  	<point x="1.0e-9" y="0.0" z="0.0" direction="dir" energy="enrg"/>
+</sources>

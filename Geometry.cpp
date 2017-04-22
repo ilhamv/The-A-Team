@@ -345,7 +345,6 @@ double      Region_t::SigmaF( const double E ) { return material->SigmaF( E ); }
 void Region_t::addSurface( const std::shared_ptr< Surface_t >& S, const int sense )
 { surfaces.push_back( std::make_pair( S, sense ) ); }
 
-
 // Add the material
 void Region_t::setMaterial( const std::shared_ptr< Material_t >& M ) 
 { material = M; }
