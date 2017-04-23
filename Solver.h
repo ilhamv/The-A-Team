@@ -29,8 +29,12 @@ int Binary_Search( const double x, const std::vector<double>& vec );
 
 
 // Scatter direction
-// Return final direction dir_f after scatter initial direction dir_i with scattering polar angle mu
+// return final direction dir_f after scatter initial direction dir_i with scattering polar angle mu
 Point_t scatter_direction( const Point_t dir_i, const double mu0 );
+
+
+// Lagrenge interpolation
+double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 );
 
 
 #endif

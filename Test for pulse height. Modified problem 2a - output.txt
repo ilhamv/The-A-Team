@@ -1,6 +1,0 @@
-
-================================================
-== Test for pulse height. Modified problem 2a ==
-================================================
-Number of histories: 10000
-Track time: 86917

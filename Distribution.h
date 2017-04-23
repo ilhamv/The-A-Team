@@ -117,43 +117,37 @@ class Linear_Distribution : public Distribution_t<double>
 // Watt distribution
 class Watt_Distribution : public Distribution_t <double>
 {
-private:
-    std::vector<double> cdfChi; // The CDF
-    std::vector<double> evChi;  // The energy grid
-    std::vector<double> probChi;
-    
-public:
-    Watt_Distribution( const std::string nameFile, const std::string label = "" ): Distribution_t(label)
-    {
-        // Read watt spectrum text file
-        std::ifstream inputFile(nameFile);
-        std::string line;
-        while(getline(inputFile, line))
-        {
-            if (!line.length() )
+	private:
+		std::vector<double> evChi;   // Energy grid 
+		std::vector<double> probChi; // PDF
+		std::vector<double> cdfChi;  // CDF
+
+	public:
+	    	Watt_Distribution( const std::string nameFile, const std::string label = "" ): Distribution_t(label) // Construct cdf from watt spectrum text file
+		{
+		    	std::ifstream inputFile(nameFile);
+		    	std::string line;
+		    	while(getline(inputFile, line))
+			{
+        			if (!line.length() )
             				continue;
-            double x = 0.0, y = 0.0;
-            sscanf(line.c_str(), "%lf %lf", &x, &y);
-            evChi.push_back(x);
-            probChi.push_back(y);
-        }
-        
-        // Create the cdf vector
-        double cdfNow = probChi[0];
-        cdfChi.push_back(cdfNow);
-        for(int a = 0 ; a<probChi.size()-1 ; a++)
-        {
-            cdfNow += 0.5 * ( evChi[a+1]-evChi[a] ) * ( probChi[a+1]+probChi[a] ) ;
-            cdfChi.push_back(cdfNow);
-        }
-        
-        // Normalize the distribution
-        for(int b = 0 ; b<cdfChi.size() ; b++){
-            cdfChi[b] = cdfChi[b] / cdfNow;
-        }
-    }
-    ~Watt_Distribution() {};
-    double sample();
+        			double x = 0.0, y = 0.0;
+	        		sscanf(line.c_str(), "%lf %lf", &x, &y);
+        			evChi.push_back(x);
+        			probChi.push_back(y);
+    			}
+    
+    			// Create the cdf vector
+    			double cdfNow = probChi[0];
+    			cdfChi.push_back(cdfNow);
+    			for(int a = 0 ; a<probChi.size()-1 ; a++)
+			{
+        			cdfNow += 0.5 * ( evChi[a+1]-evChi[a] ) * ( probChi[a+1]+probChi[a] ) ;
+        			cdfChi.push_back(cdfNow);
+    			}
+		}
+	    	~Watt_Distribution() {};
+		double sample();
 };
 
 

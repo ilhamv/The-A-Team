@@ -84,14 +84,14 @@ double LinearScatter_Distribution::sample()
 
 double Watt_Distribution::sample()
 {
-    // sample the neuton fission energy from the cdf
-    const double tempCdf = Urand();
-    const int    in      = Binary_Search( tempCdf, cdfChi );
+    	// sample the neuton fission energy from the cdf
+    	const double tempCdf = Urand();
+    	const int    in      = Binary_Search( tempCdf, cdfChi );
     
-    // interpolate the energy (binary serach gives the index of the lower bound)
-    double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
+    	// interpolate the energy (binary serach gives the index of the lower bound)
+    	double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
     
-    return theEnergy; //this is in eV
+    	return theEnergy; //this is in eV
 }
 
 

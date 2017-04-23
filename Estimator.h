@@ -12,6 +12,7 @@
 
 #include "Particle.h"
 #include "Geometry.h"
+#include "Distribution.h"
 
 
 ///////////////
@@ -115,6 +116,7 @@ class Total_Score : public Score_t
 
 		double add_score( const Particle_t& P, const double track = 0.0 );
 };
+
 
 
 /////////////
@@ -247,7 +249,7 @@ class Generic_Estimator : public Estimator_t
 
 	public:
 		// Constructor: pass the estimator name
-		 Generic_Estimator( const std::string n ) : Estimator_t(n ) {};
+		 Generic_Estimator( const std::string n ) : Estimator_t(n) {};
 		~Generic_Estimator() {};
 
 		// Add thing to be scored and push new total tally
@@ -280,50 +282,20 @@ class Generic_Estimator : public Estimator_t
 class MGXS_Estimator : public Generic_Estimator
 {
 	protected:
-		std::vector<std::shared_ptr<Bin_t>>   matrix_bin; // Vector of energy bin for scattering matrix scores
-		std::vector<double>                   Chi;        // Fission neutron energy group fraction
+		std::vector<std::shared_ptr<Bin_t>> matrix_bin; // Vector of energy bin for scattering matrix scores
+		std::vector<double>                 Chi;        // Fission neutron energy group fraction (current model: universal table)
 		// Simple group constants are handled by generic estimator bin
+	
 	public:
 		// Constructor: pass the estimator name and energy grids
 		MGXS_Estimator( const std::string n ) : Generic_Estimator(n) {};
 		~MGXS_Estimator() {};
 		
-		// Set bin
-		void setBin( const std::string type, const std::vector<double> gr )
-		{
-			// Set energy grid points
-			grid = gr; // Note: energy grid points have to span all possible energy in the problem
+		// Set bin (or group structure), and calculate Chi group constants
+		void setBin( const std::string type, const std::vector<double> gr );
 
-			// Set scores = Flux, Capture, Fission, nuFission, Total, Scatter
-			scores.push_back( std::make_shared<Flux_Score>()      );
-			scores.push_back( std::make_shared<Capture_Score>()   );
-			scores.push_back( std::make_shared<Fission_Score>()   );
-			//scores.push_back( std::make_shared<nuFission_Score>() );
-			scores.push_back( std::make_shared<Total_Score>()     );
-			scores.push_back( std::make_shared<Scatter_Score>()   );
-			Nscore = scores.size();
-		
-			// Set energy bin for scores
-			std::vector<Tally_t> Tvec; // Vector of tallies corresponding to each score
-			Tally_t T;
-			Tvec.resize( Nscore, T );
-			
-			bin = std::make_shared<Energy_Bin> ( grid, Tvec, scores );
-			Nbin = grid.size() - 1.0;
-
-			// Set vector of energy bins scoring scattering only --> scattering matrix
-			std::vector<std::shared_ptr<Score_t>> temp_scores;          // Scattering score
-			temp_scores.push_back( std::make_shared<Scatter_Score>() );
-			
-			Tally_t Tsingle; // Single tally
-			Tvec.resize( 1.0, Tsingle );
-
-			for ( int i = 0 ; i < Nbin ; i++ )
-			{
-				std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
-				matrix_bin.push_back( temp_bin ); // Generate the matrix whose column vectors are the initial energy bins
-			}
-		}
+		// Calculate Chi group constant from the universal Chi table
+		void calculateChi();
 		
 		// Score at events
 		void score( const Particle_t& P, const double told, const double track = 0.0 );
@@ -334,58 +306,6 @@ class MGXS_Estimator : public Generic_Estimator
 
 		// Report results
 		void report( std::ostringstream& output, const double trackTime );
-};
-
-// Pulse Height Estimator
-////////////////////////////////////
-class PulseHeight_Estimator : public Generic_Estimator
-{
-protected:
-
-    std::vector<double>    grid;           // Bin grid
-    std::vector<double>    tallyVec;       // tally vector
-    std::vector<double>    tallySumVec;    // sum of each bin
-    std::vector<double>    tallySquaredVec;// sum of squared
-    std::vector<double>    meanVec;        // mean for each bin
-    std::vector<double>    varVec;         // variance for each bin
-    int                    Nbin = 0;       // # of tally bins, not grid bins
-    
-    std::shared_ptr<Region_t>&regPtr;      // the region of interest
-    
-    double tally_hist    = 0.0;
-    double tally_sum     = 0.0;
-    double tally_squared = 0.0;
-    double x = 0.0;
-    
-public:
-    // Constructor: pass the estimator name
-    PulseHeight_Estimator( const std::string n, std::shared_ptr<Region_t> &R ) : Generic_Estimator(n), regPtr(R) {};
-    ~PulseHeight_Estimator() {};
-    
-    // Set bin
-    void setBin( const std::string type, const std::vector<double> gr ){
-        
-        grid = gr;
-        Nbin = grid.size() - 1;
-        
-        for(int b = 0 ; b<Nbin; b++){
-            tallyVec.push_back(0.0);
-            tallySumVec.push_back(0.0);
-            tallySquaredVec.push_back(0.0);
-            meanVec.push_back(0.0);
-            varVec.push_back(0.0);
-        }
-    };
-    
-    // Score at events
-    void score( const Particle_t& P, const double told, const double track = 0.0 );
-    
-    // Closeout history
-    // Update the sum and sum of squared, and restart history sum of all tallies
-    void endHistory();
-    
-    // Report results
-    void report( std::ostringstream& output, const double trackTime );
 };
 
 
@@ -466,7 +386,7 @@ class Surface_PMF_Estimator : public UInteger_PMF_Estimator
 {
 	public:
 		// Initialize variables at construction 
-		 Surface_PMF_Estimator( const std::string n  ) : UInteger_PMF_Estimator(n ) {};
+		 Surface_PMF_Estimator( const std::string n ) : UInteger_PMF_Estimator(n) {};
 		~Surface_PMF_Estimator() {};
 
 		// Score at events
