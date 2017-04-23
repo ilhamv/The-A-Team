@@ -1,7 +1,7 @@
 exec    = a.exe
 cc      = g++
 opt     = -O3
-cflags  = -std=c++14 $(opt)
+cflags  = -std=c++11 $(opt)
 
 main    = Main.cpp
 objects = $(patsubst %.cpp,%.o,$(filter-out $(main), $(wildcard *.cpp)))

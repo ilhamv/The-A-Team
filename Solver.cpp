@@ -118,7 +118,6 @@ Point_t scatter_direction( const Point_t dir_i, const double mu0 )
 	return dir_f;
 }
 
-
 // Lagrenge interpolation
 double Linterpolate( const double x, const double x1, const double x2, const double y1, const double y2 )
 { return ( x - x2 ) / ( x1 - x2 ) * y1 + ( x - x1 ) / ( x2 - x1 ) * y2; }
