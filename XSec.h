@@ -3,6 +3,8 @@
 
 
 #include <cmath> // sqrt
+#include <vector>
+#include "Solver.h"
 
 
 class XSec_t
@@ -42,5 +44,16 @@ class OverV_XSec : public XSec_t
 		double xs( const double E ) const { return a + b / std::sqrt(E); }
 };
 
+class lookup_XSec : public XSec_t
+{
+	std::vector<double> Edata, XSdata;
+
+	public:
+		 lookup_XSec( std::vector<double> p1, std::vector<double> p2 ) : Edata(p1), XSdata(p2) {};
+		~lookup_XSec() {};
+
+		double xs( const double E ) const;
+        
+};
 
 #endif
