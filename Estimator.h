@@ -12,7 +12,6 @@
 
 #include "Particle.h"
 #include "Geometry.h"
-#include "Distribution.h"
 
 
 ///////////////
@@ -282,20 +281,50 @@ class Generic_Estimator : public Estimator_t
 class MGXS_Estimator : public Generic_Estimator
 {
 	protected:
-		std::vector<std::shared_ptr<Bin_t>> matrix_bin; // Vector of energy bin for scattering matrix scores
-		std::vector<double>                 Chi;        // Fission neutron energy group fraction (current model: universal table)
+		std::vector<std::shared_ptr<Bin_t>>   matrix_bin; // Vector of energy bin for scattering matrix scores
+		std::vector<double>                   Chi;        // Fission neutron energy group fraction
 		// Simple group constants are handled by generic estimator bin
-	
 	public:
 		// Constructor: pass the estimator name and energy grids
 		MGXS_Estimator( const std::string n ) : Generic_Estimator(n) {};
 		~MGXS_Estimator() {};
 		
-		// Set bin (or group structure), and calculate Chi group constants
-		void setBin( const std::string type, const std::vector<double> gr );
+		// Set bin
+		void setBin( const std::string type, const std::vector<double> gr )
+		{
+			// Set energy grid points
+			grid = gr; // Note: energy grid points have to span all possible energy in the problem
 
-		// Calculate Chi group constant from the universal Chi table
-		void calculateChi();
+			// Set scores = Flux, Capture, Fission, nuFission, Total, Scatter
+			scores.push_back( std::make_shared<Flux_Score>()      );
+			scores.push_back( std::make_shared<Capture_Score>()   );
+			scores.push_back( std::make_shared<Fission_Score>()   );
+			//scores.push_back( std::make_shared<nuFission_Score>() );
+			scores.push_back( std::make_shared<Total_Score>()     );
+			scores.push_back( std::make_shared<Scatter_Score>()   );
+			Nscore = scores.size();
+		
+			// Set energy bin for scores
+			std::vector<Tally_t> Tvec; // Vector of tallies corresponding to each score
+			Tally_t T;
+			Tvec.resize( Nscore, T );
+			
+			bin = std::make_shared<Energy_Bin> ( grid, Tvec, scores );
+			Nbin = grid.size() - 1.0;
+
+			// Set vector of energy bins scoring scattering only --> scattering matrix
+			std::vector<std::shared_ptr<Score_t>> temp_scores;          // Scattering score
+			temp_scores.push_back( std::make_shared<Scatter_Score>() );
+			
+			Tally_t Tsingle; // Single tally
+			Tvec.resize( 1.0, Tsingle );
+
+			for ( int i = 0 ; i < Nbin ; i++ )
+			{
+				std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
+				matrix_bin.push_back( temp_bin ); // Generate the matrix whose column vectors are the initial energy bins
+			}
+		}
 		
 		// Score at events
 		void score( const Particle_t& P, const double told, const double track = 0.0 );

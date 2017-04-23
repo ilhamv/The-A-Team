@@ -4,7 +4,7 @@
 
 #include "Estimator.h"
 #include "Geometry.h"
-#include "Solver.h"  // Binary_Search, Linterpolate
+#include "Solver.h"  // Binary_Search
 
 
 ///////////////
@@ -249,7 +249,8 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 		output << "  " + scores[i]->name() + ":\n";
 		output << "  -> Mean     = " << total_tally[i].mean;
 	       	output << "  +/-  " << total_tally[i].meanUncer;
-		output << "  (" << total_tally[i].relUncer * 100.0;
+		//output << "  (" << std::defaultfloat << total_tally[i].relUncer * 100.0; // removed default float to run on std 11
+        output << "  (" << total_tally[i].relUncer * 100.0;
 		output << "%)\n";
 		output << "  -> Variance = " << total_tally[i].var;
 	       	output << "\n";
@@ -300,47 +301,6 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 // Homogenized MG Constant Generator
 ////////////////////////////////////
 
-// Set bin (or group structure), and calculate Chi group constants
-void MGXS_Estimator::setBin( const std::string type, const std::vector<double> gr )
-{
-	// Set energy grid points
-	grid = gr; 
-
-	// Set scores = Flux, Capture, Fission, nuFission, Total, Scatter
-	scores.push_back( std::make_shared<Flux_Score>()      );
-	scores.push_back( std::make_shared<Capture_Score>()   );
-	scores.push_back( std::make_shared<Fission_Score>()   );
-	//scores.push_back( std::make_shared<nuFission_Score>() );
-	scores.push_back( std::make_shared<Total_Score>()     );
-	scores.push_back( std::make_shared<Scatter_Score>()   );
-	Nscore = scores.size();
-
-	// Set energy bin for scores
-	std::vector<Tally_t> Tvec; // Vector of tallies corresponding to each score
-	Tally_t T;
-	Tvec.resize( Nscore, T );
-	
-	bin = std::make_shared<Energy_Bin> ( grid, Tvec, scores );
-	Nbin = grid.size() - 1.0;
-
-	// Set vector of energy bins scoring scattering only --> scattering matrix
-	std::vector<std::shared_ptr<Score_t>> temp_scores;          // Scattering score
-	temp_scores.push_back( std::make_shared<Scatter_Score>() );
-	
-	Tally_t Tsingle; // Single tally
-	Tvec.resize( 1.0, Tsingle );
-
-	for ( int i = 0 ; i < Nbin ; i++ )
-	{
-		std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
-		matrix_bin.push_back( temp_bin ); // Generate the matrix whose column vectors are the initial energy bins
-	}
-
-	// Calculate Chi group constants
-	calculateChi();
-}
-
-
 // Score at events
 void MGXS_Estimator::score( const Particle_t& P, const double told, const double track /*= 0.0*/ )
 {
@@ -381,61 +341,6 @@ void MGXS_Estimator::endHistory()
 		{
 			tally_endHistory( matrix_bin[i]->tally[j][0] );
 		}
-	}
-}
-
-
-// Calculate Chi group constant from the universal Chi table
-void MGXS_Estimator::calculateChi()
-{
-	// Read watt spectrum text file
-	std::vector<double> evChi;   // Energy grid 
-	std::vector<double> probChi; // PDF
-    	std::ifstream inputFile("Chi.txt");
-    	std::string line;
-    	while(getline(inputFile, line))
-	{
-		if (!line.length() )
-			continue;
-		double x = 0.0, y = 0.0;
-		sscanf(line.c_str(), "%lf %lf", &x, &y);
-		evChi.push_back(x);
-		probChi.push_back(y);
-	}
-	
-	// Integrate Chi spectrum for each group (marching up scheme)
-	double Elow = 0.0; // Lower bound at each step of numerical integration
-	double ylow = 0.0; // Its value
-	double Eup  = 0.0; // Upper bound at each step of numerical integration (T.B.D. at each step)
-	double yup  = 0.0; // Its value
-	int    idx  = 1;   // Index in Chi spectrum data to be compared to decide the upper bound
-	
-	for ( int i = 0 ; i < Nbin ; i++ )
-	{
-		double sum = 0.0;       // Numerical integration sum
-		
-		while ( Eup < grid[i+1] )
-		{
-			if ( evChi[idx] > grid[i+1] )
-			{
-				// Upper bound is energy group grid
-				Eup = grid[i+1];
-				yup = Linterpolate( Eup, Elow, evChi[idx], ylow, probChi[idx] );
-			}
-			else
-			{
-				// Upper bound is chi spectrum data grid
-				Eup = evChi[idx];
-				yup = probChi[idx];
-				idx++;
-			}
-			sum += ( yup + ylow ) * ( Eup - Elow ) * 0.5;
-			
-			Elow = Eup;
-			ylow = yup;
-		}
-		Chi.push_back( sum );
-
 	}
 }
 
@@ -497,41 +402,11 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 
 		output << "g\t";
 		output << "upper(" + bin->unit + ")\tlower(" + bin->unit + ")\t";
-		output << std::setw(12) << std::left << "Chi" << "\t"; 
 		for ( int i = 1 ; i < Nscore ; i++ ) 
 		{ 
 			output << std::setw(12) << std::left << scores[i]->name() << "\t"; 
 			output << std::setw(12) << std::left << "uncertainty\t"; 
 		}
-		output << "\n";
-	
-		output << "----\t" << "------------\t" << "------------\t" << "------------\t";
-		for ( int i = 1 ; i < Nscore ; i++ ) 
-		{ 
-			output << "------------\t" << "------------\t"; 
-		}
-		output << "\n";
-	
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			output << j+1;
-			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
-		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
-		        output << "\t" << std::setw(12) << std::left << Chi[Nbin-j-1]; 
-			output << "\t";
-
-			for ( int i = 1 ; i < Nscore ; i++ )
-			{
-				output << std::setw(12) << bin->tally[Nbin-j-1][i].mean << "\t";
-			        output << std::setw(12) << bin->tally[Nbin-j-1][i].meanUncer << "\t";
-			}
-			output << "\n";
-		}
-		
-		output << "\nScattering matrix," << std::endl;
-
-		output << "g\t";
-		output << "upper(" + bin->unit + ")\tlower(" + bin->unit + ")\t";
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			const std::string g_prime = std::to_string(j+1);
@@ -541,6 +416,10 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		output << "\n";
 	
 		output << "----\t" << "------------\t" << "------------\t";
+		for ( int i = 1 ; i < Nscore ; i++ ) 
+		{ 
+			output << "------------\t" << "------------\t"; 
+		}
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{ 
 			output << "------------\t" << "------------\t"; 
@@ -553,6 +432,12 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
 		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
 			output << "\t";
+
+			for ( int i = 1 ; i < Nscore ; i++ )
+			{
+				output << std::setw(12) << bin->tally[Nbin-j-1][i].mean << "\t";
+			        output << std::setw(12) << bin->tally[Nbin-j-1][i].meanUncer << "\t";
+			}
 			for ( int i = 0 ; i < Nbin ; i++ )
 			{
 				output << std::setw(12) << matrix_bin[Nbin-i-1]->tally[Nbin-j-1][0].mean << "\t"; 

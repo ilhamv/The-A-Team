@@ -8,6 +8,7 @@
 #include <stack>        // stack
 #include <cmath>        // exp
 #include <sstream>      // istringstream
+#include <fstream>      // file stream
 
 #include "VReduction.h" // Split_Roulette
 #include "Const.h"      // MAX
@@ -92,11 +93,6 @@ void XML_input
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");
 
-	// Current Chi fission spectrum model is universal table
-	// 	the following parameters are used to effectively handle the shared pointer
-	bool        watt_available = false; // watt spectrum availability flag
-	std::string watt_name;              // watt spectrum distribution name if available
-
   	// Find total number of distributions
   	unsigned int num_distributions = 0;
   	for ( const auto& d : input_distributions ) { num_distributions++; }
@@ -158,13 +154,11 @@ void XML_input
           				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
         			}
                 
-		                // Watt spectrum
-		                else if (type == "watt" )
-		                {
-		                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
-				    watt_available = true;
-				    watt_name      = name;
-                		}
+                //watt spectrum
+                else if (type == "watt" )
+                {
+                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name ); 
+                }
 				
 				// Unknown
 				else 
@@ -275,7 +269,7 @@ void XML_input
     		// Add nuclide reactions
     		for ( const auto& r : n.children() ) 
 		{
-      			const std::string       rxn_type = r.name();
+      		const std::string       rxn_type = r.name();
 			std::shared_ptr<XSec_t> XS;
 			
 			// Constant XSec
@@ -293,7 +287,9 @@ void XML_input
 				iss >> a >> b;
 		    		XS = std::make_shared<OverV_XSec> ( a, b );
 			}
-			else
+			else if ( r.attribute("xs_file") )
+            {}
+            else
 			{
 				std::cout << "appropriate cross section for reaction" << rxn_type << " is required" << std::endl;
 				throw;
@@ -303,8 +299,41 @@ void XML_input
 			if ( rxn_type == "capture" )
 			{
         			Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
-      			}      
-			
+      		}      
+			// Continuous lookup Capture
+            else if (rxn_type == "capture_cont")
+            {
+                    std::string filename;
+                    // cross section loading
+                    if ( r.attribute("xs_file") )
+                    {
+                        std::istringstream iss( r.attribute("xs_file").value() );
+                        iss >> filename;
+                    }
+                    else
+                    {
+                        std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
+                        throw;
+                    }
+                    std::ifstream xs_file (filename);
+                    std::vector<double> E_vec;
+                    std::vector<double> XS_vec;
+                    double c1,c2,c3,c4,c5;
+                
+                    if (xs_file.is_open())
+                    {
+                        while(xs_file >> c1 >> c2 >> c3 >> c4 >> c5)
+                        {
+                            E_vec.push_back(c1);
+                            XS_vec.push_back(c4); //4th column is scatter
+                        }
+                        xs_file.close();
+                        XS = std::make_shared<lookup_XSec> ( E_vec, XS_vec );
+                        Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS) );
+                    }
+                    else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
+                    
+            }
 			// Scatter
 			else if ( rxn_type == "scatter" )
 			{
@@ -348,19 +377,87 @@ void XML_input
           				throw;
         			}
       			}
-
+            // Continuous lookup Scatter
+            else if ( rxn_type == "scatter_cont" )
+			{
+				std::string filename;
+                // cross section loading
+                if ( r.attribute("xs_file") )
+                    {
+                        std::istringstream iss( r.attribute("xs_file").value() );
+                        iss >> filename;
+                    }
+                else
+                    {
+                        std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
+                        throw;
+                    }
+                    
+                std::ifstream xs_file (filename);
+                std::vector<double> E_vec;
+                std::vector<double> XS_vec;
+                double c1,c2,c3,c4,c5;
+                
+                if (xs_file.is_open())
+                {
+                    while(xs_file >> c1 >> c2 >> c3 >> c4 >> c5)
+                    {
+                        E_vec.push_back(c1);
+                        XS_vec.push_back(c3); //3rd column is scatter
+                    }
+                    xs_file.close();
+                    XS = std::make_shared<lookup_XSec> ( E_vec, XS_vec );
+                    //Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS) );
+                }
+                else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
+                
+                
+                
+                //scattering distribution
+                if ( !r.attribute("distribution") ) 
+				{ 
+					std::cout << "distribution is required for scattering reaction" << std::endl;
+					throw;
+				}
+				
+				const std::string dist_name = r.attribute("distribution").value();
+        			
+				// Isotropic
+				if ( dist_name == "isotropic" ) 
+				{
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< IsotropicScatter_Distribution > (), Amass ) );
+        			}
+				
+				// Henyey-Greenstein
+				else if ( dist_name == "henyey-greenstein" ) 
+				{
+					if ( !r.attribute("g") ) 
+					{ 
+						std::cout << "parameter g is required for henyey-greenstein scattering distribution" << std::endl;
+						throw;
+					}
+					const double g = r.attribute("g").as_double();
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< HGScatter_Distribution > ( g ), Amass ) );
+        			}
+				
+				// Linearly anisotropic
+				else if ( dist_name == "linear" )
+				{
+					const double mubar = r.attribute("mubar").as_double();
+					Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS, std::make_shared< LinearScatter_Distribution > ( mubar ), Amass ) );
+        			}
+        			
+				// Unknown scattering distribution
+				else 
+				{
+          				std::cout << "unknown scattering distribution " << dist_name << " in nuclide " << name << std::endl;
+          				throw;
+        			}
+      		}
 			// Fission
 			else if ( rxn_type == "fission" )
 			{
-               			// Check if Chi is already available
-				std::shared_ptr<Distribution_t<double>> watt;
-				
-				if ( watt_available )
-				{
-					watt = findByName( double_distributions, watt_name );
-				}
-				else { watt = std::make_shared< Watt_Distribution > ("Chi.txt"); }
-
+                
 				if ( !r.attribute("multiplicity")  )
 				{ 
 					std::cout << "multiplicity is required for fission reaction" << std::endl;
@@ -379,7 +476,7 @@ void XML_input
 					}
 					const double nubar = r.attribute("nubar").as_double();
                     
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), watt ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
 				}
 
 				// Terrel
@@ -395,7 +492,88 @@ void XML_input
 					const double b     = r.attribute("b").as_double();
 					const int    nmax  = r.attribute("nmax").as_int();
 					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
-					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
+				}
+				
+				// Unknown multiplicity distribution
+				else 
+				{
+          				std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
+          				throw;
+        			}
+
+			}
+            // Continuous lookup fission
+            else if ( rxn_type == "fission_cont" )
+			{
+                std::string filename;
+                // cross section loading
+                if ( r.attribute("xs_file") )
+                    {
+                        std::istringstream iss( r.attribute("xs_file").value() );
+                        iss >> filename;
+                    }
+                else
+                    {
+                        std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
+                        throw;
+                    }
+                    
+                std::ifstream xs_file (filename);
+                std::vector<double> E_vec;
+                std::vector<double> XS_vec;
+                double c1,c2,c3,c4,c5;
+                
+                if (xs_file.is_open())
+                {
+                    while(xs_file >> c1 >> c2 >> c3 >> c4 >> c5)
+                    {
+                        E_vec.push_back(c1);
+                        XS_vec.push_back(c5); //5th column is scatter
+                    }
+                    xs_file.close();
+                    XS = std::make_shared<lookup_XSec> ( E_vec, XS_vec );
+                    //Nuc->addReaction( std::make_shared<Fission_Reaction> ( XS) );
+                }
+                else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
+                
+                
+                // multiplicity distribution
+				if ( !r.attribute("multiplicity")  )
+				{ 
+					std::cout << "multiplicity is required for fission reaction" << std::endl;
+					throw;
+				}
+
+				const std::string mult_dist_name   = r.attribute("multiplicity").value();
+				
+				// Average
+				if ( mult_dist_name == "average" )
+				{
+					if ( !r.attribute("nubar") ) 
+					{ 
+						std::cout << "parameter nubar is required for average fission multiplicity" << std::endl;
+						throw;
+					}
+					const double nubar = r.attribute("nubar").as_double();
+                    
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Average_Multiplicity_Distribution > ( nubar ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
+				}
+
+				// Terrel
+				else if ( mult_dist_name == "terrel" )
+				{
+					if ( !r.attribute("nubar") || !r.attribute("gamma") || !r.attribute("b") || !r.attribute("nmax") ) 
+					{ 
+						std::cout << "parameter nubar, gamma, b, and nmax are required for terrel fission multiplicity" << std::endl;
+						throw;
+					}
+					const double nubar = r.attribute("nubar").as_double();
+					const double gamma = r.attribute("gamma").as_double();
+					const double b     = r.attribute("b").as_double();
+					const int    nmax  = r.attribute("nmax").as_int();
+					const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
+					Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), std::make_shared< Watt_Distribution > ("Chi.txt") ) );
 				}
 				
 				// Unknown multiplicity distribution
@@ -768,8 +946,6 @@ void XML_input
         			// MGXS group
 				else
 				{
-					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
-					if ( bin_grid.back() > 2e7 ) { bin_grid[bin_grid.size()-1] = 2e7; }
 					Est->setBin( "energy", bin_grid ); 
 				}
 			}

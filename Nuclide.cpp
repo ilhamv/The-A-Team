@@ -36,6 +36,33 @@ double Nuclide_t::sigmaF( const double E )
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
+double Nuclide_t::sigmaScont( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("scatter_cont") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+double Nuclide_t::sigmaCcont( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("capture_cont") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+double Nuclide_t::sigmaFcont( const double E ) 
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type("fission_cont") ) { return r->xs( E ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
 double Nuclide_t::sigmaT( const double E )
 { 
 	double sum = 0.0;
@@ -50,7 +77,7 @@ double Nuclide_t::sigmaT( const double E )
 // Add reaction
 void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
 { 
-	if ( R->type("scatter") ) { scatter = R; } // Attach pointer on scattering reaction
+	if ( R->type("scatter") || R->type("scatter_cont") ) { scatter = R; } // Attach pointer on scattering reaction
 	reactions.push_back( R ); 
 }
 
