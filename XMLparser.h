@@ -881,7 +881,13 @@ void XML_input
 			}
 		}
 
-		else if ( e_type == "mgxs" ) { Est = std::make_shared<MGXS_Estimator> ( name ); }
+		else if ( e_type == "mgxs" ) 
+		{ 
+			unsigned int N = 1; // Default Legendre scattering components considered
+		       	if ( e.attribute("N") ) { N = e.attribute("N").as_uint(); }
+			Est = std::make_shared<MGXS_Estimator> ( name, N ); 
+		}
+
 		else { std::cout << "unknown estimator type " << name << std::endl; throw; }
 
       		for ( const auto& eChild : e.children() )
@@ -967,7 +973,7 @@ void XML_input
 				else
 				{
 					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
-					if ( bin_grid.back() > 2e7 ) { bin_grid[bin_grid.size()-1] = 2e7; }
+					if ( bin_grid.back() > 3.1e7 ) { bin_grid[bin_grid.size()-1] = 3.1e7; }
 					Est->setBin( "energy", bin_grid ); 
 				}
 			}

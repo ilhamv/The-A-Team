@@ -283,16 +283,23 @@ class MGXS_Estimator : public Generic_Estimator
 {
 	protected:
 		std::vector<std::shared_ptr<Bin_t>> matrix_bin; // Vector of energy bin for scattering matrix scores
-		std::vector<double>                 Chi;        // Fission neutron energy group fraction (current model: universal table)
+		std::vector<std::vector<std::shared_ptr<Bin_t>>> tensor_bin; // Legendre components tensor ( N x G x G )
+		                                                             //   consists of GxG scattering matrix for each legendre order n=[0,N]
+		const unsigned int                               N;          // Legendre order considered
+		std::vector<double>                              Pl;         // To store legendre polynomials value		
+		std::vector<double>                              Chi;        // Fission neutron energy group fraction (current model: universal table)
 		// Simple group constants are handled by generic estimator bin
 	
 	public:
 		// Constructor: pass the estimator name and energy grids
-		MGXS_Estimator( const std::string n ) : Generic_Estimator(n) {};
+		MGXS_Estimator( const std::string n, const unsigned int pn ) : Generic_Estimator(n), N(pn) {};
 		~MGXS_Estimator() {};
 		
 		// Set bin (or group structure), and calculate Chi group constants
 		void setBin( const std::string type, const std::vector<double> gr );
+
+		// Calculate Legendre polynomials at mu
+		void calculatePl( const double mu );
 
 		// Calculate Chi group constant from the universal Chi table
 		void calculateChi();

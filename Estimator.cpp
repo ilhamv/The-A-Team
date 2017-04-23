@@ -306,6 +306,9 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	// Set energy grid points
 	grid = gr; 
 
+	///////////////////////////////////////////////////////
+	// Set bin with multi score for basic MGXS constants //
+
 	// Set scores = Flux, Capture, Fission, nuFission, Total, Scatter
 	scores.push_back( std::make_shared<Flux_Score>()      );
 	scores.push_back( std::make_shared<Capture_Score>()   );
@@ -315,29 +318,71 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	scores.push_back( std::make_shared<Scatter_Score>()   );
 	Nscore = scores.size();
 
-	// Set energy bin for scores
-	std::vector<Tally_t> Tvec; // Vector of tallies corresponding to each score
+	// Set a vector of tallies corresponding to each score
+	std::vector<Tally_t> Tvec; 
 	Tally_t T;
 	Tvec.resize( Nscore, T );
-	
+
+	// Set energy bins containing copies of the vector of tallies
 	bin = std::make_shared<Energy_Bin> ( grid, Tvec, scores );
 	Nbin = grid.size() - 1.0;
 
-	// Set vector of energy bins scoring scattering only --> scattering matrix
-	std::vector<std::shared_ptr<Score_t>> temp_scores;          // Scattering score
+	// Basic MGXS constants bin done//
+	//////////////////////////////////
+
+
+	///////////////////////////////////////////////
+	// Set Legendre scattering components tensor //
+
+	// Set scores = Scatter	
+	std::vector<std::shared_ptr<Score_t>> temp_scores;
 	temp_scores.push_back( std::make_shared<Scatter_Score>() );
 	
-	Tally_t Tsingle; // Single tally
-	Tvec.resize( 1.0, Tsingle );
+	// Set a temporary vector of tallies corresponding to each score
+	std::vector<Tally_t> temp_Tvec; 
+	temp_Tvec.push_back( T ); // Previous single tally T is employed
 
+	// Construct the legendre scattering components tensor
 	for ( int i = 0 ; i < Nbin ; i++ )
 	{
-		std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
+		std::shared_ptr<Bin_t> temp_bin = std::make_shared<Energy_Bin> ( grid, temp_Tvec, temp_scores ); // Bin of initial energy with only one tally for scattering score
 		matrix_bin.push_back( temp_bin ); // Generate the matrix whose column vectors are the initial energy bins
 	}
+	
+	for ( int j = 0 ; j <= N ; j++ )
+	{
+		std::vector<std::shared_ptr<Bin_t>> temp_matrix; // Temporary matrix ( final energy bin x initial energy bin )
+		                                                 // to be pushed to the legendre scattering components tensor
+		for ( int i = 0 ; i < Nbin ; i++ )
+		{
+			// Temporary bin of initial energy with only one tally for scattering score
+			std::shared_ptr<Bin_t> t_bin = std::make_shared<Energy_Bin> ( grid, temp_Tvec, temp_scores ); 
+			// Push temporary bin into temporary matrix
+			temp_matrix.push_back( t_bin ); 
+		}
+		tensor_bin.push_back( temp_matrix ); // Push temmporary matrix into the tensor
+	}
+	
+	// Set legendre polynomials storage
+	Pl.push_back( 1.0 ); // P0
+	Pl.push_back( 1.0 ); // P1 (always constructed by default, even if N=0)
+	for ( int i = 2 ; i <= N ; i++ ) { Pl.push_back( 1.0 ); }
+
+	// Legendre Scattering components tensor done//
+	///////////////////////////////////////////////
+
 
 	// Calculate Chi group constants
 	calculateChi();
+}
+
+
+// Calculate Legendre polynomials at mu
+void MGXS_Estimator::calculatePl( const double mu )
+{
+	Pl[1] = mu;
+	for ( int n = 2 ; n <=N ; n++ )
+	{ Pl[n] = ( ( 2.0*n - 1.0 ) * mu * Pl[n-1] - ( n - 1.0 ) * Pl[n-2] ) / n; }
 }
 
 
@@ -351,12 +396,23 @@ void MGXS_Estimator::score( const Particle_t& P, const double told, const double
 	// First, simulate scattering reaction to get post-scattering particle information
 	Particle_t P_final = P;
 	P.region()->simulate_scatter( P_final );
+
+	// Compute scattering cosine and considered legendre polynomials
+	const double mu = P.dir().x*P_final.dir().x + P.dir().y*P_final.dir().y + P.dir().z*P_final.dir().z;
+	calculatePl( mu );
 	
 	// Then, find the final energy bin location
 	const int loc = Binary_Search( P_final.energy(), grid );
 	
 	// Final energy bin location is set, now score into the initial energy bin location
-	matrix_bin[loc]->score( P, grid, told, track );
+	matrix_bin[loc]->score( P, grid, told, track*Pl[0] );
+
+	// Final energy bin location is set, now score into the appropriate bins
+	// Iterate over considered Legendre components
+	for ( int i = 0 ; i <= N ; i++ )
+	{
+		tensor_bin[i][loc]->score( P, grid, told, track*Pl[i] );
+	}
 }
 
 
@@ -380,6 +436,10 @@ void MGXS_Estimator::endHistory()
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			tally_endHistory( matrix_bin[i]->tally[j][0] );
+			for ( int n = 0 ; n <= N ; n++ )
+			{
+				tally_endHistory( tensor_bin[n][i]->tally[j][0] );
+			}
 		}
 	}
 }
@@ -458,6 +518,10 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			tally_stats( matrix_bin[i]->tally[j][0], trackTime );
+			for ( int n = 0 ; n <= N ; n++ )
+			{
+				tally_stats( tensor_bin[n][i]->tally[j][0], trackTime );
+			}	
 		}	
 	}	
 	
@@ -481,6 +545,12 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 
 			matrix_bin[i]->tally[j][0].mean = matrix_bin[i]->tally[j][0].mean / bin->tally[j][0].mean;
 			matrix_bin[i]->tally[j][0].meanUncer = matrix_bin[i]->tally[j][0].meanUncer * matrix_bin[i]->tally[j][0].mean;
+
+			const double C = tensor_bin[0][i]->tally[j][0].meanUncer / tensor_bin[0][i]->tally[j][0].mean;
+			tensor_bin[0][i]->tally[j][0].meanUncer = std::sqrt( C*C + B*B );
+
+			tensor_bin[0][i]->tally[j][0].mean = tensor_bin[0][i]->tally[j][0].mean / bin->tally[j][0].mean;
+			tensor_bin[0][i]->tally[j][0].meanUncer = tensor_bin[0][i]->tally[j][0].meanUncer * tensor_bin[0][i]->tally[j][0].mean;
 		}	
 	}	
 	
@@ -493,10 +563,29 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 	// Note energy group number is reversed for convenience
 	if ( Nbin != 0 )
 	{
-		output << "Homogenized MG Constants," << std::endl;
+		output << "Group structure," << std::endl;
 
 		output << "g\t";
 		output << "upper(" + bin->unit + ")\tlower(" + bin->unit + ")\t";
+		output << std::setw(12) << std::left << scores[0]->name() << "\t"; 
+		output << std::setw(12) << std::left << "uncertainty\t"; 
+		output << "\n";
+	
+		output << "----\t" << "------------\t" << "------------\t" << "------------\t" << "------------\t";
+		output << "\n";
+	
+		for ( int j = 0 ; j < Nbin ; j++ )
+		{
+			output << j+1;
+			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
+		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
+		        output << "\t" << std::setw(12) << bin->tally[Nbin-j-1][0].mean; 
+		        output << "\t" << std::setw(12) << bin->tally[Nbin-j-1][0].meanUncer; 
+			output << "\n";
+		}
+		output << "\n\nHomogenized MG Constants," << std::endl;
+
+		output << "g\t";
 		output << std::setw(12) << std::left << "Chi" << "\t"; 
 		for ( int i = 1 ; i < Nscore ; i++ ) 
 		{ 
@@ -505,7 +594,7 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		}
 		output << "\n";
 	
-		output << "----\t" << "------------\t" << "------------\t" << "------------\t";
+		output << "----\t" << "------------\t";
 		for ( int i = 1 ; i < Nscore ; i++ ) 
 		{ 
 			output << "------------\t" << "------------\t"; 
@@ -515,8 +604,6 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 		for ( int j = 0 ; j < Nbin ; j++ )
 		{
 			output << j+1;
-			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
-		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
 		        output << "\t" << std::setw(12) << std::left << Chi[Nbin-j-1]; 
 			output << "\t";
 
@@ -528,35 +615,38 @@ void MGXS_Estimator::report( std::ostringstream& output, const double trackTime 
 			output << "\n";
 		}
 		
-		output << "\nScattering matrix," << std::endl;
+		output << "\n\nLegendre Scattering Matrix Components," << std::endl;
+		
+		for ( int n = 0 ; n <= N ; n++ )
+		{
+			output << "Sigma_s" << n << "\n";
 
-		output << "g\t";
-		output << "upper(" + bin->unit + ")\tlower(" + bin->unit + ")\t";
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			const std::string g_prime = std::to_string(j+1);
-			output << std::setw(12) << std::left << "g -> " + g_prime << "\t"; 
-			output << std::setw(12) << std::left << "uncertainty\t"; 
-		}
-		output << "\n";
-	
-		output << "----\t" << "------------\t" << "------------\t";
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{ 
-			output << "------------\t" << "------------\t"; 
-		}
-		output << "\n";
-	
-		for ( int j = 0 ; j < Nbin ; j++ )
-		{
-			output << j+1;
-			output << "\t" << std::setw(12) << std::left << grid[Nbin-j];
-		        output << "\t" << std::setw(12) << std::left << grid[Nbin-j-1]; 
-			output << "\t";
-			for ( int i = 0 ; i < Nbin ; i++ )
+			output << "g\t";
+			for ( int j = 0 ; j < Nbin ; j++ )
 			{
-				output << std::setw(12) << matrix_bin[Nbin-i-1]->tally[Nbin-j-1][0].mean << "\t"; 
-				output << std::setw(12) << matrix_bin[Nbin-i-1]->tally[Nbin-j-1][0].meanUncer << "\t"; 
+				const std::string g_prime = std::to_string(j+1);
+				output << std::setw(12) << std::left << "g -> " + g_prime << "\t"; 
+				output << std::setw(12) << std::left << "uncertainty\t"; 
+			}
+			output << "\n";
+	
+			output << "----\t";
+			for ( int j = 0 ; j < Nbin ; j++ )
+			{ 
+				output << "------------\t" << "------------\t"; 
+			}
+			output << "\n";
+	
+			for ( int j = 0 ; j < Nbin ; j++ )
+			{
+				output << j+1;
+				output << "\t";
+				for ( int i = 0 ; i < Nbin ; i++ )
+				{
+					output << std::setw(12) << tensor_bin[n][Nbin-i-1]->tally[Nbin-j-1][0].mean << "\t"; 
+					output << std::setw(12) << tensor_bin[n][Nbin-i-1]->tally[Nbin-j-1][0].meanUncer << "\t"; 
+				}
+				output << "\n";
 			}
 			output << "\n";
 		}
