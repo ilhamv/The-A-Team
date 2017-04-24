@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Infinite Fuel Cell MG XS Generation" histories="1e6"/>
+	<description name="Infinite Fuel Cell MG XS Generation" histories="1e5"/>
 </simulation>
 
 
@@ -48,9 +48,9 @@
 
 
 <estimators>
-  	<mgxs name="MG" N="3">
-		<group    grid="0 0.025 1 100 10000000000000000"/>
-    		<region   name="slab"/>
+  	<mgxs name="MG">
+		<group grid="0 1 10000 10000000000000000"/>
+    		<region name="slab"/>
   	</mgxs>
 </estimators>
 

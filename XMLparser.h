@@ -64,13 +64,17 @@ void XML_input
 	// XML input treatment //
 	
 	// User enters the XML file name and pugixml will attempt to load
+    std::string dirTestFolder = "./test_folder/";
+    
 	std::string input_file_name;
   	std::cout << "\nEnter XML input file name:\n";
   	std::cin  >> input_file_name;
+    
+    dirTestFolder += input_file_name;
 	
 	// XML input file
 	pugi::xml_document input_file;
-	pugi::xml_parse_result load_result = input_file.load_file( input_file_name.c_str() );
+    pugi::xml_parse_result load_result = input_file.load_file( dirTestFolder.c_str() ) ; //input_file_name.c_str() );
 
 	// Check to see if result failed and throw an exception if it did
 	if ( ! load_result ) 
