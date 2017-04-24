@@ -7,6 +7,7 @@
 #include "Point.h"
 #include "Const.h"       // PI2
 #include "Solver.h"
+#include "Particle.h"
 
 double Uniform_Distribution::sample() 
 {
@@ -82,6 +83,7 @@ double LinearScatter_Distribution::sample()
 	else { return 2.0 * Urand() - 1.0; }
 }
 
+/*
 double Watt_Distribution::sample()
 {
     	// sample the neuton fission energy from the cdf
@@ -92,6 +94,81 @@ double Watt_Distribution::sample()
     	double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
     
     	return theEnergy; //this is in eV
+}
+ */
+
+double Watt_Distribution::sampleFis( const Particle_t &P )
+{
+    double pE = P.energy();
+    //make a decision for a, b, and g
+    if      ( nameNuc == "Th232" && pE < 2.5e4                   ) {
+        a = a1;
+        b = b1;
+        g = g1;
+    }
+    else if ( nameNuc == "Th232" && pE >= 2.5e4   &&  pE < 1.0e6 ) {
+        a = a2;
+        b = b2;
+        g = g2;
+    }
+    else if ( nameNuc == "Th232" && pE >= 1.0e6   &&  pE < 14.0e6 ) {
+        a = a3;
+        b = b3;
+        g = g3;
+    }
+    else if ( nameNuc == "U233"  && pE < 1.0e6                    ) {
+        a = a4;
+        b = b4;
+        g = g4;
+    }
+    else if ( nameNuc == "U233"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
+        a = a5;
+        b = b5;
+        g = g5;
+    }
+    else if ( nameNuc == "U235"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
+        a = a7;
+        b = b7;
+        g = g7;
+    }
+    else if ( nameNuc == "U238"  && pE < 2.5e4                    ) {
+        a = a8;
+        b = b8;
+        g = g8;
+    }
+    else if ( nameNuc == "U238"  && pE >= 2.5e4   &&  pE < 1.0e6  ) {
+        a = a9;
+        b = b9;
+        g = g9;
+    }
+    else if ( nameNuc == "U238"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
+        a = a10;
+        b = b10;
+        g = g10;
+    }
+    else if ( nameNuc == "Pu239" && pE < 1.0e6                    ) {
+        a = a11;
+        b = b11;
+        g = g11;
+    }
+    else if ( nameNuc == "Pu239" && pE >= 1.0    &&  pE < 14.0   ) {
+        a = a12;
+        b = b12;
+        g = g12;
+    }
+
+    //do the sampling
+    double Eout = 0.0;
+    while(1){
+        double rand1 = Urand();
+        Eout  = -a*g*log(rand1); //MeV
+        
+        if(  pow( (1.0-g)*(1.0-log(rand1)) -  log(Urand()) , 2 ) < b*Eout ){
+            break;
+        }
+    }
+    
+    return ( Eout*1.0e6 ); //eV
 }
 
 
