@@ -23,18 +23,18 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	// push all but one of them into the Particle bank, and reset the top particle 
 	// if no secondaries, kill the particle
 
-	int n = nu_dist->sample(); // sampled multiplicity
+	int n = nu_dist->sample( ); // sampled multiplicity
     
 	if ( n != 0 ) 
-	{
-		// bank all but last particle (skips if n = 1)
-		for ( int i = 0 ; i < n - 1 ; i++ ) 
-		{
-            		double e = fissionEnergy_dist->sample(); //sample neutron fission energy
-            		Particle_t p( P.pos(), isotropic.sample(), e, P.time(), P.weight() );
-			p.setRegion( P.region() );
-			Pbank.push( p );
-		}
+    {
+        // bank all but last particle (skips if n = 1)
+        for ( int i = 0 ; i < n - 1 ; i++ )
+        {
+            double e = fissionEnergy_dist->sampleFis( P ); //sample neutron fission energy
+            Particle_t p( P.pos(), isotropic.sample(), e, P.time(), P.weight() );
+            p.setRegion( P.region() );
+            Pbank.push( p );
+        }
 
 		// reset the top particle
 		P.setDirection( isotropic.sample() );

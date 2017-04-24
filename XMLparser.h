@@ -9,6 +9,7 @@
 #include <cmath>        // exp
 #include <sstream>      // istringstream
 #include <fstream>      // file stream
+#include <dirent.h>     // open a folder
 
 #include "VReduction.h" // Split_Roulette
 #include "Const.h"      // MAX
@@ -22,6 +23,7 @@
 #include "Reaction.h"
 #include "Estimator.h"
 #include "XSec.h"
+
 
 // Function that returns an item from a vector of objects of type T by name provided
 // the object class has a string and a method called name() allowing for it to be returned
@@ -146,30 +148,32 @@ void XML_input
           				Dist = std::make_shared< Linear_Distribution > ( a, b, fa, fb, name );
         			}
 	        		
-				// Cubic-double
-				else if ( type == "cubic" ) 
-				{
-          				const double a    = d.attribute("a").as_double();
-	          			const double b    = d.attribute("b").as_double();
-        	  			const double c3   = d.attribute("c3").as_double();
-          				const double c2   = d.attribute("c2").as_double();
-        	  			const double c1   = d.attribute("c1").as_double();
-          				const double c0   = d.attribute("c0").as_double();
-          				const double fmax = d.attribute("fmax").as_double();
-          				Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
-        			}
+                // Cubic-double
+                else if ( type == "cubic" )
+                {
+                    const double a    = d.attribute("a").as_double();
+                    const double b    = d.attribute("b").as_double();
+                    const double c3   = d.attribute("c3").as_double();
+                    const double c2   = d.attribute("c2").as_double();
+                    const double c1   = d.attribute("c1").as_double();
+                    const double c0   = d.attribute("c0").as_double();
+                    const double fmax = d.attribute("fmax").as_double();
+                    Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
+                }
                 
-		                // Watt spectrum
-		                else if (type == "watt" )
-		                {
-		                    Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
-				    watt_available = true;
-				    watt_name      = name;
-                		}
-				
-				// Unknown
-				else 
-				{
+                // Watt spectrum
+                else if (type == "watt" )
+                {
+                    //Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
+                    //Default is U235 thermal
+                    Dist = std::make_shared< Watt_Distribution > ( "U235", name  );
+                    watt_available = true;
+                    watt_name      = name;
+                }
+                
+                // Unknown
+                else 
+                {
           				std::cout << "unsupported distribution with data type " << data << std::endl;
           				throw;
         			}
@@ -262,8 +266,9 @@ void XML_input
 	pugi::xml_node input_nuclides = input_file.child("nuclides");
   	for ( const auto& n : input_nuclides )
 	{
-    		const std::string          name  = n.attribute("name").value();
+        const std::string          name  = n.attribute("name").value();
 		double                     Amass = 1e9; // dedault nuclide mass
+        const std::string        nameNuc = name;
     		
 		// Provided nuclide mass input
 		if ( n.attribute("A") ) 
@@ -311,18 +316,23 @@ void XML_input
             else if (rxn_type == "capture_cont")
             {
                     std::string filename;
+                    std::string dirName = "./xs_folder/";
+                
                     // cross section loading
                     if ( r.attribute("xs_file") )
                     {
+                        
                         std::istringstream iss( r.attribute("xs_file").value() );
                         iss >> filename;
+                        dirName += filename;
                     }
                     else
                     {
                         std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
                         throw;
                     }
-                    std::ifstream xs_file (filename);
+
+                std::ifstream xs_file (dirName);
                     std::vector<double> E_vec;
                     std::vector<double> XS_vec;
                     double c1,c2,c3,c4,c5;
@@ -388,19 +398,24 @@ void XML_input
             else if ( rxn_type == "scatter_cont" )
 			{
 				std::string filename;
+                std::string dirName = "./xs_folder/";
+                
                 // cross section loading
                 if ( r.attribute("xs_file") )
                     {
+                        
                         std::istringstream iss( r.attribute("xs_file").value() );
                         iss >> filename;
+                        dirName += filename;
+                        
                     }
                 else
                     {
                         std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
                         throw;
                     }
-                    
-                std::ifstream xs_file (filename);
+                
+                std::ifstream xs_file (dirName);
                 std::vector<double> E_vec;
                 std::vector<double> XS_vec;
                 double c1,c2,c3,c4,c5;
@@ -417,8 +432,6 @@ void XML_input
                     //Nuc->addReaction( std::make_shared< Scatter_Reaction > ( XS) );
                 }
                 else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
-                
-                
                 
                 //scattering distribution
                 if ( !r.attribute("distribution") ) 
@@ -471,7 +484,7 @@ void XML_input
 				{
 					watt = findByName( double_distributions, watt_name );
 				}
-				else { watt = std::make_shared< Watt_Distribution > ("Chi.txt"); }
+				else { watt = std::make_shared< Watt_Distribution > ( nameNuc ); }
 
 				if ( !r.attribute("multiplicity")  )
 				{ 
@@ -522,19 +535,23 @@ void XML_input
 			else if ( rxn_type == "fission_cont" )
 			{
                 std::string filename;
+                std::string dirName = "./xs_folder/";
+                
                 // cross section loading
                 if ( r.attribute("xs_file") )
                     {
+                        
                         std::istringstream iss( r.attribute("xs_file").value() );
                         iss >> filename;
+                        dirName += filename;
                     }
                 else
                     {
                         std::cout << "Cross section file for reaction" << rxn_type << " is required" << std::endl;
                         throw;
                     }
-                    
-                std::ifstream xs_file (filename);
+                
+                std::ifstream xs_file (dirName);
                 std::vector<double> E_vec;
                 std::vector<double> XS_vec;
                 double c1,c2,c3,c4,c5;
@@ -551,14 +568,15 @@ void XML_input
                     //Nuc->addReaction( std::make_shared<Fission_Reaction> ( XS) );
                 }
                 else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
-               			// Check if Chi is already available
+                
+               	// Check if Chi is already available
 				std::shared_ptr<Distribution_t<double>> watt;
 				
 				if ( watt_available )
 				{
 					watt = findByName( double_distributions, watt_name );
 				}
-				else { watt = std::make_shared< Watt_Distribution > ("Chi.txt"); }
+				else { watt = std::make_shared< Watt_Distribution > ( nameNuc ); }
 
 				if ( !r.attribute("multiplicity")  )
 				{ 
@@ -881,13 +899,7 @@ void XML_input
 			}
 		}
 
-		else if ( e_type == "mgxs" ) 
-		{ 
-			unsigned int N = 1; // Default Legendre scattering components considered
-		       	if ( e.attribute("N") ) { N = e.attribute("N").as_uint(); }
-			Est = std::make_shared<MGXS_Estimator> ( name, N ); 
-		}
-
+		else if ( e_type == "mgxs" ) { Est = std::make_shared<MGXS_Estimator> ( name ); }
 		else { std::cout << "unknown estimator type " << name << std::endl; throw; }
 
       		for ( const auto& eChild : e.children() )
@@ -973,7 +985,7 @@ void XML_input
 				else
 				{
 					if ( bin_grid[0] > 0.0 ) { bin_grid.insert( bin_grid.begin(), 0.0 ); }
-					if ( bin_grid.back() > 3.1e7 ) { bin_grid[bin_grid.size()-1] = 3.1e7; }
+					if ( bin_grid.back() > 2e7 ) { bin_grid[bin_grid.size()-1] = 2e7; }
 					Est->setBin( "energy", bin_grid ); 
 				}
 			}
