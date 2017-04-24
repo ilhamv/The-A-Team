@@ -322,6 +322,9 @@ class Region_t : public Geometry_t
 		
 		// Add a bounding surface
 		void addSurface ( const std::shared_ptr< Surface_t  >& S, const int sense );
+    
+        // Return pointers to surfaces that belong to certain region
+        std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
 
     		// Test if particle is in the region
 		bool testPoint( const Point_t& p );
