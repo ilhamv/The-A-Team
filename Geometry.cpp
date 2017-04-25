@@ -405,10 +405,10 @@ double Region_t::collision_distance( const double E )
 
 // Collision
 // Let the Material take care of the collision sample and reaction process
-void Region_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Region_t::collision( Particle_t& P, bool eigenvalue, std::stack< Particle_t >& Pbank, std::stack< Particle_t>& Fbank )
 { 
 	if ( material ) 
-	{ material->collision_sample( P, Pbank ); }
+	{ material->collision_sample( P, eigenvalue, Pbank, Fbank ); }
 	// Vacuum --> Kill particle at collision
 	else { return P.kill(); }
 }	

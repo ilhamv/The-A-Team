@@ -30,8 +30,8 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 		// bank all but last particle (skips if n = 1)
 		for ( int i = 0 ; i < n - 1 ; i++ ) 
 		{
-            		double e = fissionEnergy_dist->sample(); //sample neutron fission energy
-            		Particle_t p( P.pos(), isotropic.sample(), e, P.time(), P.weight() );
+            double e = fissionEnergy_dist->sample(); //sample neutron fission energy
+            Particle_t p( P.pos(), isotropic.sample(), e, P.time(), P.weight() );
 			p.setRegion( P.region() );
 			Pbank.push( p );
 		}

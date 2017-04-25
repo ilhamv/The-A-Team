@@ -43,6 +43,9 @@ void XML_input
 	unsigned long long&                                      nhist,          
 	double&                                                  Ecut_off,
 	double&                                                  tcut_off,
+	bool& 													 eigenvalue,
+	int&													 ncycles,
+	int&													 npassive,
 	Source_Bank&                                             Sbank,
 	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
 	std::vector < std::shared_ptr<Region_t>    >&            Region,    
@@ -75,7 +78,7 @@ void XML_input
 	
 	// Set simulation description: name and # of histories
   	pugi::xml_node input_simulation = input_file.child("simulation");
-    	
+
 	for ( const auto& s : input_simulation )
 	{
 		if( (std::string) s.name() == "description" )
@@ -87,6 +90,12 @@ void XML_input
 		{
 			if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
 			if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
+		}
+		else if ( (std::string) s.name() == "k-eigenvalue" )
+		{
+			eigenvalue = 1;
+			ncycles = s.attribute("number_of_cycles").as_int();
+			npassive = s.attribute("passive_cycles").as_int();
 		}
 	}
         
@@ -1088,7 +1097,10 @@ void XML_input
     				throw;
   			}
 			
-			Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
+			if(eigenvalue)
+				Src = std::make_shared<Eigenvalue_Source> ( nhist, posDist, dirDist, enrgDist, timeDist );
+			else
+				Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
 		}
 
 		// Unknown source type

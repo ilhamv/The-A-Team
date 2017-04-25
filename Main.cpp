@@ -28,9 +28,13 @@ int main()
 	unsigned long long                            nhist;             // Number of particle samples
 	double                                        Ecut_off  = 0.0;   // Energy cut-off
 	double                                        tcut_off  = MAX;   // Time cut-off
+	bool 										  eigenvalue = 0;	 // toggle for fixed-source vs k-eigenvalue simulation
+	int										      ncycles = 1;		 // total number of cycles to run for k-eigenvalue simulation
+	int										      npassive = 0;      // number of cycles to skip for source convergence for k-eigenvalue simulation
 	unsigned long long                            trackTime = 0;     // "Computation time" (particle track) for variance reduction
 	Source_Bank                                   Sbank;             // Source bank
 	std::stack  < Particle_t >                    Pbank;             // Particle bank
+	std::stack  < Particle_t >                    Fbank;			 // Fission bank to update source for k-eigenvalue simulations
 	std::vector < std::shared_ptr<Surface_t>    > Surface;           // Surfaces
 	std::vector < std::shared_ptr<Region_t>     > Region;            // Regions
 	std::vector < std::shared_ptr<Nuclide_t>    > Nuclide;           // Nuclides
@@ -44,7 +48,8 @@ int main()
 	
 	// XML input parser	
 	XML_input
-	( simName, nhist, Ecut_off, tcut_off, Sbank, Surface, Region, Nuclide, Material, Estimator, double_distributions, int_distributions, point_distributions );
+	( simName, nhist, Ecut_off, tcut_off, eigenvalue, ncycles, npassive, Sbank, Surface, Region, Nuclide,
+      Material, Estimator, double_distributions, int_distributions, point_distributions );
 	
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
 	std::cout.flush();
@@ -103,7 +108,7 @@ int main()
 				{
 					// Move particle to collision site and sample the collision and tally if there is any region tally
 					R->moveParticle( P, dcol );
-					R->collision( P, Pbank );
+					R->collision( P, eigenvalue, Pbank, Fbank );
 					
 					// Accumulate "computation time"
 					trackTime++;

@@ -79,16 +79,31 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 
 // Sample entire collision (nuclide, then nuclide reaction)
 // Then, process the reaction on the Particle 
-void Material_t::collision_sample( Particle_t& P, std::stack<Particle_t>& Pbank ) 
+void Material_t::collision_sample( Particle_t& P, bool eigenvalue, std::stack< Particle_t >& Pbank, std::stack< Particle_t >& Fbank ) 
 {
 	// First sample nuclide
 	std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
 
 	// Now get the reaction
 	std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );
+
+	// Pre-reaction particle bank size
+	int prevSize = Pbank.size();
 	
 	// Finally process the reaction on the Particle
 	R->sample( P, Pbank );
+
+	// Bank fission particles if applicable
+	if( eigenvalue && R->type("fission") )
+	{
+		int nu = Pbank->size() - prevSize;
+		for(int n = 0; n < nu; n++)
+		{
+			Fbank.push( Pbank.top() );
+			Pbank.pop();
+		}
+	}
+	return;
 }
 		
 

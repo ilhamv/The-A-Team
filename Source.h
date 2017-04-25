@@ -122,7 +122,7 @@ class Generic_Source : public Source_t
 {
   	private:
     		// Position, direction, energy and time distribution
-		const std::shared_ptr< Distribution_t<Point_t> > dist_pos;
+			const std::shared_ptr< Distribution_t<Point_t> > dist_pos;
     		const std::shared_ptr< Distribution_t<Point_t> > dist_dir;
     		const std::shared_ptr< Distribution_t<double>  > dist_enrg;
     		const std::shared_ptr< Distribution_t<double>  > dist_time;
@@ -134,6 +134,21 @@ class Generic_Source : public Source_t
     		Particle_t getSource();
 };
 
+// Updatable source for k-eigenvalue calculations
+class Eigenvalue_Source : public Source_t
+{
+	private:
+		const int source_weight;						//overall source weight kept constant over all iterations
+		double source_particle_weight;					//weight of each source particle set to maintain constant source_weight
+		std::stack <Particle_t> source_particle_bank;
+	public:
+		Eigenvalue_Source( const int SW, const std::shared_ptr< Distribution_t<Point_t> > pos, const std::shared_ptr< Distribution_t<Point_t> > dir,
+				const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time );
+		~Eigenvalue_Source() {};
+
+		void updateSource( const std::stack <Particle_t> F );
+		Particle_t getSource();
+};
 
 // Source Bank
 // A collection of sources and its probability (or ratio) 
