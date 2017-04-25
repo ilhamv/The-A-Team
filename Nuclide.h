@@ -28,9 +28,9 @@ class Nuclide_t
 		double      sigmaS( const double E );
 		double      sigmaC( const double E );
 		double      sigmaF( const double E );
-        double      sigmaScont( const double E );
-		double      sigmaCcont( const double E );
-		double      sigmaFcont( const double E );
+		
+		// Sample Chi spectrum
+    		double Chi( const double E );
 
 		// Add reaction
 		void   addReaction( const std::shared_ptr< Reaction_t >& R );

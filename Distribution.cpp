@@ -8,14 +8,15 @@
 #include "Const.h"       // PI2
 #include "Solver.h"
 #include "Particle.h"
+#include "Solver.h" // Linterpolate
 
-double Uniform_Distribution::sample() 
+double Uniform_Distribution::sample( const double param /*= 0.0*/ ) 
 {
 	return a + Urand() * range;
 }
 
 
-double Linear_Distribution::sample() 
+double Linear_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	double r1 = Urand(), r2 = Urand();
   	double p  = 2.0 * std::fmin( fa, fb ) / ( fa + fb );
@@ -28,7 +29,7 @@ double Linear_Distribution::sample()
 }
 
 
-double Cubic_Distribution::sample() 
+double Cubic_Distribution::sample( const double param /*= 0.0*/ ) 
 {
 	double x;
 	double y;
@@ -44,13 +45,13 @@ double Cubic_Distribution::sample()
 }
 
 
-double Normal_Distribution::sample() 
+double Normal_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	return mean + sigma * std::sqrt( -2.0 * std::log( Urand() ) ) * std::cos( twopi * Urand() ); 
 }
 
 
-double RayleighScatter_Distribution::sample() 
+double RayleighScatter_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	// perform rejection sampling of Rayleigh scattering distribution bounded by uniform distribution
   	// empirical tests showed that this method was the fastest with optimized -O3 setting with g++ (on MacOS)
@@ -67,7 +68,7 @@ double RayleighScatter_Distribution::sample()
 }
 
 
-double HGScatter_Distribution::sample() 
+double HGScatter_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	// direct inversion of Henhey-Green scattering distribution
   	const double x = Urand() + E;
@@ -76,103 +77,59 @@ double HGScatter_Distribution::sample()
 }
 
 
-double LinearScatter_Distribution::sample()
+double LinearScatter_Distribution::sample( const double param /*= 0.0*/ )
 {
 	// Linear decomposition
 	if ( Urand() < prob ) { return std::sqrt( 4.0 * Urand() ) - 1.0; }
 	else { return 2.0 * Urand() - 1.0; }
 }
 
-/*
-double Watt_Distribution::sample()
-{
-    	// sample the neuton fission energy from the cdf
-    	const double tempCdf = Urand();
-    	const int    in      = Binary_Search( tempCdf, cdfChi );
-    
-    	// interpolate the energy (binary serach gives the index of the lower bound)
-    	double theEnergy = evChi[in] + (evChi[in+1]-evChi[in])/(cdfChi[in+1]-cdfChi[in])*(tempCdf-cdfChi[in]);
-    
-    	return theEnergy; //this is in eV
-}
- */
 
-double Watt_Distribution::sampleFis( const Particle_t &P )
+double Watt_Distribution::sample( const double E /*= 0.0*/ )
 {
-    double pE = P.energy();
-    //make a decision for a, b, and g
-    if      ( nameNuc == "Th232" && pE < 2.5e4                   ) {
-        a = a1;
-        b = b1;
-        g = g1;
-    }
-    else if ( nameNuc == "Th232" && pE >= 2.5e4   &&  pE < 1.0e6 ) {
-        a = a2;
-        b = b2;
-        g = g2;
-    }
-    else if ( nameNuc == "Th232" && pE >= 1.0e6   &&  pE < 14.0e6 ) {
-        a = a3;
-        b = b3;
-        g = g3;
-    }
-    else if ( nameNuc == "U233"  && pE < 1.0e6                    ) {
-        a = a4;
-        b = b4;
-        g = g4;
-    }
-    else if ( nameNuc == "U233"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
-        a = a5;
-        b = b5;
-        g = g5;
-    }
-    else if ( nameNuc == "U235"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
-        a = a7;
-        b = b7;
-        g = g7;
-    }
-    else if ( nameNuc == "U238"  && pE < 2.5e4                    ) {
-        a = a8;
-        b = b8;
-        g = g8;
-    }
-    else if ( nameNuc == "U238"  && pE >= 2.5e4   &&  pE < 1.0e6  ) {
-        a = a9;
-        b = b9;
-        g = g9;
-    }
-    else if ( nameNuc == "U238"  && pE >= 1.0e6   &&  pE < 14.0e6 ) {
-        a = a10;
-        b = b10;
-        g = g10;
-    }
-    else if ( nameNuc == "Pu239" && pE < 1.0e6                    ) {
-        a = a11;
-        b = b11;
-        g = g11;
-    }
-    else if ( nameNuc == "Pu239" && pE >= 1.0    &&  pE < 14.0   ) {
-        a = a12;
-        b = b12;
-        g = g12;
-    }
+	double a;
+    	double b;
+    	double g;
+	double xi;   // xi_1 in formula
+	double C;    // Acceptance parameter
+	double Eout;
 
-    //do the sampling
-    double Eout = 0.0;
-    while(1){
-        double rand1 = Urand();
-        Eout  = -a*g*log(rand1); //MeV
-        
-        if(  pow( (1.0-g)*(1.0-log(rand1)) -  log(Urand()) , 2 ) < b*Eout ){
-            break;
-        }
-    }
+	// Binary search is not employed as there are only three grid points
+	if ( E <= 1.0 )
+	{
+		// E <= 1 eV (thermal)
+		a = vec_a[0];
+		b = vec_b[0];
+		g = vec_g[0];
+	}
+	else if ( E <= 1.0e6 )
+	{
+		// 1 eV < E <= 1 MeV
+		a = Linterpolate( E, 1.0 , 1.0e6, vec_a[0], vec_a[1] );
+		b = Linterpolate( E, 1.0 , 1.0e6, vec_b[0], vec_b[1] );
+		g = Linterpolate( E, 1.0 , 1.0e6, vec_g[0], vec_g[1] );
+	}
+	else
+	{
+		// E >= 1 MeV, note for E > 14 MeV the values are extrapolated
+		a = Linterpolate( E, 1.0e6, 14.0e6, vec_a[1], vec_a[2] );
+		b = Linterpolate( E, 1.0e6, 14.0e6, vec_b[1], vec_b[2] );
+		g = Linterpolate( E, 1.0e6, 14.0e6, vec_g[1], vec_g[2] );
+	}
     
-    return ( Eout*1.0e6 ); //eV
+	do
+	{
+        	xi = Urand();
+		Eout  = -a*g * std::log( xi ); //MeV
+        	C = ( 1.0 - g ) * ( 1.0 - std::log( xi ) ) - std::log( Urand() );
+    	}
+       	while ( C*C > b*Eout );
+    
+    	return ( Eout*1.0e6 ); //eV
 }
 
 
-Point_t IsotropicDirection_Distribution::sample()
+Point_t IsotropicDirection_Distribution::sample( const double param /*= 0.0*/ )
 {
 	// Sample polar cosine and azimuthal angle uniformly
 	const double mu  = 2.0 * Urand() - 1.0;
@@ -185,11 +142,11 @@ Point_t IsotropicDirection_Distribution::sample()
 	p.z = std::sin( azi ) * c;
 	p.x = mu;
 
-  return p;
+  	return p;
 }
 
 
-Point_t AnisotropicDirection_Distribution::sample() 
+Point_t AnisotropicDirection_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	const double mu  = dist_mu->sample(); 
   	const double azi = PI2 * Urand();
@@ -209,7 +166,7 @@ Point_t AnisotropicDirection_Distribution::sample()
 }
 
 
-Point_t IndependentXYZ_Distribution::sample() 
+Point_t IndependentXYZ_Distribution::sample( const double param /*= 0.0*/ ) 
 {
   	return Point_t( dist_x->sample(), dist_y->sample(), dist_z->sample() );
 }

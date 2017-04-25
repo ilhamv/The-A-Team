@@ -57,24 +57,20 @@ void XML_input
 )
 {
     
-    //For pulse height tally
-    bool varReductionExist = false;
-    bool pulseHeightExist  = false;
+	//For pulse height tally
+	bool varReductionExist = false;
+	bool pulseHeightExist  = false;
 
 	// XML input treatment //
 	
 	// User enters the XML file name and pugixml will attempt to load
-    std::string dirTestFolder = "./test_folder/";
-    
 	std::string input_file_name;
   	std::cout << "\nEnter XML input file name:\n";
   	std::cin  >> input_file_name;
     
-    dirTestFolder += input_file_name;
-	
 	// XML input file
 	pugi::xml_document input_file;
-    pugi::xml_parse_result load_result = input_file.load_file( dirTestFolder.c_str() ) ; //input_file_name.c_str() );
+    	pugi::xml_parse_result load_result = input_file.load_file( input_file_name.c_str() );
 
 	// Check to see if result failed and throw an exception if it did
 	if ( ! load_result ) 
@@ -102,11 +98,6 @@ void XML_input
         
 	// Set user distributuions
   	pugi::xml_node input_distributions = input_file.child("distributions");
-
-	// Current Chi fission spectrum model is universal table
-	// 	the following parameters are used to effectively handle the shared pointer
-	bool        watt_available = false; // watt spectrum availability flag
-	std::string watt_name;              // watt spectrum distribution name if available
 
   	// Find total number of distributions
   	unsigned int num_distributions = 0;
@@ -159,24 +150,31 @@ void XML_input
                 // Cubic-double
                 else if ( type == "cubic" )
                 {
-                    const double a    = d.attribute("a").as_double();
-                    const double b    = d.attribute("b").as_double();
-                    const double c3   = d.attribute("c3").as_double();
-                    const double c2   = d.attribute("c2").as_double();
-                    const double c1   = d.attribute("c1").as_double();
-                    const double c0   = d.attribute("c0").as_double();
-                    const double fmax = d.attribute("fmax").as_double();
-                    Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
+                    	const double a    = d.attribute("a").as_double();
+                   	const double b    = d.attribute("b").as_double();
+                    	const double c3   = d.attribute("c3").as_double();
+                    	const double c2   = d.attribute("c2").as_double();
+                    	const double c1   = d.attribute("c1").as_double();
+                    	const double c0   = d.attribute("c0").as_double();
+                    	const double fmax = d.attribute("fmax").as_double();
+                    	Dist = std::make_shared< Cubic_Distribution > ( a, b, c3, c2, c1, c0, fmax, name );
                 }
                 
                 // Watt spectrum
                 else if (type == "watt" )
                 {
-                    //Dist = std::make_shared< Watt_Distribution > ( "Chi.txt", name );
-                    //Default is U235 thermal
-                    Dist = std::make_shared< Watt_Distribution > ( "U235", name  );
-                    watt_available = true;
-                    watt_name      = name;
+			// Still U-235 by default
+			// Next: <watt name="" dtype="double" fissile="U-235"
+			// 	Build a function("nuclide name") returning a pair of vectors, a and b
+			std::vector<double> a;
+			std::vector<double> b;
+			a.push_back( 0.988 );
+			a.push_back( 0.988 );
+			a.push_back( 1.028 );
+			b.push_back( 2.249 );
+			b.push_back( 2.249 );
+			b.push_back( 2.084 );
+			Dist = std::make_shared< Watt_Distribution > ( a, b, name );
                 }
                 
                 // Unknown
@@ -485,14 +483,20 @@ void XML_input
 			// Fission
 			else if ( rxn_type == "fission" )
 			{
-               			// Check if Chi is already available
-				std::shared_ptr<Distribution_t<double>> watt;
-				
-				if ( watt_available )
-				{
-					watt = findByName( double_distributions, watt_name );
-				}
-				else { watt = std::make_shared< Watt_Distribution > ( nameNuc ); }
+				// Set up Chi spectrum
+				std::shared_ptr< Distribution_t<double> > watt;
+
+				// Next: <watt name="" dtype="double" fissile="U-235"
+				// 	Build a function("nuclide name") returning a pair of vectors, a and b
+				std::vector<double> a;
+				std::vector<double> b;
+				a.push_back( 0.988 );
+				a.push_back( 0.988 );
+				a.push_back( 1.028 );
+				b.push_back( 2.249 );
+				b.push_back( 2.249 );
+				b.push_back( 2.084 );
+				watt = std::make_shared< Watt_Distribution > ( a, b, name );
 
 				if ( !r.attribute("multiplicity")  )
 				{ 
@@ -577,15 +581,20 @@ void XML_input
                 }
                 else{ std::cout << "unable to open file for reaction" << rxn_type << std::endl;}
                 
-               	// Check if Chi is already available
-				std::shared_ptr<Distribution_t<double>> watt;
+				// Set up Chi spectrum
+				std::shared_ptr< Distribution_t<double> > watt;
 				
-				if ( watt_available )
-				{
-					watt = findByName( double_distributions, watt_name );
-				}
-				else { watt = std::make_shared< Watt_Distribution > ( nameNuc ); }
-
+				// Next: <watt name="" dtype="double" fissile="U-235"
+				// 	Build a function("nuclide name") returning a pair of vectors, a and b
+				std::vector<double> a;
+				std::vector<double> b;
+				a.push_back( 0.988 );
+				a.push_back( 0.988 );
+				a.push_back( 1.028 );
+				b.push_back( 2.249 );
+				b.push_back( 2.249 );
+				b.push_back( 2.084 );
+				watt = std::make_shared< Watt_Distribution > ( a, b, name );
 				if ( !r.attribute("multiplicity")  )
 				{ 
 					std::cout << "multiplicity is required for fission reaction" << std::endl;
