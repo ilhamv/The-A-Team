@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Problem 1a" histories="2e7" />
+	<description name="Problem 1a" histories="2e7" transportMethod="1"/>
 </simulation>
 
 
@@ -26,6 +26,10 @@
     		<nuclide name="nuc1" density="0.25"/>
     		<nuclide name="nuc2" density="0.75"/>
   	</material>
+    <material name="mat2">
+    		<nuclide name="nuc1" density="0.0"/>
+    		<nuclide name="nuc2" density="0.0"/>
+  	</material>
 </materials>
 
 
@@ -41,11 +45,11 @@
     		<surface name="px2" sense="-1"/>
   	</region>
 	
-	<region name="left outside" importance="0.0">
+	<region name="left outside" importance="0.0" material="mat2">
     		<surface name="px1" sense="-1"/>
   	</region>
   	
-	<region name="right outside" importance="0.0">
+	<region name="right outside" importance="0.0" material="mat2">
     		<surface name="px2" sense="+1"/>
   	</region>
 </regions>

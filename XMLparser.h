@@ -51,7 +51,8 @@ void XML_input
 	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
 	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
   	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions,
+    double&                                           transportMethod
 );
 
 
