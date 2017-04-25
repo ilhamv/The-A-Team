@@ -16,7 +16,10 @@
 class Reaction_t
 {
 	private:
-		std::shared_ptr<XSec_t> r_xs; // Reaction microXs in E[eV]
+		std::shared_ptr<XSec_t>                   r_xs;      // Reaction microXs in E[eV]
+    		
+	protected:
+		std::shared_ptr< Distribution_t<double> > Chi_dist;  // Fission neutron energy distribution
 	
 	public:
 		// Constructor: Pass the microXs
@@ -26,6 +29,9 @@ class Reaction_t
 		// Get the microXs
 		virtual double xs( const double E ) final { return r_xs->xs(E); };
 
+		// Sample the Chi spectrum
+    		virtual double Chi( const double E ) final { return Chi_dist->sample(E); }
+		
 		// Sample the reaction process on the working particle and the particle bank
 		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank ) = 0;
 		
@@ -74,15 +80,18 @@ class Scatter_Reaction : public Reaction_t
 class Fission_Reaction : public Reaction_t 
 {
 	private:
-		std::shared_ptr< Distribution_t<int> >    nu_dist;            // Fission multiplicity distribution
-		IsotropicDirection_Distribution           isotropic;          // Isotropic distribution for emerging neutron
-    		std::shared_ptr< Distribution_t<double> > fissionEnergy_dist; // Watt fission spectrum
+    		std::shared_ptr< Distribution_t<int> >    nu_dist;   // Fission multiplicity distribution
+    		IsotropicDirection_Distribution           isotropic; // Isotropic distribution for emerging neutron
     
 	public:
 		// Constructor: Pass the microXs and distributions
 		 Fission_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<int> >& D
-				   , const std::shared_ptr< Distribution_t<double> >& W ) :
-		 	Reaction_t(x), nu_dist(D), fissionEnergy_dist(W) {}; 
+                          , const std::shared_ptr< Distribution_t<double> >& W  ) :
+		 	Reaction_t(x), nu_dist(D) 
+		{
+			Chi_dist = W;
+		}
+
 		~Fission_Reaction() {};
 
 		// Sample fission multiplicity, then appropriately pushing new fission particles to the bank

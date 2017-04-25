@@ -36,33 +36,6 @@ double Nuclide_t::sigmaF( const double E )
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
-double Nuclide_t::sigmaScont( const double E ) 
-{ 
-	for ( auto& r : reactions )
-	{
-		if ( r->type("scatter_cont") ) { return r->xs( E ); }
-	}
-	// Nuclide doesn't have the reaction
-	return 0.0;
-}
-double Nuclide_t::sigmaCcont( const double E ) 
-{ 
-	for ( auto& r : reactions )
-	{
-		if ( r->type("capture_cont") ) { return r->xs( E ); }
-	}
-	// Nuclide doesn't have the reaction
-	return 0.0;
-}
-double Nuclide_t::sigmaFcont( const double E ) 
-{ 
-	for ( auto& r : reactions )
-	{
-		if ( r->type("fission_cont") ) { return r->xs( E ); }
-	}
-	// Nuclide doesn't have the reaction
-	return 0.0;
-}
 double Nuclide_t::sigmaT( const double E )
 { 
 	double sum = 0.0;
@@ -72,6 +45,17 @@ double Nuclide_t::sigmaT( const double E )
 
 	return sum; 
 }
+
+
+// Sample Chi spectrum
+double Nuclide_t::Chi( const double E )
+{ 
+	for ( auto& r : reactions )
+	{
+		if ( r->type( "fission" ) ) { return r->Chi(E); }
+	}
+	return 0.0;
+};
 
 
 // Add reaction
