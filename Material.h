@@ -34,6 +34,7 @@ class Material_t
 		double      SigmaS( const double E );
 		double      SigmaC( const double E );
 		double      SigmaF( const double E );
+		double    nuSigmaF( const double E );
 		
 		// Add a pair of nuclide and its total macroXs
 		// the supplied variable are the nuclide and its nuclide density

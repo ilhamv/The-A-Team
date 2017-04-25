@@ -48,6 +48,15 @@ double Material_t::SigmaT( const double E )
 	}	
 	return sum;
 }
+double Material_t::nuSigmaF( const double E ) 
+{ 
+	double sum = 0.0;
+	for ( auto& n : nuclides )
+	{
+		sum += n.first->nusigmaF( E ) * n.second;
+	}	
+	return sum;
+}
 
 
 // Add a nuclide

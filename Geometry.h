@@ -312,10 +312,11 @@ class Region_t : public Geometry_t
     		// Getters
 		double      importance(); // importance
 		// MacroXsec of the contained material
-		double      SigmaT( const double E );
-		double      SigmaS( const double E );
-		double      SigmaC( const double E );
-		double      SigmaF( const double E );
+		double      SigmaT  ( const double E );
+		double      SigmaS  ( const double E );
+		double      SigmaC  ( const double E );
+		double      SigmaF  ( const double E );
+		double      nuSigmaF( const double E );
 		
 		// Set the material
     		void setMaterial( const std::shared_ptr< Material_t >& M );
@@ -323,8 +324,8 @@ class Region_t : public Geometry_t
 		// Add a bounding surface
 		void addSurface ( const std::shared_ptr< Surface_t  >& S, const int sense );
     
-        // Return pointers to surfaces that belong to certain region
-        std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
+        	// Return pointers to surfaces that belong to certain region
+        	std::vector< std::pair< std::shared_ptr< Surface_t >, int > > listSurfaces () { return surfaces; };
 
     		// Test if particle is in the region
 		bool testPoint( const Point_t& p );

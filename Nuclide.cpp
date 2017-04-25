@@ -1,6 +1,7 @@
 #include <vector> // vector
 #include <memory> // shared_ptr
 #include <cassert>
+#include <iostream>
 
 #include "Random.h"
 #include "Nuclide.h"
@@ -11,39 +12,70 @@ std::string Nuclide_t::name()   { return n_name; } // Name
 // microXs
 double Nuclide_t::sigmaS( const double E ) 
 { 
+	checkE( E );
 	for ( auto& r : reactions )
 	{
-		if ( r->type("scatter") ) { return r->xs( E ); }
+		if ( r->type("scatter") ) { return r->xs( E, idx_help ); }
 	}
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
 double Nuclide_t::sigmaC( const double E ) 
 { 
+	checkE( E );
 	for ( auto& r : reactions )
 	{
-		if ( r->type("capture") ) { return r->xs( E ); }
+		if ( r->type("capture") ) { return r->xs( E, idx_help ); }
 	}
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
 double Nuclide_t::sigmaF( const double E ) 
 { 
+	checkE( E );
 	for ( auto& r : reactions )
 	{
-		if ( r->type("fission") ) { return r->xs( E ); }
+		if ( r->type("fission") ) { return r->xs( E, idx_help ); }
 	}
 	// Nuclide doesn't have the reaction
 	return 0.0;
 }
 double Nuclide_t::sigmaT( const double E )
 { 
+	checkE( E );
 	double sum = 0.0;
 
 	for ( auto& r : reactions )
-	{ sum += r->xs( E ); }
+	{ 
+		sum += r->xs( E, idx_help );
+	}
 
 	return sum; 
+}
+double Nuclide_t::nusigmaF( const double E ) 
+{ 
+	checkE( E );
+	for ( auto& r : reactions )
+	{
+		if ( r->type("fission") ) { return r->xs( E, idx_help ) * r->nu( E, idx_help ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
+
+
+// Check energy at cross secton call
+//   if it's another different energy, search the location on the table --> idx_help
+void Nuclide_t::checkE( const double E )
+{
+	if ( !E_table->empty() )
+	{
+		if ( E != E_current ) 
+		{ 
+			idx_help  = Binary_Search( E, *E_table );
+			E_current = E;
+		}
+	}
 }
 
 
@@ -58,10 +90,17 @@ double Nuclide_t::Chi( const double E )
 };
 
 
+// Set energy grids for table look-up XS
+void Nuclide_t::setTable( const std::shared_ptr< std::vector<double> >& Evec )
+{
+	E_table = Evec;
+}
+
+
 // Add reaction
 void Nuclide_t::addReaction( const std::shared_ptr< Reaction_t >& R ) 
 { 
-	if ( R->type("scatter") || R->type("scatter_cont") ) { scatter = R; } // Attach pointer on scattering reaction
+	if ( R->type("scatter") ) { scatter = R; } // Attach pointer on scattering reaction
 	reactions.push_back( R ); 
 }
 

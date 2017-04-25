@@ -49,7 +49,7 @@
 
 <estimators>
   	<mgxs name="MG">
-		<group grid="0 1 10000 10000000000000000"/>
+		<group grid="0 0.025 1 10 10000 10000000000000000"/>
     		<region name="slab"/>
   	</mgxs>
 </estimators>

@@ -1,0 +1,17 @@
+
+================
+== Problem 1b ==
+================
+Number of histories: 20000000
+Track time: 22704627
+
+
+Estimator report: Leak out right
+================================
+Total tallies,
+  Current:
+  -> Mean     = 0.0183026  +/-  2.9973e-05  (0.163764%)
+  -> Variance = 0.0179676
+  [F.O.M.: 0.0164229]
+
+

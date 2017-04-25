@@ -334,10 +334,11 @@ void ConeZ_Surface::reflect( Particle_t& P ) { return; }
 // Getters
 double      Region_t::importance() { return r_importance; } // importance
 // Get macroXsec of the contained material
-double      Region_t::SigmaT( const double E ) { return material->SigmaT( E ); }
-double      Region_t::SigmaS( const double E ) { return material->SigmaS( E ); }
-double      Region_t::SigmaC( const double E ) { return material->SigmaC( E ); }
-double      Region_t::SigmaF( const double E ) { return material->SigmaF( E ); }
+double      Region_t::SigmaT  ( const double E ) { return material->SigmaT( E ); }
+double      Region_t::SigmaS  ( const double E ) { return material->SigmaS( E ); }
+double      Region_t::SigmaC  ( const double E ) { return material->SigmaC( E ); }
+double      Region_t::SigmaF  ( const double E ) { return material->SigmaF( E ); }
+double      Region_t::nuSigmaF( const double E ) { return material->nuSigmaF( E ); }
 
 
 // Take in a pair of surface pointer and integer describing sense

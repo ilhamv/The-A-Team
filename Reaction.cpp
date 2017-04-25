@@ -1,5 +1,4 @@
 #include <stack> // stack
-#include <iostream>
 
 #include "Reaction.h"
 #include "Particle.h"
@@ -23,7 +22,7 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	// push all but one of them into the Particle bank, and reset the top particle 
 	// if no secondaries, kill the particle
 
-	int n = nu_dist->sample( ); // sampled multiplicity
+	int n = nu_dist->sample( r_nu->xs( P.energy() ) ); // sampled multiplicity
     
 	if ( n != 0 ) 
     	{
