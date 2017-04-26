@@ -12,6 +12,7 @@
 #include "Random.h" // Urand
 #include "Point.h"
 #include "Particle.h"
+#include "XSec.h"
 
 // Sampling Distributions base class
 template< class T >
@@ -253,14 +254,11 @@ class IsotropicDirection_Distribution : public Distribution_t<Point_t>
 // Average multiplicity distribution
 class Average_Multiplicity_Distribution : public Distribution_t<int>
 {
-	private:
-		const double nubar;
-
 	public:
-		 Average_Multiplicity_Distribution( const double p1, const std::string label = "" ) : nubar(p1), Distribution_t(label) {};
+		 Average_Multiplicity_Distribution( const std::string label = "" ) : Distribution_t(label) {};
 		~Average_Multiplicity_Distribution() {};
 		
-		int sample( const double param = 0.0 ) { return std::floor( nubar + Urand() ); }
+		int sample( const double nu = 0.0 ) { return std::floor( nu + Urand() ); }
 };
 
 // Terrel multiplicity distribution

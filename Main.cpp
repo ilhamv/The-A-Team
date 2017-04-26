@@ -54,7 +54,6 @@ int main()
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
 	std::cout.flush();
 
-
 	// Simulation loop
 	for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 	{

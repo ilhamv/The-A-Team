@@ -16,18 +16,22 @@
 class Reaction_t
 {
 	private:
-		std::shared_ptr<XSec_t>                   r_xs;      // Reaction microXs in E[eV]
+		std::shared_ptr<XSec_t> r_xs;  // Reaction microXs in E[eV]
     		
 	protected:
+		std::shared_ptr<XSec_t> r_nu; // Nubar	
 		std::shared_ptr< Distribution_t<double> > Chi_dist;  // Fission neutron energy distribution
 	
 	public:
 		// Constructor: Pass the microXs
-	       	 Reaction_t( std::shared_ptr<XSec_t> x ) : r_xs(x) {}; // Pass the microXs
+	       	 Reaction_t( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n = std::make_shared<Constant_XSec>(0.0) ) : r_xs(x), r_nu(n) {}; // Pass the microXs
 		~Reaction_t() {};
 
 		// Get the microXs
-		virtual double xs( const double E ) final { return r_xs->xs(E); };
+		virtual double xs( const double E, const unsigned long long idx = 0 ) final { return r_xs->xs( E, idx ); };
+
+		// Get the microXs
+		virtual double nu( const double E, const unsigned long long idx = 0 ) final { return r_nu->xs( E, idx ); };
 
 		// Sample the Chi spectrum
     		virtual double Chi( const double E ) final { return Chi_dist->sample(E); }
@@ -85,9 +89,9 @@ class Fission_Reaction : public Reaction_t
     
 	public:
 		// Constructor: Pass the microXs and distributions
-		 Fission_Reaction( std::shared_ptr<XSec_t> x, const std::shared_ptr< Distribution_t<int> >& D
+		 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<int> >& D
                           , const std::shared_ptr< Distribution_t<double> >& W  ) :
-		 	Reaction_t(x), nu_dist(D) 
+		 	Reaction_t(x,n), nu_dist(D) 
 		{
 			Chi_dist = W;
 		}
