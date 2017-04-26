@@ -1,59 +1,35 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Test 2" histories="1e8"/>
+	<description name="Test 2x8" histories="1e8"/>
 </simulation>
 
 
 <nuclides>
-    <nuclide name="O16" A="16">
-        <capture_cont xs_file="008016.txt"/>
-        <scatter_cont xs_file="008016.txt" distribution="isotropic" />
-        <fission_cont xs_file="008016.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="H1" A="1.0">
-        <capture_cont xs_file="001001.txt"/>
-        <scatter_cont xs_file="001001.txt" distribution="isotropic" />
-        <fission_cont xs_file="001001.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="He3" A="3.0">
-        <capture_cont xs_file="002003.txt"/>
-        <scatter_cont xs_file="002003.txt" distribution="isotropic" />
-        <fission_cont xs_file="002003.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="C0" A="12">
-        <capture_cont xs_file="006000.txt"/>
-        <scatter_cont xs_file="006000.txt" distribution="isotropic" />
-        <fission_cont xs_file="006000.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="B10" A="10.0">
-        <capture_cont xs_file="005010.txt"/>
-        <scatter_cont xs_file="005010.txt" distribution="isotropic" />
-        <fission_cont xs_file="005010.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="B11" A="11.0">
-        <capture_cont xs_file="005011.txt"/>
-        <scatter_cont xs_file="005011.txt" distribution="isotropic" />
-        <fission_cont xs_file="005011.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
+    <O-16 name="O16"  />
+    <H-1  name="H1"   />
+    <He-3 name="He3"  />
+    <Cnat name="C0"   />
+    <B-10 name="B10"  />
+    <B-11 name="B11"  />
 </nuclides>
 
 
 <materials>
-  	<material name="mat_dark"> <!-- boron carbide -->
-    		<nuclide name="B10" density="0.02196747826"/>
-            <nuclide name="B11" density="0.08786991304"/>
-            <nuclide name="C0"  density="0.0274626087"/>
-  	</material>
+    <material name="mat_dark"> <!-- boron carbide -->
+        <nuclide name="B10" density="0.0219716"/>
+        <nuclide name="B11" density="0.0878864"/>
+        <nuclide name="C0"  density="0.027468"/>
+    </material>
     
-	<material name="mat_light"> <!-- water -->
-    		<nuclide name="H1"  density="0.0667323657"/>
-            <nuclide name="O16" density="0.0333676343"/>
-  	</material>
-	
-	<material name="mat_detector"> <!-- He3 -->
-    		<nuclide name="He3" density="0.00002501"/>
-  	</material>
+    <material name="mat_light"> <!-- water -->
+        <nuclide name="H1"  density="0.066733"/>
+        <nuclide name="O16" density="0.033368"/>
+    </material>
+    
+    <material name="mat_detector"> <!-- He3 -->
+        <nuclide name="He3" density="0.00002501"/>
+    </material>
 </materials>
 
 <surfaces>
