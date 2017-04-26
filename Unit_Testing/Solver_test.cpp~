@@ -1,0 +1,18 @@
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+#include <cmath>
+#include "Point.h"
+
+TEST_CASE( "point data structure", "[Point_t]" ) {
+
+  SECTION ( "normalize" ) {
+    Point_t aPoint( -1.0, -2.0, 5.0 );
+    aPoint.normalize();
+    REQUIRE( aPoint.x == Approx( -0.1825741858 ) );
+    REQUIRE( aPoint.y == Approx( -0.36514837167 ) );
+    REQUIRE( aPoint.z == Approx( 0.912870929175 ) );
+  }
+
+}
+

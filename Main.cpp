@@ -48,6 +48,10 @@ int main()
     
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
 	std::cout.flush();
+
+	// Start timing for progress updating later
+        std::clock_t start = std::clock();
+
 	// Simulation loop
 	if (transportMethod != 0) // delta tracking
     {   std::cout << "RUNNING DELTA TRACKING MODE!"<<std::endl;
@@ -209,6 +213,29 @@ int main()
         
 	    	// Estimator history closeout
 	    	for ( auto& E : Estimator ) { E->endHistory(); }
+
+		// Print progress report to terminal
+		if ( ( fmod( std::log10( isample + 1 ), 1 ) == 0 ) || ( isample + 1 == nhist ) ) {
+		  double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+		  if ( duration != 0 ) {
+		    // to print scientific notation
+		    double sci1 = ( isample + 1 ) / std::pow( 10, std::floor( std::log10( isample + 1 ) ) );
+		    double sci2 = std::floor( std::log10( isample + 1 ) );
+		    std::cout << "  " << sci1 << "E" << sci2 << " histories took " << duration << " seconds.";
+		    if ( isample + 1 == nhist ) {std::cout << " Finished on "; }
+		    else {std::cout << ".. should finish on "; }
+		    // predict time left
+		    double timeLeft = duration / (isample + 1) * ( nhist - ( isample + 1 ) );
+		    // print local time + time left
+		    time_t rawtime;
+		    struct tm * timeinfo;
+		    time(&rawtime);
+		    rawtime += timeLeft;
+		    timeinfo = localtime (&rawtime);
+		    std::cout << asctime(timeinfo);
+		  }
+		}
+
 	    	// Start next history
         
 	    } // All histories are done, end of simulation loop

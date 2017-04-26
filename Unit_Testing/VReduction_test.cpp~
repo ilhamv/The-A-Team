@@ -1,0 +1,18 @@
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+#include "XSec.h"
+
+
+TEST_CASE( "Splitting and Rouletting", "[Split_Roulette]" ) {
+
+  double aXS = 5.0;
+  Constant_XSec aConstant_XSec( aXS );
+
+  SECTION ( "Split_Roulette" ) {
+
+    double aE = 1.0;
+    REQUIRE( true );
+
+  }
+}
