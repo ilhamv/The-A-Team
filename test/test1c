@@ -11,34 +11,24 @@
 
 
 <nuclides>
-    <nuclide name="C0" A="12">
-        <capture_cont xs_file="006000.txt"/>
-        <scatter_cont xs_file="006000.txt" distribution="isotropic" />
-        <fission_cont xs_file="006000.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="H1" A="1.0">
-        <capture_cont xs_file="001001.txt"/>
-        <scatter_cont xs_file="001001.txt" distribution="isotropic" />
-        <fission_cont xs_file="001001.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
-    <nuclide name="He3" A="3.0">
-        <capture_cont xs_file="002003.txt"/>
-        <scatter_cont xs_file="002003.txt" distribution="isotropic" />
-        <fission_cont xs_file="002003.txt" multiplicity="average" nubar="2.8"/>
-    </nuclide>
+    	<Cnat name="006000"/>
+    	<H-1 name="001001"/>
+    	<He-3 name="002003"/>
 </nuclides>
 
 <materials>
-    <material name="polyethylene">
-        <nuclide name="C0" density="0.0399338924"/>
-        <nuclide name="H1" density="0.0798661076"/>
-    </material>
-    <material name="helium3">
-        <nuclide name="He3" density="0.00002501"/>
-    </material>
-    <material name="graphite">
-        <nuclide name="C0" density="0.1003"/>
-    </material>
+  	<material name="polyethylene">
+    		<nuclide name="006000" density="0.0399338924"/>
+    		<nuclide name="001001" density="0.0798661076"/>
+  	</material>
+	
+	<material name="helium3">
+    		<nuclide name="002003" density="0.00002501"/>
+  	</material>
+
+    	<material name="graphite">
+        	<nuclide name="006000" density="0.1003"/>
+    	</material>
 </materials>
 
 
