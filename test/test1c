@@ -1,42 +1,43 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
+
 <simulation>
 	<description name="Test 1c" histories="1e7"/>
 </simulation>
 
+
 <distributions>
-  	<delta name="dir" datatype="point" x = "0.0" y = "0.0" z = "1.0"/>
+  	<delta       name="dir" datatype="point" x = "0.0" y = "0.0" z = "1.0"/>
     <delta       name="enrg" datatype="double" val="1.0e6"/>
 </distributions>
 
 
 <nuclides>
-    	<Cnat name="006000"/>
-    	<H-1 name="001001"/>
-    	<He-3 name="002003"/>
+    <Cnat name="C0"/>
+    <H-1  name="H1"/>
+    <He-3 name="He3"/>
 </nuclides>
 
-<materials>
-  	<material name="polyethylene">
-    		<nuclide name="006000" density="0.0399338924"/>
-    		<nuclide name="001001" density="0.0798661076"/>
-  	</material>
-	
-	<material name="helium3">
-    		<nuclide name="002003" density="0.00002501"/>
-  	</material>
 
-    	<material name="graphite">
-        	<nuclide name="006000" density="0.1003"/>
-    	</material>
+<materials>
+    <material name="polyethylene">
+        <nuclide name="C0" density="0.0399338924"/>
+        <nuclide name="H1" density="0.0798661076"/>
+    </material>
+    <material name="helium3">
+        <nuclide name="He3" density="0.00002501"/>
+    </material>
+    <material name="graphite">
+        <nuclide name="C0" density="0.1003"/>
+    </material>
 </materials>
 
 
 <surfaces>
     <sphere     name="sp1"  x="0.0" y="0.0" z="0.0" r="4.0"/>
-    <plane_x    name="px1"  x="13.5"/>
-    <plane_x    name="px2"  x="19.5"/>
-    <cylinder_x name="cx1"  y="0.0" z="0.0" r="1.0"/> <!-- outer cylinder -->
+    <plane_x    name="px1"  x="9.0"/>
+    <plane_x    name="px2"  x="24.0"/>
+    <cylinder_x name="cx1"  y="0.0" z="0.0" r="5.5"/> <!-- outer cylinder -->
     <plane_x    name="px11" x="14.0"/>
     <plane_x    name="px22" x="19.0"/>
     <cylinder_x name="cx11" y="0.0" z="0.0" r="0.5"/> <!-- inner cylinder -->
@@ -88,6 +89,7 @@
         <surface name="px2" sense="+1" importance="0.0"/>
     </region>
 </regions>
+
 
 <estimators>
     <estimator name="Detector" score="flux absorption">
