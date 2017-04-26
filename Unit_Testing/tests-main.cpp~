@@ -1,0 +1,4 @@
+// tests-main.cpp for unit testing
+// only has two lines
+#define CATCH_CONFIG_MAIN
+#include "Catch.h"

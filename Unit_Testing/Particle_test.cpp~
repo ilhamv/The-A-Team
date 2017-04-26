@@ -1,0 +1,134 @@
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+
+#include <memory>      // shared_ptr
+#include <vector>      // vector
+#include <cmath>
+
+#include "Geometry.h"
+#include "Particle.h"
+#include "Particle.h"
+#include "Estimator.h"
+#include "Point.h"
+#include "Material.h"
+
+TEST_CASE( "particle, such as neutron", "[Particle]" ) {
+
+  SECTION ( "pos and dir and alive and weight and time and energy and speed" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    double aenergy = 2.0; //eV
+    double atime = 7.0;
+    double aweight = 0.5;
+    Particle_t aParticle( aposition, adirection, aenergy, atime, aweight );
+    REQUIRE( aParticle.pos().x == 1.0 );
+    REQUIRE( aParticle.pos().y == 2.0 );
+    REQUIRE( aParticle.pos().z == -5.0 );
+    REQUIRE( aParticle.dir().x == Approx( -0.1825741858 ) );
+    REQUIRE( aParticle.dir().y == Approx( -0.36514837167 ) );
+    REQUIRE( aParticle.dir().z == Approx( 0.912870929175 ) );
+    REQUIRE( aParticle.alive() );
+    REQUIRE( aParticle.weight() == aweight );
+    REQUIRE( aParticle.time() == atime );
+    REQUIRE( aParticle.energy() == aenergy );
+    REQUIRE( aParticle.speed() == Approx( 1.956083E6 ) ); //cm/s
+  }
+
+  SECTION ( "region and setRegion" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    Particle_t aParticle( aposition, adirection );
+    std::string aregionname = "a region name";
+    std::shared_ptr<Region_t> aRegion = std::make_shared<Region_t> ( aregionname, 1.0 );
+    aParticle.setRegion( aRegion );
+    REQUIRE( aParticle.region()->name() == aregionname );
+  }
+
+  SECTION ( "setDirection and setWeight and setTime" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( 0.3, 0.4, -0.8);
+    adirection.normalize();
+    Particle_t aParticle( aposition, adirection );
+    Point_t newdirection( -1.0, -2.0, 5.0 );
+    newdirection.normalize();
+    aParticle.setDirection( newdirection );
+    aParticle.setWeight( 0.9 );
+    aParticle.setTime( 200.0 );
+    REQUIRE( aParticle.dir().x == Approx( -0.1825741858 ) );
+    REQUIRE( aParticle.dir().y == Approx( -0.36514837167 ) );
+    REQUIRE( aParticle.dir().z == Approx( 0.912870929175 ) );
+    REQUIRE( aParticle.weight() == 0.9 );
+    REQUIRE( aParticle.time() == 200.0 );
+  }
+
+  SECTION ( "setEnergy" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    Particle_t aParticle( aposition, adirection );
+    aParticle.setEnergy( 2.0 );
+    REQUIRE( aParticle.speed() == Approx( 1.956083E6 ) ); //cm/s
+    REQUIRE( aParticle.energy() == Approx( 2.0 ) ); //eV
+  }
+
+  SECTION ( "setSpeed" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    Particle_t aParticle( aposition, adirection );
+    aParticle.setSpeed( 1.956083E6 );
+    REQUIRE( aParticle.speed() == Approx( 1.956083E6 ) ); //cm/s
+    REQUIRE( aParticle.energy() == Approx( 2.0 ) ); //eV
+  }
+
+  SECTION ( "kill" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    Particle_t aParticle( aposition, adirection );
+    aParticle.kill();
+    REQUIRE( !aParticle.alive() );
+    REQUIRE( aParticle.weight() == 0.0 );
+  }
+
+  SECTION ( "move" ) {
+    Point_t aposition( 1.0, 2.0, -5.0 );
+    Point_t adirection( -1.0, -2.0, 5.0 );
+    adirection.normalize();
+    double aenergy = 2.0; //eV
+    double atime = 0.0;
+    Particle_t aParticle( aposition, adirection, aenergy, atime );
+    double distance = 5.477225575; //cm
+    aParticle.move( distance );
+    REQUIRE( aParticle.pos().x == Approx( 0.0 ) );
+    REQUIRE( aParticle.pos().y == Approx( 0.0 ) );
+    REQUIRE( aParticle.pos().z == Approx( 0.0 ) );
+    REQUIRE( aParticle.time() == Approx( 2.8001E-6 ) ); //s
+  }
+
+  SECTION ( "scatter" ) {
+
+  }
+
+  SECTION ( "searchRegion" ) {
+    std::string asurfacename = "a surface name";
+    std::string aboundarycondition = "transmission";
+    double alocation = 3.0;
+    PlaneX_Surface aPlaneX_Surface( asurfacename, aboundarycondition, alocation );
+    Point_t aposition( 3.0, 0.0, 0.0);
+    Point_t adirection( 1.0, 0.0, 0.0 );
+    Particle_t aParticle( aposition, adirection );
+    std::vector < std::shared_ptr<Region_t> > regions;
+    std::string aregionname = "a region name";
+    std::shared_ptr<Region_t> aRegion = std::make_shared<Region_t> ( aregionname, 1.0 );
+    std::shared_ptr<PlaneX_Surface> surfacepointer = std::make_shared<PlaneX_Surface>( aPlaneX_Surface );
+    aRegion->addSurface( surfacepointer, 1 );
+    regions.push_back( aRegion );
+    aParticle.searchRegion( regions );
+    REQUIRE( aParticle.region() == aRegion );
+  }
+
+}
+

@@ -12,7 +12,7 @@ class Point_t
 		Point_t( double a = 0.0, double b = 0.0, double c = 0.0 ) : x(a), y(b), z(c) {};
 		~Point_t() {};		
 
-		void normalize();
+		Point_t& normalize();
 };
 
 
