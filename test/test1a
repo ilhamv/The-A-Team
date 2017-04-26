@@ -11,24 +11,24 @@
 
 
 <nuclides>
-    	<Cnat name="C0"/>
-    	<H-1 name="H1"/>
-    	<He-3 name="He3"/>
+    	<Cnat name="006000"/>
+    	<H-1 name="001001"/>
+    	<He-3 name="002003"/>
 </nuclides>
 
 
 <materials>
   	<material name="polyethylene">
-    		<nuclide name="C0" density="0.0399338924"/>
-    		<nuclide name="H1" density="0.0798661076"/>
+    		<nuclide name="006000" density="0.0399338924"/>
+    		<nuclide name="001001" density="0.0798661076"/>
   	</material>
 	
 	<material name="helium3">
-    		<nuclide name="He3" density="0.00002501"/>
+    		<nuclide name="002003" density="0.00002501"/>
   	</material>
 
     	<material name="graphite">
-        	<nuclide name="C0" density="0.1003"/>
+        	<nuclide name="006000" density="0.1003"/>
     	</material>
 </materials>
 
