@@ -124,7 +124,8 @@ void XML_input
 	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
 	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
   	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions,
+    double&                                           transportMethod
 )
 {
     
@@ -161,6 +162,7 @@ void XML_input
 		{
 			simName = s.attribute("name").value();          // simulation name
 			nhist   = s.attribute("histories").as_double(); // # of histories
+            transportMethod = s.attribute("transportMethod").as_double(); // transportMethod, 0=normal, else delta
 		}
 		else if ( (std::string) s.name() == "cut-off" )
 		{
