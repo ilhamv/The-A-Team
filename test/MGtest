@@ -1,0 +1,57 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="MGXS" histories="1e4"/>
+</simulation>
+
+
+<distributions>
+  	<uniform        name="uniform x" datatype="double" a="0.0" b="4.0"/>
+  	<delta          name="delta y-z" datatype="double" a="0.0"/>
+  	<independentXYZ name="pos"       datatype="point"  x = "uniform x" y = "delta y-z" z = "delta y-z"/>
+  	<isotropic      name="dir"       datatype="point"/>
+</distributions>
+
+
+<nuclides>
+	<U-235 name="U235"/>
+	<H-1 name="H1"/>
+</nuclides>
+
+
+<materials>
+  	<material name="mat1">
+    		<nuclide name="H1" density="5.0"/>
+    		<nuclide name="U235" density="0.001"/>
+  	</material>
+</materials>
+
+
+<surfaces>
+	<plane_x name="px1" x="0.0" bc="reflective"/>
+	<plane_x name="px2" x="4.0"/>
+</surfaces>
+
+
+<regions>
+  	<region name="slab" material="mat1">
+    		<surface name="px1" sense="+1"/>
+    		<surface name="px2" sense="-1"/>
+  	</region>
+	
+	<region name="right outside" importance="0.0">
+    		<surface name="px2" sense="+1"/>
+  	</region>
+</regions>
+
+
+<estimators>
+  	<mgxs name="MGXS" N="3">
+    		<region name="slab"/>
+		<group  grid="0.0 0.025 1.0 14.0e6"/>
+  	</mgxs>
+</estimators>
+
+<sources>
+  	<source position="pos" direction="dir"/>
+</sources>
