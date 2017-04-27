@@ -54,13 +54,14 @@ double Material_t::SigmaT( const double E )
 double Material_t::nu( const double E )
 {
 	double sum = 0.0;
-	int num = 0.0;
+	double num = 0.0;
 	for ( auto& n : nuclides )
 	{
 		sum += n.first->nu( E );
 		if ( n.first->nu( E ) != 0 )
 		{ num++; }
 	}
+	if ( num == 0 ) { return 0; }
 	return sum / num;
 }
 double Material_t::nuSigmaF( const double E ) 
@@ -103,11 +104,18 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 // Bank fission neutrons for k-eigenvalue simulations
 void Material_t::bank_fission_neutrons ( Particle_t& P, double K, std::stack< Particle_t>& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh )
 {
+	//std::cout << "k: " << K << std::endl;
+	//std::cout << "SigmaT: " << SigmaT( P.energy() ) << std::endl;
 	double bank_nu = floor( ( P.weight() / K ) * nu ( P.energy() ) * ( SigmaF( P.energy() ) / SigmaT( P.energy() ) ) + Urand() );
 
+	//std::cout << "Particle weight: " << P.weight() << std::endl;
 	//std::cout << "Number of neutrons to add to fission bank: " << bank_nu << std::endl;
 
-	shannon_mesh->update( P, bank_nu );
+	if( bank_nu != 0 )
+		shannon_mesh->update( P, bank_nu );
+
+	//std::cout << "mesh updated" << std::endl;
+
 	for ( int n = 0; n < bank_nu; n++ )
 	{
 		double r = Urand();
@@ -140,11 +148,17 @@ void Material_t::bank_fission_neutrons ( Particle_t& P, double K, std::stack< Pa
 // Then, process the reaction on the Particle 
 void Material_t::collision_sample( Particle_t& P, bool eigenvalue, double K, std::stack< Particle_t >& Pbank, std::stack< Particle_t >& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh ) 
 {
+
+	//std::cout << "about to bank" << std::endl;
 	//First bank fission neutrons if running a k-eigenvalue simulation
 	if ( eigenvalue ) { bank_fission_neutrons( P, K, Fbank, shannon_mesh ); }
 
+	//std::cout << "fission neutrons banked" << std::endl;
+
 	// Then sample nuclide
 	std::shared_ptr< Nuclide_t >  N = nuclide_sample( P.energy() );
+
+	//std::cout << "nuclide sampled" << std::endl;
 
 	// Now get the reaction
 	std::shared_ptr< Reaction_t > R = N->reaction_sample( P.energy() );

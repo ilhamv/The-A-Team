@@ -195,6 +195,9 @@ void XML_input
 			bool z_found = 0;
 			double x, X, y, Y, z, Z;
 			int xn, yn, zn;
+			z = -MAX;
+			Z = MAX;
+			zn = 1;
 			for ( const auto& k : s.children() )
 			{
 				if ( (std::string) k.name() == "x" )
@@ -223,20 +226,14 @@ void XML_input
 				}
 				else if ( (std::string) k.name() == "z" )
 				{
-					if( !( k.attribute("min") && k.attribute("max") && k.attribute("number_of_steps") ) )
-					{
-						std::cout << "Shannon Entropy Mesh z-dimension requires minimum value, maximum value, and number of steps" << std::endl;
-						throw;
-					}
 					z = k.attribute("min").as_double();
 					Z = k.attribute("max").as_double();
 					zn = k.attribute("number_of_steps").as_int();
-					z_found = 1;
 				}
 			}
-			if( !( x_found && y_found && z_found ) )
+			if( !( x_found && y_found) )
 			{
-				std::cout << "Shannon Entropy Mesh requires x, y, and z dimensions" << std::endl;
+				std::cout << "Shannon Entropy Mesh requires x, and y dimensions" << std::endl;
 				throw;
 			}
 			shannon_mesh = std::make_shared <Shannon_Entropy_Mesh> ( x, X, xn, y, Y, yn, z, Z, zn );

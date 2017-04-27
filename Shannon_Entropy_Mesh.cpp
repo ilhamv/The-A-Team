@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "Shannon_Entropy_Mesh.h"
 
 void Shannon_Entropy_Mesh::clear()
@@ -20,6 +22,9 @@ void Shannon_Entropy_Mesh::update( Particle_t& P, double N )
 	int x_index = floor( ( ( P.pos().x - xmin ) * x_nmesh ) / (xmax - xmin) );
 	int y_index = floor( ( ( P.pos().y - ymin ) * y_nmesh ) / (ymax - ymin) );
 	int z_index = floor( ( ( P.pos().z - zmin ) * z_nmesh ) / (zmax - zmin) );
+
+	//std::cout << "Particle: " << P.pos().x << "  " << P.pos().y << "  " << P.pos().z << std::endl;
+	//std::cout << "x: " << x_index << ", y: " << y_index << ", z: " << z_index << std::endl;
 
 	mesh.at(x_index).at(y_index).at(z_index) += N;
 	return;
