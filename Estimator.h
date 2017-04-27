@@ -332,7 +332,6 @@ class PulseHeight_Estimator : public Generic_Estimator
 protected:
     
     std::vector<double>    grid;           // Bin grid
-    std::vector<double>    tallyVec;       // tally vector
     std::vector<double>    tallySumVec;    // sum of each bin
     std::vector<double>    tallySquaredVec;// sum of squared
     std::vector<double>    meanVec;        // mean for each bin
@@ -358,7 +357,6 @@ public:
         Nbin = grid.size() - 1;
         
         for(int b = 0 ; b<Nbin; b++){
-            tallyVec.push_back(0.0);
             tallySumVec.push_back(0.0);
             tallySquaredVec.push_back(0.0);
             meanVec.push_back(0.0);
@@ -375,6 +373,9 @@ public:
     
     // Report results
     void report( std::ostringstream& output, const double trackTime );
+    
+    //for pulse height tally unit testing
+    std::vector <double> getTallySumVec(){ return tallySumVec; };
 };
 
 

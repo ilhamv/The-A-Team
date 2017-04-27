@@ -641,7 +641,7 @@ void PulseHeight_Estimator::endHistory()
 void PulseHeight_Estimator::report( std::ostringstream& output, const double trackTime )
 {
     //get the mean and variance of the pulse height tally
-    for( int a = 0 ; a<tallyVec.size() ; a++ ){
+    for( int a = 0 ; a<tallySumVec.size() ; a++ ){
         meanVec[a]  = tallySumVec[a] / nhist;
         varVec[a]   = std::sqrt (  (tallySquaredVec[a] / nhist  - meanVec[a]*meanVec[a] )/ nhist  ) / meanVec[a];
     }
@@ -654,7 +654,7 @@ void PulseHeight_Estimator::report( std::ostringstream& output, const double tra
     //FOR ENERGY BIN
     output << "Lower Bin [eV]    Upper Bin [eV]    Score/NPS         Rel. Uncertainty \n";
     output << "-------------     -------------     ---------         ---------------- \n";
-    for( int q = 0 ; q<tallyVec.size() ; q++ ){
+    for( int q = 0 ; q<tallySumVec.size() ; q++ ){
         output << std::setw(18) << std::left << grid[q]<< std::setw(18) << std::left  << grid[q+1]<< std::setw(18) << std::left  << meanVec[q]<< std::setw(18) << std::left  << varVec[q] << "\n";
     }
     

@@ -14,7 +14,7 @@ all :	$(objects)
 	@$(MAKE) $(exec) test
 
 test :
-#	@ cd $(testdir) && $(MAKE) # comment out this line to prevent unit testing (unit testing is slow)
+	@ cd $(testdir) && $(MAKE) # comment out this line to prevent unit testing (unit testing is slow)
 
 %.o : %.cpp
 	$(cc) $(cflags) -c $<
