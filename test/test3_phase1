@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Test 3" histories="1e4"/>
+	<description name="Test 3, K-eigenvalue" histories="1e4"/>
 	<cut-off energy="1" />
     <k-eigenvalue number_of_cycles="200" passive_cycles="20">
     	<x min="-9.0" max="9.0" number_of_steps="16"/>

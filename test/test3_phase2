@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Test 3" histories="1e7"/>
+	<description name="Test 3, Leakage rate" histories="1e7"/>
 	<cut-off energy="1" />
 </simulation>
 
@@ -44,7 +44,7 @@
 <estimators>
   	<estimator name="Sphere leakage" score="current">
     		<surface name="suspicious_sphere"/>
-			<bin type="time" grid_linear="0.0 1e-8 3.5e-7"/>
+			<bin type="time" grid_linear="0.0 1e-8 1e-6"/>
   	</estimator>
 </estimators>
 
