@@ -103,7 +103,7 @@ Eigenvalue_Source::Eigenvalue_Source( const int SW, const std::shared_ptr< Distr
 {
 	for(int i = 0; i < SW; i++)
 	{
-		Point_t p = dist_dir->sample();
+		Point_t p = dir->sample();
 		p.normalize();
 		source_particle_bank.emplace( pos->sample(), p, enrg->sample(), time->sample() );
 	}
@@ -112,9 +112,13 @@ Eigenvalue_Source::Eigenvalue_Source( const int SW, const std::shared_ptr< Distr
 	source_particle_weight = 1;
 }
 
-void Eigenvalue_Source::updateSource( const std::stack <Particle_t> F )
+void Eigenvalue_Source::update( std::stack <Particle_t> F )
 {
-	source_particle_bank = F;
+	for ( int f = 0; f < F.size(); f++ )
+	{
+		source_particle_bank.push( F.top() );
+		F.pop();
+	}
 	source_particle_weight = source_weight / source_particle_bank.size();
 	return;
 }

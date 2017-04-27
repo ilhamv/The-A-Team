@@ -40,6 +40,10 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	else
 	{ P.kill(); }
 }
+
+// Implicit fission reaction sample
+void Implicit_Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+{ P.kill(); }
    
 
 // Check reaction type

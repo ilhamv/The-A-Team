@@ -19,6 +19,7 @@ class Source_t
 
 		// Get the particle source
 		virtual Particle_t getSource() = 0;
+		virtual void update( std::stack <Particle_t> F ) { return; };
 };
 
 
@@ -138,7 +139,7 @@ class Generic_Source : public Source_t
 class Eigenvalue_Source : public Source_t
 {
 	private:
-		const int source_weight;						//overall source weight kept constant over all iterations
+		int source_weight;						//overall source weight kept constant over all iterations
 		double source_particle_weight;					//weight of each source particle set to maintain constant source_weight
 		std::stack <Particle_t> source_particle_bank;
 	public:
@@ -146,7 +147,7 @@ class Eigenvalue_Source : public Source_t
 				const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time );
 		~Eigenvalue_Source() {};
 
-		void updateSource( const std::stack <Particle_t> F );
+		void update( std::stack <Particle_t> F );
 		Particle_t getSource();
 };
 
@@ -172,7 +173,7 @@ class Source_Bank
 		// Get source
 		// sources are sampled wrt to their probability
 		// then, particle region is searched and set
-		Particle_t getSource( const std::vector<std::shared_ptr<Region_t>>& Region )
+		std::shared_ptr<Source_t> getSource()
 		{
 			const double xi = total * Urand();
 			double s  = 0.0;
@@ -182,9 +183,7 @@ class Source_Bank
 				s += So.second;
 				if ( s > xi ) 
 				{ 
-                    Particle_t P = So.first->getSource();
-                    P.searchRegion( Region );
-                    return P;
+                    return So.first;
                 }
             }
             //this is added because there is a possibility that this class does not return anything.

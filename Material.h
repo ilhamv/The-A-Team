@@ -10,6 +10,7 @@
 #include "Particle.h"
 #include "Nuclide.h"
 #include "Random.h"
+#include "Shannon_Entropy_Mesh.h"
 #include "Const.h"   // MAXD
 
 
@@ -34,6 +35,7 @@ class Material_t
 		double      SigmaS( const double E );
 		double      SigmaC( const double E );
 		double      SigmaF( const double E );
+		double			nu( const double E );
 		double    nuSigmaF( const double E );
 		
 		// Add a pair of nuclide and its total macroXs
@@ -46,10 +48,13 @@ class Material_t
 		// Sample collided nuclide
 		std::shared_ptr< Nuclide_t > nuclide_sample( const double E );
 
+		// Bank fission neutrons for k-eigenvalue simulations
+		void bank_fission_neutrons ( Particle_t& P, double K, std::stack< Particle_t>& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh );
+
 		// Handle collision event
-		// Sample entire collision (nuclide, then nuclide reaction)
+		// Sample entire collision (nuclide, then nuclide reaction); bank fission neutrons for k-eigenvalue simulations
 		// Then, process the reaction on the Particle
-		void collision_sample( Particle_t& P, bool eigenvalue, std::stack< Particle_t >& Pbank, std::stack< Particle_t >& Fbank );
+		void collision_sample( Particle_t& P, bool eigenvalue, double K, std::stack< Particle_t >& Pbank, std::stack< Particle_t >& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh );
 		
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

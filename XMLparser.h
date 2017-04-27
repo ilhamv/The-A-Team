@@ -46,6 +46,8 @@ void XML_input
 	bool& 													 eigenvalue,
 	int&													 ncycles,
 	int&													 npassive,
+	std::shared_ptr <K_Eigenvalue_Estimator>&      		     k_est,
+	std::shared_ptr <Shannon_Entropy_Mesh>& 		  		 shannon_mesh,
 	Source_Bank&                                             Sbank,
 	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
 	std::vector < std::shared_ptr<Region_t>    >&            Region,    

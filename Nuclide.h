@@ -31,6 +31,7 @@ class Nuclide_t
 		double sigmaS( const double E );
 		double sigmaC( const double E );
 		double sigmaF( const double E );
+		double nu( const double E );
 		double nusigmaF( const double E );
 
 		// Set energy grids for table look-up XS
@@ -40,8 +41,8 @@ class Nuclide_t
 		//   if it's another different energy, search the location on the table --> idx_help
 		void checkE( const double E );
 		
-		// Sample Chi spectrum
-    		double Chi( const double E );
+		// Sample Chi spectrum for fission
+    	double Chi( const double E );
 
 		// Add reaction
 		void addReaction( const std::shared_ptr< Reaction_t >& R );
