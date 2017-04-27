@@ -12,7 +12,8 @@ const double PI_sqrt  = std::sqrt(PI);
 const double EPSILON  = std::numeric_limits<float>::epsilon();
 const double MAX      = std::numeric_limits<float>::max();
 const double MAX_less = 0.9 * MAX; 
-
+const double C        = 2.998E10; // speed of light cm/s
+const double ME       = 510998.9; // mass of electron eV
 
 #endif
 
