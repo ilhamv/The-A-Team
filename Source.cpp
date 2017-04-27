@@ -97,3 +97,36 @@ Particle_t Generic_Source::getSource()
 	Particle_t P ( dist_pos->sample(), p, dist_enrg->sample(), dist_time->sample() );
   	return P;
 }
+
+Eigenvalue_Source::Eigenvalue_Source( const int SW, const std::shared_ptr< Distribution_t<Point_t> > pos, const std::shared_ptr< Distribution_t<Point_t> > dir,
+				const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time )
+{
+	for(int i = 0; i < SW; i++)
+	{
+		Point_t p = dir->sample();
+		p.normalize();
+		source_particle_bank.emplace( pos->sample(), p, enrg->sample(), time->sample() );
+	}
+
+	source_weight = SW;
+	source_particle_weight = 1;
+}
+
+void Eigenvalue_Source::update( std::stack <Particle_t> F )
+{
+	for ( int f = 0; f < F.size(); f++ )
+	{
+		source_particle_bank.push( F.top() );
+		F.pop();
+	}
+	source_particle_weight = source_weight / source_particle_bank.size();
+	return;
+}
+
+Particle_t Eigenvalue_Source::getSource()
+{
+	Particle_t P = source_particle_bank.top();
+	source_particle_bank.pop();
+	P.setWeight(source_particle_weight);
+	return P;
+}

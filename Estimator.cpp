@@ -36,8 +36,8 @@ double Fission_Score::add_score( const Particle_t& P, const double track /*= 0.0
 { return P.region()->SigmaF( P.energy() ) * track * P.weight(); }
 
 // Production (path length)
-double nuFission_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
-{ return P.region()->nuSigmaF( P.energy() ) * track * P.weight(); }
+double Production_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
+{ return P.region()->nu( P.energy() ) * P.region()->SigmaF( P.energy() ) * track * P.weight(); }
 
 // Total (path length)
 double Total_Score::add_score( const Particle_t& P, const double track /*= 0.0*/ )
@@ -295,7 +295,15 @@ void Generic_Estimator::report( std::ostringstream& output, const double trackTi
 	}
 }
 
+double K_Eigenvalue_Estimator::new_k( int passive, int cycles )
+{
+	double k = total_tally.at(0).hist / source_weight;
+	if ( cycles < passive )  //if this is false, then endCycle() will be called after new_k, and endCycle() will reset the history sum
+		total_tally.at(0).hist = 0.0;
+	return k;
+}
 
+void K_Eigenvalue_Estimator::endCycle() { endHistory(); };
 
 // Homogenized MG Constant Generator
 ////////////////////////////////////
@@ -313,7 +321,7 @@ void MGXS_Estimator::setBin( const std::string type, const std::vector<double> g
 	scores.push_back( std::make_shared<Flux_Score>()      );
 	scores.push_back( std::make_shared<Capture_Score>()   );
 	scores.push_back( std::make_shared<Fission_Score>()   );
-	scores.push_back( std::make_shared<nuFission_Score>() );
+	scores.push_back( std::make_shared<Production_Score>() );
 	scores.push_back( std::make_shared<Total_Score>()     );
 	scores.push_back( std::make_shared<Scatter_Score>()   );
 	Nscore = scores.size();

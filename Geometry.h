@@ -10,6 +10,7 @@
 #include "Estimator.h"
 #include "Point.h"
 #include "Material.h"
+#include "Shannon_Entropy_Mesh.h"
 
 
 // Forward declaration
@@ -64,7 +65,7 @@ class Surface_t : public Geometry_t
     		~Surface_t() {};
 
 		// Hit implementation
-		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region );
+		virtual void hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region, bool eigenvalue, int passive, int cycles );
 
 		// Evaluate point location via the "S" equation
 		virtual double eval( const Point_t& p ) = 0;
@@ -316,6 +317,7 @@ class Region_t : public Geometry_t
 		double      SigmaS  ( const double E );
 		double      SigmaC  ( const double E );
 		double      SigmaF  ( const double E );
+		double			  nu( const double E );
 		double      nuSigmaF( const double E );
 		
 		// Set the material
@@ -331,7 +333,7 @@ class Region_t : public Geometry_t
 		bool testPoint( const Point_t& p );
 		
 		// Move particle and score any estimators
-		void moveParticle( Particle_t& P, const double dmove );
+		void moveParticle( Particle_t& P, const double dmove, bool eigenvalue, int passive, int cycles = 0 );
 		
 		// Return the closest bounding surface and the corresponding particle hit distance 
 		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );
@@ -340,7 +342,7 @@ class Region_t : public Geometry_t
 		double collision_distance( const double E );
 
 		// Let the Material take care of the collision sample and reaction process
-		void collision( Particle_t& P, std::stack< Particle_t >& Pbank );
+		void collision( Particle_t& P, bool eigenvalue, double K, std::stack< Particle_t >& Pbank, std::stack< Particle_t>& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh );
 
 		// Simulate scattering for scattering matrix MGXS
 		void simulate_scatter( Particle_t& P );

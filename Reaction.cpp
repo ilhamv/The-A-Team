@@ -25,21 +25,26 @@ void Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
 	int n = nu_dist->sample( r_nu->xs( P.energy() ) ); // sampled multiplicity
     
 	if ( n != 0 ) 
-    	{
-        	// bank all but last particle (skips if n = 1)
-	        for ( int i = 0 ; i < n - 1 ; i++ )
-        	{
-	            	Particle_t p( P.pos(), isotropic.sample(), Chi_dist->sample( P.energy() ), P.time(), P.weight() );
-        	    	p.setRegion( P.region() );
-            		Pbank.push( p );
-        	}
+    {
+        // bank all but last particle (skips if n = 1)
+	    for ( int i = 0 ; i < n - 1 ; i++ )
+        {
+	            Particle_t p( P.pos(), isotropic.sample(), Chi_dist->sample( P.energy() ), P.time(), P.weight() );
+        	    p.setRegion( P.region() );
+            	Pbank.push( p );
+        }
 
 		// reset the top particle
 		P.setDirection( isotropic.sample() );
+		P.setEnergy( Chi_dist->sample( P.energy() ) );
 	}
 	else
 	{ P.kill(); }
 }
+
+// Implicit fission reaction sample
+void Implicit_Fission_Reaction::sample( Particle_t& P, std::stack< Particle_t >& Pbank )
+{ P.kill(); }
    
 
 // Check reaction type

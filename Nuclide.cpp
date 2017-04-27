@@ -52,6 +52,16 @@ double Nuclide_t::sigmaT( const double E )
 
 	return sum; 
 }
+double Nuclide_t::nu( const double E )
+{
+	checkE( E );
+	for ( auto& r : reactions )
+	{
+		if ( r->type("fission") ) { return r->nu( E, idx_help ); }
+	}
+	// Nuclide doesn't have the reaction
+	return 0.0;
+}
 double Nuclide_t::nusigmaF( const double E ) 
 { 
 	checkE( E );
@@ -88,7 +98,6 @@ double Nuclide_t::Chi( const double E )
 	}
 	return 0.0;
 };
-
 
 // Set energy grids for table look-up XS
 void Nuclide_t::setTable( const std::shared_ptr< std::vector<double> >& Evec )

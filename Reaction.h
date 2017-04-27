@@ -83,10 +83,9 @@ class Scatter_Reaction : public Reaction_t
 // Fission reaction
 class Fission_Reaction : public Reaction_t 
 {
-	private:
+	protected:
     		std::shared_ptr< Distribution_t<int> >    nu_dist;   // Fission multiplicity distribution
     		IsotropicDirection_Distribution           isotropic; // Isotropic distribution for emerging neutron
-    
 	public:
 		// Constructor: Pass the microXs and distributions
 		 Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<int> >& D
@@ -100,10 +99,22 @@ class Fission_Reaction : public Reaction_t
 
 		// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
 		// --> Reaction.cpp
-		void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		virtual void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 		
 		// Check type
 		bool type( const std::string s );
+};
+
+// Implicit fission reaction for k-eigenvalue calculations
+class Implicit_Fission_Reaction : public Fission_Reaction
+{
+	public:
+		Implicit_Fission_Reaction( std::shared_ptr<XSec_t> x, std::shared_ptr<XSec_t> n, const std::shared_ptr< Distribution_t<int> >& D
+                          , const std::shared_ptr< Distribution_t<double> >& W  ) :
+			Fission_Reaction( x, n, D, W ) {};
+		~Implicit_Fission_Reaction() {};
+
+		void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
 };
 
 

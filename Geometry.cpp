@@ -12,7 +12,7 @@
 
 
 // Hit implementation
-void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region )
+void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>& Region, bool eigenvalue, int passive, int cycles )
 {
 	// Note: new particle region search is only performed in transmission
 	// Transmission
@@ -33,8 +33,14 @@ void Surface_t::hit( Particle_t& P, const std::vector<std::shared_ptr<Region_t>>
 	}
 	
 	// Score estimators 
-	const double told = P.time(); // crossing surface happends instantly
-	for ( auto& e : estimators ) { e->score( P, told ); }
+	const double told = P.time(); // crossing surface happens instantly
+	if ( eigenvalue )
+	{
+		if ( cycles >= passive )
+			for ( const auto& e : estimators ) { e->score( P, told ); }
+	}
+	else
+		for ( const auto& e : estimators ) { e->score( P, told ); }
 }
 
 
@@ -338,6 +344,7 @@ double      Region_t::SigmaT  ( const double E ) { return material->SigmaT( E );
 double      Region_t::SigmaS  ( const double E ) { return material->SigmaS( E ); }
 double      Region_t::SigmaC  ( const double E ) { return material->SigmaC( E ); }
 double      Region_t::SigmaF  ( const double E ) { return material->SigmaF( E ); }
+double      Region_t::nu      ( const double E ) { return material->nu( E ); }
 double      Region_t::nuSigmaF( const double E ) { return material->nuSigmaF( E ); }
 
 
@@ -367,11 +374,20 @@ bool Region_t::testPoint( const Point_t& p )
 
 
 // Move particle and score any estimators
-void Region_t::moveParticle( Particle_t& P, const double dmove )
+void Region_t::moveParticle( Particle_t& P, const double dmove, bool eigenvalue, int passive, int cycles )
 {
 	const double told = P.time();
 	P.move( dmove );
-	for ( const auto& e : estimators ) { e->score( P, told, dmove ); }
+	if ( eigenvalue )
+	{
+		for ( const auto& e : estimators )
+		{
+			if ( ( e->name() == "k_eigenvalue_estimator" ) || ( cycles >= passive ) )
+				e->score( P, told, dmove );
+		}
+	}
+	else
+		for ( const auto& e : estimators ) { e->score( P, told, dmove ); }
 }
 
 
@@ -406,10 +422,10 @@ double Region_t::collision_distance( const double E )
 
 // Collision
 // Let the Material take care of the collision sample and reaction process
-void Region_t::collision( Particle_t& P, std::stack< Particle_t >& Pbank )
+void Region_t::collision( Particle_t& P, bool eigenvalue, double K, std::stack< Particle_t >& Pbank, std::stack< Particle_t>& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh )
 { 
 	if ( material ) 
-	{ material->collision_sample( P, Pbank ); }
+	{ material->collision_sample( P, eigenvalue, K, Pbank, Fbank, shannon_mesh ); }
 	// Vacuum --> Kill particle at collision
 	else { return P.kill(); }
 }	

@@ -97,11 +97,11 @@ class Fission_Score : public Score_t
 
 
 // Nu Fission (path length)
-class nuFission_Score : public Score_t
+class Production_Score : public Score_t
 {
 	public:
-		 nuFission_Score() : Score_t( "Prod. Rate" ) {};
-		~nuFission_Score() {};
+		 Production_Score() : Score_t( "Prod. Rate" ) {};
+		~Production_Score() {};
 
 		double add_score( const Particle_t& P, const double track = 0.0 );
 };
@@ -216,6 +216,9 @@ class Estimator_t
 		 Estimator_t( const std::string n ) : e_name(n) {};
 		~Estimator_t() {};
 
+		// Get name
+		virtual std::string name() final { return e_name; }
+
 		// Add thing to be scored
 		virtual void addScore( const std::shared_ptr<Score_t>& S ) = 0;
 
@@ -275,6 +278,17 @@ class Generic_Estimator : public Estimator_t
 		virtual void report( std::ostringstream& output, const double trackTime );
 };
 
+class K_Eigenvalue_Estimator : public Generic_Estimator
+{
+	private:
+		int source_weight;
+	public:
+		K_Eigenvalue_Estimator( int SW ) : source_weight(SW), Generic_Estimator( "k_eigenvalue_estimator" ) { addScore( std::make_shared< Production_Score > () ); };
+		~K_Eigenvalue_Estimator() {};
+
+		double new_k( int passive, int cycles );
+		void endCycle();
+};
 
 // Homogenized MG Constant Generator
 ////////////////////////////////////

@@ -122,6 +122,11 @@ void XML_input
 	unsigned long long&                                      nhist,          
 	double&                                                  Ecut_off,
 	double&                                                  tcut_off,
+	bool& 													 eigenvalue,
+	int&													 ncycles,
+	int&													 npassive,
+	std::shared_ptr <K_Eigenvalue_Estimator>&      		     k_est,
+	std::shared_ptr <Shannon_Entropy_Mesh>& 		  		 shannon_mesh,
 	Source_Bank&                                             Sbank,
 	std::vector < std::shared_ptr<Surface_t>   >&            Surface,     
 	std::vector < std::shared_ptr<Region_t>    >&            Region,    
@@ -166,7 +171,7 @@ void XML_input
     	
 	for ( const auto& s : input_simulation )
 	{
-		if( (std::string) s.name() == "description" )
+		if ( (std::string) s.name() == "description" )
 		{
 			simName = s.attribute("name").value();          // simulation name
 			nhist   = s.attribute("histories").as_double(); // # of histories
@@ -176,6 +181,62 @@ void XML_input
 		{
 			if ( s.attribute("energy") ) { Ecut_off = s.attribute("energy").as_double(); }
 			if ( s.attribute("time") )   { tcut_off = s.attribute("time").as_double(); }
+		}
+		else if ( (std::string) s.name() == "k-eigenvalue" )
+		{
+			eigenvalue = 1;
+			ncycles = s.attribute("number_of_cycles").as_int();
+			npassive = s.attribute("passive_cycles").as_int();
+			bool x_found = 0;
+			bool y_found = 0;
+			bool z_found = 0;
+			double x, X, y, Y, z, Z;
+			int xn, yn, zn;
+			for ( const auto& k : s.children() )
+			{
+				if ( (std::string) k.name() == "x" )
+				{
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					{
+						std::cout << "Shannon Entropy Mesh x-dimension requires minimum value, maximum value, and number of steps" << std::endl;
+						throw;
+					}
+					x = k.attribute("min").as_double();
+					X = k.attribute("max").as_double();
+					xn = k.attribute("number_of_steps").as_int();
+					x_found = 1;
+				}
+				else if ( (std::string) k.name() == "y" )
+				{
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					{
+						std::cout << "Shannon Entropy Mesh y-dimension requires minimum value, maximum value, and number of steps" << std::endl;
+						throw;
+					}
+					y = k.attribute("min").as_double();
+					Y = k.attribute("max").as_double();
+					yn = k.attribute("number_of_steps").as_int();
+					y_found = 1;
+				}
+				else if ( (std::string) k.name() == "z" )
+				{
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					{
+						std::cout << "Shannon Entropy Mesh z-dimension requires minimum value, maximum value, and number of steps" << std::endl;
+						throw;
+					}
+					z = k.attribute("min").as_double();
+					Z = k.attribute("max").as_double();
+					zn = k.attribute("number_of_steps").as_int();
+					z_found = 1;
+				}
+			}
+			if( !( x_found && y_found && z_found ) )
+			{
+				std::cout << "Shannon Entropy Mesh requires x, y, and z dimensions" << std::endl;
+				throw;
+			}
+			shannon_mesh = std::make_shared <Shannon_Entropy_Mesh> ( x, X, xn, y, Y, yn, z, Z, zn );
 		}
 	}
         
@@ -372,9 +433,9 @@ void XML_input
 			Nuc   = std::make_shared<Nuclide_t> ( name, Amass );
 
     			// Add nuclide reactions
-    			for ( const auto& r : n.children() ) 
+    		for ( const auto& r : n.children() ) 
 			{
-            			const std::string       rxn_type = r.name();
+            	const std::string rxn_type = r.name();
 			
 				// Set XSec
 				std::shared_ptr<XSec_t> XS;
@@ -447,7 +508,7 @@ void XML_input
 				if ( rxn_type == "capture" )
 				{
         				Nuc->addReaction( std::make_shared<Capture_Reaction> ( XS ) );
-	      			}      
+	      		}      
 
 				// Scatter
 				else if ( rxn_type == "scatter" )
@@ -493,8 +554,8 @@ void XML_input
           					throw;
 	        			}
       				}
-            			// Continuous lookup Scatter
-            			else if ( rxn_type == "scatter_cont" )
+            	// Continuous lookup Scatter
+            	else if ( rxn_type == "scatter_cont" )
 				{
 					std::string filename;
                 			std::string dirName = "./xs_folder/";
@@ -610,8 +671,11 @@ void XML_input
 							throw;
 						}
 						auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
-                    
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+
+						if( eigenvalue )
+							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+						else
+							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
                         fissionExist = true;
 					}
 
@@ -629,7 +693,11 @@ void XML_input
 						const int    nmax  = r.attribute("nmax").as_int();
 						const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
 						auto         nu = std::make_shared<Constant_XSec>(0.0);
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+
+						if( eigenvalue )
+							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+						else
+							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
                         fissionExist = true;
 					}
 				
@@ -641,7 +709,7 @@ void XML_input
         				}
 
 				}
-      				// Continuous lookup fission
+      			// Continuous lookup fission
 				else if ( rxn_type == "fission_cont" )
 				{
                 			std::string filename;
@@ -676,10 +744,10 @@ void XML_input
                     				XS = std::make_shared<Table_XSec> ( E_vec, XS_vec );
                 			}
                 			else
-					{ 
-						std::cout << "unable to open file for reaction " << rxn_type << " in nuclide " << name << std::endl;
-						throw;
-					}
+							{ 
+								std::cout << "unable to open file for reaction " << rxn_type << " in nuclide " << name << std::endl;
+								throw;
+							}
                 
 					// Set up Chi spectrum
 					std::shared_ptr< Distribution_t<double> > watt;
@@ -712,8 +780,11 @@ void XML_input
 							throw;
 						}
 						auto nubar = std::make_shared<Constant_XSec> ( r.attribute("nubar").as_double() );
-                    
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+
+						if( eigenvalue )
+							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+						else
+							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
                         fissionExist = true;
 					}
 
@@ -731,7 +802,11 @@ void XML_input
 						const int    nmax  = r.attribute("nmax").as_int();
 						const std::vector< std::pair< int, double > > v;     // a dummy, as it is required for discrete distribution base class
 						auto         nu = std::make_shared<Constant_XSec>(0.0);
-						Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+
+						if( eigenvalue )
+							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+						else
+							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
                         fissionExist = true;
 					}
 				
@@ -1169,6 +1244,11 @@ void XML_input
 		// Push new estimator
     		Estimator.push_back( Est );
   	}
+	if ( eigenvalue )
+	{
+		k_est = std::make_shared <K_Eigenvalue_Estimator> ( nhist );
+		for ( const auto& r : Region ) { r->addEstimator( k_est ); }
+	}
 
 	// Set source bank
   	pugi::xml_node input_sources = input_file.child("sources");
@@ -1275,7 +1355,10 @@ void XML_input
     				throw;
   			}
 			
-			Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
+			if(eigenvalue)
+				Src = std::make_shared<Eigenvalue_Source> ( nhist, posDist, dirDist, enrgDist, timeDist );
+			else
+				Src = std::make_shared<Generic_Source> ( posDist, dirDist, enrgDist, timeDist );
 		}
 
 		// Unknown source type
