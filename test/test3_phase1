@@ -46,14 +46,6 @@
 	</region>
 </regions>
 
-
-<estimators>
-  	<estimator name="Sphere leakage" score="current">
-    		<surface name="suspicious_sphere"/>
-  	</estimator>
-</estimators>
-
-
 <sources>
   	<source position="pos" direction="dir" energy="enrg"/>
 </sources>
