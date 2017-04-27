@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Problem 1a" histories="2e7" transportMethod="1"/>
+	<description name="Problem 1a" histories="1e7" transportMethod="1"/>
 </simulation>
 
 
@@ -56,8 +56,8 @@
 
 
 <estimators>
-  	<estimator name="Leak out right" score="current">
-    		<surface name="px2"/>
+  	<estimator name="collisions in slab" score="total flux">
+    		<region name="slab"/>
   	</estimator>
 </estimators>
 

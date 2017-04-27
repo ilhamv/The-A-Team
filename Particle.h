@@ -30,6 +30,8 @@ class Particle_t
 		p_pos(p1), p_dir( p2 ), p_time(t), p_weight(w) { setEnergy(E); p_dir.normalize(); }
 		~Particle_t() {};
 
+		std::string               type;           // Type, neutron or photon
+
     		// Getters
 		Point_t                   pos()    const; // Position
     		Point_t                   dir()    const; // Direction 

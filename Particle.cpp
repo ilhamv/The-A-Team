@@ -27,14 +27,21 @@ void Particle_t::setTime( const double t )                       { p_time   = t;
 void Particle_t::setEnergy( const double E )                                       // Energy, and speed
 { 
 	p_energy = E; // eV
-	p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0; // cm/s
-	// note, the constant above is 2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
+	if ( type.compare( "photon" ) == 0 ) { // if it is a photon
+	  p_speed = C;
+	}
+	else {
+	  p_speed  = std::sqrt( p_energy * 191312955.067 ) * 100.0; // cm/s
+	  // note, the constant above is 2.0 * ( 1.60217662e-19 J/eV ) / ( 1.674927471e-27 kg )
+	}
 }
 void Particle_t::setSpeed( const double v )                                        // Speed, and energy
 { 
+    if ( type.compare( "photon" ) != 0 ) { // if it's not a photon
 	p_speed  = v; // cm/s
-	p_energy = 5.2270376e-13 * v * v; // eV
-	// note, the constant above is 0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) / ( 10000 cm^2/m^2 )
+    }
+    p_energy = 5.2270376e-13 * v * v; // eV
+    // note, the constant above is 0.5 / ( 1.60217662e-19 J/eV ) * ( 1.674927471e-27 kg ) / ( 10000 cm^2/m^2 )
 }
 
 
@@ -49,7 +56,7 @@ void Particle_t::move( const double dmove )
 	setTime( p_time + dmove / p_speed );
 }
 
-
+// only for neutron
 // Scatter particle with scattering angle mu0, with nucleus having mass A
 // Scattering angle mu0 is sampled in and passed by the Reaction (see Reaction.h)
 // Scattering is trated in Center of mass (COM) frame

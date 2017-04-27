@@ -27,6 +27,7 @@ int main()
 	// Variable declarations
 	std::string                                   simName;           // Simulation name
 	unsigned long long                            nhist;             // Number of particle samples
+	std::string                                   particleType = "neutron"; // neutron or photon, default neutron
 	double                                        Ecut_off  = 0.0;   // Energy cut-off
 	double                                        tcut_off  = MAX;   // Time cut-off
 	bool 										  eigenvalue = 0;	 // toggle for fixed-source vs k-eigenvalue simulation
@@ -52,7 +53,7 @@ int main()
 	
 	// XML input parser	
 	XML_input
-	( simName, nhist, Ecut_off, tcut_off, eigenvalue, ncycles, npassive, k_est, shannon_mesh, Sbank, Surface, Region, Nuclide,
+	  ( simName, nhist, particleType, Ecut_off, tcut_off, eigenvalue, ncycles, npassive, k_est, shannon_mesh, Sbank, Surface, Region, Nuclide,
       Material, Estimator, double_distributions, int_distributions, point_distributions, transportMethod );
 	
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
@@ -75,6 +76,7 @@ int main()
 	    	while ( !Pbank.empty() )
 	    	{
 	    		Particle_t                P = Pbank.top(); // Working particle
+			P.type = particleType;
 	    		std::shared_ptr<Region_t> R = P.region();  // Working region
 	    		Pbank.pop();
 	    		// Particle loop
@@ -139,7 +141,7 @@ int main()
         // Cycle loop
 		for ( unsigned int icycle = 0; icycle < ncycles; icycle++ )
 		{
-			//std::cout << "cycle: " << icycle << std::endl;
+			std::cout << "cycle: " << icycle << std::endl;
 
 			// Start timing for progress updating later
 			std::clock_t start = std::clock();
@@ -201,9 +203,9 @@ int main()
 							// 	Note: particle weight and working region are not updated yet
 							SnD.first->hit( P, Region, eigenvalue, npassive, icycle );
 
-							//std::cout << "SURFACE CROSS!" << std::endl;
-
 							// std::cout << P.region()->name() << std::endl;
+
+							//std::cout << "SURFACE CROSS!" << std::endl;
 
 							// Splitting & Roulette Variance Reduction Technique
 							// 	More important : split
@@ -225,9 +227,9 @@ int main()
 							//std::cout << "PARTICLE MOVED!" << std::endl;
 
 							R->collision( P, eigenvalue, k, Pbank, Fbank, shannon_mesh );
-					
-							//std::cout << "COLLISION!" << std::endl;
 
+							//std::cout << "COLLISION!" << std::endl;
+					
 							// Accumulate "computation time"
 							trackTime++;
 						}
@@ -250,7 +252,7 @@ int main()
 					for ( auto& E : Estimator ) { E->endHistory(); }
 
 				// Print progress report to terminal
-				if ( ( !eigenvalue & ( fmod( std::log10( isample + 1 ), 1 ) == 0 ) ) || ( isample + 1 == nhist ) )
+				if ( ( (!eigenvalue && fmod( std::log10( isample + 1 ), 1 ) == 0 ) ) || ( isample + 1 == nhist ) )
 				{
 		  			double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 		  			if ( duration != 0 )
@@ -282,17 +284,17 @@ int main()
 				k = k_est->new_k( npassive, icycle );					// get new estimate of k for next iteration
 				std::shared_ptr <Source_t> Source = Sbank.getSource();  // Update source with fission bank for next iteration
 
-				//std::cout << "old nhist: " << nhist << std::endl;
+				std::cout << "old nhist: " << nhist << std::endl;
 
 				nhist = Fbank.size();
 
-				//std::cout << "new nhist: " << nhist << std::endl;
+				std::cout << "new nhist: " << nhist << std::endl;
 
 				Source->update( Fbank );
 
-				//std::cout << "new fission bank size: " << Fbank.size() <<std::endl;
+				std::cout << "new fission bank size: " << Fbank.size() <<std::endl;
 
-				std::cout << icycle + 1 << " cycles completed -- k = " << k << " -- Shannon Entropy = " << shannon_mesh->entropy( nhist ) << std::endl;
+				std::cout << icycle << " cycles completed -- k = " << k << " -- Shannon Entropy = " << shannon_mesh->entropy( nhist ) << std::endl;
 				shannon_mesh->clear();
 				if ( icycle == ( npassive - 1 ) ) { std::cout << std::endl << "All passive cycles completed; estimators activated." << std::endl << std::endl; }
 				if ( icycle >= npassive ) { k_est->endCycle(); }		// if source has converged, start sampling mean of k
