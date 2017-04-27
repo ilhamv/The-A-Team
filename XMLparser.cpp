@@ -122,7 +122,8 @@ bool setNuclide( const std::string name, const std::string label, std::shared_pt
 void XML_input
 ( 
 	std::string&                                             simName,
-	unsigned long long&                                      nhist,          
+	unsigned long long&                                      nhist,         
+	std::string&                                             particleType,      
 	double&                                                  Ecut_off,
 	double&                                                  tcut_off,
 	bool& 													 eigenvalue,
@@ -179,6 +180,7 @@ void XML_input
 			simName = s.attribute("name").value();          // simulation name
 			nhist   = s.attribute("histories").as_double(); // # of histories
             transportMethod = s.attribute("transportMethod").as_double(); // transportMethod, 0=normal, else delta
+	                particleType = s.attribute("particleType").as_string(); // neutron or photon
 		}
 		else if ( (std::string) s.name() == "cut-off" )
 		{
@@ -195,9 +197,6 @@ void XML_input
 			bool z_found = 0;
 			double x, X, y, Y, z, Z;
 			int xn, yn, zn;
-			z = -MAX;
-			Z = MAX;
-			zn = 1;
 			for ( const auto& k : s.children() )
 			{
 				if ( (std::string) k.name() == "x" )
@@ -226,14 +225,20 @@ void XML_input
 				}
 				else if ( (std::string) k.name() == "z" )
 				{
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("number_of_steps") ) )
+					{
+						std::cout << "Shannon Entropy Mesh z-dimension requires minimum value, maximum value, and number of steps" << std::endl;
+						throw;
+					}
 					z = k.attribute("min").as_double();
 					Z = k.attribute("max").as_double();
 					zn = k.attribute("number_of_steps").as_int();
+					z_found = 1;
 				}
 			}
-			if( !( x_found && y_found) )
+			if( !( x_found && y_found && z_found ) )
 			{
-				std::cout << "Shannon Entropy Mesh requires x, and y dimensions" << std::endl;
+				std::cout << "Shannon Entropy Mesh requires x, y, and z dimensions" << std::endl;
 				throw;
 			}
 			shannon_mesh = std::make_shared <Shannon_Entropy_Mesh> ( x, X, xn, y, Y, yn, z, Z, zn );
@@ -816,8 +821,27 @@ void XML_input
           					std::cout << "unknown fission multiplicity distribution " << mult_dist_name <<" in nuclide " << name << std::endl;
           					throw;
         				}
+				}
 
-				}	
+				// Photoelectric
+				else if ( rxn_type == "photoelectric" )
+				{
+        				Nuc->addReaction( std::make_shared<Photoelectric_Reaction> ( XS ) );
+	      			}      
+
+				// Compton Scatter
+				else if ( rxn_type == "compton_scatter" )
+				{
+        				Nuc->addReaction( std::make_shared<ComptonScatter_Reaction> ( XS ) );
+	      			}      
+
+				// Pair Production
+				else if ( rxn_type == "pair_production" )
+				{
+        				Nuc->addReaction( std::make_shared<PairProduction_Reaction> ( XS ) );
+	      			}      
+	
+
 				// Unknown reaction
 				else 
 				{

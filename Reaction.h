@@ -118,4 +118,59 @@ class Implicit_Fission_Reaction : public Fission_Reaction
 };
 
 
+// Photoelectric reaction
+class Photoelectric_Reaction : public Reaction_t 
+{
+	public:
+		// Constructor: Pass the microXs
+		 Photoelectric_Reaction( std::shared_ptr<XSec_t> x ) : Reaction_t(x) {}; // Pass the microXs
+		~Photoelectric_Reaction() { };
+
+		// Kill the working particle upon reaction sample
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		
+		// Check type
+		bool type( const std::string s );
+};
+
+// Compton scatter reaction
+class ComptonScatter_Reaction : public Reaction_t 
+{
+	private:
+    		IsotropicDirection_Distribution           KleinNishina; // Klein-Nishina distribution for scattered photons
+	public:
+		// Constructor: Pass the microXs
+		ComptonScatter_Reaction( std::shared_ptr<XSec_t> x ) :
+		Reaction_t(x) {}; // Pass the microXs and scattering angle distribution
+		~ComptonScatter_Reaction() {};
+
+		// Scatter the working particle
+		void  sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		
+		// Check type
+		bool type( const std::string s );
+};
+
+// Pair production reaction
+class PairProduction_Reaction : public Reaction_t 
+{
+	private:
+    		IsotropicDirection_Distribution           isotropic; // Isotropic distribution for emerging photons
+    
+	public:
+		// Constructor: Pass the microXs and distributions
+		 PairProduction_Reaction( std::shared_ptr<XSec_t> x ) :
+		 	Reaction_t(x)
+		{}
+
+		~PairProduction_Reaction() {};
+
+		// Sample fission multiplicity, then appropriately pushing new fission particles to the bank
+		// --> Reaction.cpp
+		void sample( Particle_t& P, std::stack< Particle_t >& Pbank );
+		
+		// Check type
+		bool type( const std::string s );
+};
+
 #endif

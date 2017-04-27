@@ -41,6 +41,7 @@ void XML_input
 ( 
 	std::string&                                             simName,
 	unsigned long long&                                      nhist,          
+	std::string&                                             particleType,
 	double&                                                  Ecut_off,
 	double&                                                  tcut_off,
 	bool& 													 eigenvalue,
