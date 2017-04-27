@@ -282,6 +282,9 @@ int main()
 				k = k_est->new_k( npassive, icycle );					// get new estimate of k for next iteration
 				std::shared_ptr <Source_t> Source = Sbank.getSource();  // Update source with fission bank for next iteration
 				nhist = Fbank.size();
+
+				std::cout << "new nhist: " << nhist << std::endl;
+
 				Source->update( Fbank );
 				std::cout << icycle << " cycles completed -- k = " << k << " -- Shannon Entropy = " << shannon_mesh->entropy( nhist ) << std::endl;
 				shannon_mesh->clear();
