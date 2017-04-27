@@ -1,78 +1,70 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Pulse Height Test Problem" histories="1e3"/>
+	<description name="PulseHeight" histories="1e8"/>
 </simulation>
 
 <distributions>
     <delta       name="enrg"       datatype="double" val="1.0e6"/>
-  	<linear      name="ang source" datatype="double" a="0.0" b="1.0" fa ="0.0" fb="2.0"/>
-  	<anisotropic name="dir"        datatype="point"  u="1.0" v="0.0" w  ="0.0" distribution="ang source"/>
+    <delta       name="dir"        datatype="point" x = "1.0" y = "0.0" z = "0.0"/>
 </distributions>
 
 
 <nuclides>
-	<nuclide name="nuc1" A="2.0" > <!-- deuterium -->
-    		<scatter xs="0.90" distribution="isotropic"/>
-    		<capture xs="0.01"/>
-  	</nuclide>
+	<Cnat  name="C0" />
+    <H-1   name="H1" />
 </nuclides>
 
 
 <materials>
-  	<material name="mat1">
-    		<nuclide name="nuc1" density="1.0"/>
+  	<material name="ej309">
+            <!-- C:H = 4:5, density 0.968g/cm3 Eljen technology -->
+    		<nuclide name="C0" density="0.01663532747"/>
+            <nuclide name="H1" density="0.003465693222"/>
   	</material>
 </materials>
 
 
 <surfaces>
 	<plane_x name="px1" x="0.0"/>
-    <plane_x name="px2" x="5.0"/>
-    <plane_x name="px3" x="10.0"/>
-	<plane_x name="px4" x="15.0"/>
+    <plane_x name="px2" x="7.62"/>
+    <cylinder_x name="cyl" y="0.0" z="0.0" r="3.81"/>
 </surfaces>
 
 
 <regions>
-  	<region name="slab left" material="mat1">
-    		<surface name="px1" sense="+1"/>
-    		<surface name="px2" sense="-1"/>
+  	<region name="detector" material="ej309">  <!-- this will be our detector -->
+    		<surface name="px1" sense="+1" />
+    		<surface name="px2" sense="-1" />
+            <surface name="cyl" sense="-1" />
   	</region>
     
-    <region name="slab middle" material="mat1"> <!-- this will be our detector -->
-        <surface name="px2" sense="+1"/>
-        <surface name="px3" sense="-1"/>
+    <region name="left outside" >
+        <surface name="px1" sense="-1"/>
     </region>
     
-    <region name="slab right" material="mat1">
-        <surface name="px3" sense="+1"/>
-        <surface name="px4" sense="-1"/>
+    <region name="mid outside" >
+        <surface name="px1" sense="+1"/>
+        <surface name="px2" sense="-1"/>
+        <surface name="cyl" sense="+1" />
     </region>
 	
-	<region name="left outside" importance="0.0">
-    		<surface name="px1" sense="-1"/>
-  	</region>
-  	
 	<region name="right outside" importance="0.0">
-    		<surface name="px4" sense="+1"/>
+    		<surface name="px2" sense="+1"/>
   	</region>
+    
 </regions>
 
 
 <estimators>
     
-    <estimator name="Leak out right" score="current">
-        <surface name="px2"/>
-    </estimator>
-    
     <pulseHeight name="pulse height" >
-        <region  name="slab middle"/>
-        <bin     type="energy" grid_linear="0 1e5 1.20e6"/> <!-- from 0 eV to 1.2 MeV, increment 0.01 MeV -->
+        <region  name="detector"/>
+        <bin     type="energy" grid_linear="0 0.005e6 1.50e6"/> <!-- from 0 eV to 1.5 MeV, increment 5 KeV or  0.005 MeV -->
     </pulseHeight>
     
 </estimators>
 
 <sources>
-  	<point x="1.0e-9" y="0.0" z="0.0" direction="dir" energy="enrg"/>
+  	<point x="-5.0" y="0.0" z="0.0" direction="dir" energy="enrg"/>
 </sources>

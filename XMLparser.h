@@ -33,7 +33,7 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 
 // Function that set nuclide based on library availability
 // Current approximation: isotropic in C.O.M.
-void setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc );
+bool setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc );
 
 
 // XML input pasrese
@@ -56,7 +56,8 @@ void XML_input
 	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
 	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
   	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions,
+    double&                                           transportMethod
 );
 
 

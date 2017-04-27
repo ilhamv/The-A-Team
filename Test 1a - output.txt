@@ -1,0 +1,23 @@
+
+=============
+== Test 1a ==
+=============
+Number of histories: 10000000
+Track time: 51410380
+
+
+Estimator report: Detector
+==========================
+Total tallies,
+  Flux:
+  -> Mean     = 0.00165049  +/-  1.83318e-05  (1.11069%)
+  -> Variance = 0.00336055
+  [F.O.M.: 0.000157676]
+
+
+  Abs. Rate:
+  -> Mean     = 0.000100837  +/-  1.61893e-06  (1.60549%)
+  -> Variance = 2.62093e-05
+  [F.O.M.: 7.54626e-05]
+
+

@@ -38,8 +38,11 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 
 // Function that set nuclide based on library availability
 // Current approximation: isotropic in C.O.M.
-void setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc )
+bool setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc )
 {
+    
+    bool PHbool = false;
+    
 	// Check availability
 	std::string dirName = "./xs_folder/" + name + ".txt"; // Library file location
 	std::ifstream xs_file (dirName);
@@ -105,7 +108,10 @@ void setNuclide( const std::string name, const std::string label, std::shared_pt
 	if ( nu[ nu.size() / 2 ] > 0.0 )
 	{
 		Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Average_Multiplicity_Distribution > (), std::make_shared< Watt_Distribution > ( a, b ) ) );
+        PHbool = true;
 	}
+    
+    return PHbool;
 }
 
 
@@ -129,13 +135,16 @@ void XML_input
 	std::vector < std::shared_ptr<Estimator_t> >&            Estimator,
 	std::vector < std::shared_ptr<Distribution_t<double>> >& double_distributions,
   	std::vector < std::shared_ptr<Distribution_t<int>>    >& int_distributions,
-  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions
+  	std::vector < std::shared_ptr<Distribution_t<Point_t>>>& point_distributions,
+    double&                                           transportMethod
 )
 {
     
 	// Pulse height tally
 	bool varReductionExist = false;
 	bool pulseHeightExist  = false;
+    bool fissionExist      = false;
+    bool fissionExistSN    = false;
 
 	// XML input treatment //
 	
@@ -166,6 +175,7 @@ void XML_input
 		{
 			simName = s.attribute("name").value();          // simulation name
 			nhist   = s.attribute("histories").as_double(); // # of histories
+            transportMethod = s.attribute("transportMethod").as_double(); // transportMethod, 0=normal, else delta
 		}
 		else if ( (std::string) s.name() == "cut-off" )
 		{
@@ -666,6 +676,7 @@ void XML_input
 							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
 						else
 							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+                        fissionExist = true;
 					}
 
 					// Terrel
@@ -687,6 +698,7 @@ void XML_input
 							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
 						else
 							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+                        fissionExist = true;
 					}
 				
 					// Unknown multiplicity distribution
@@ -773,6 +785,7 @@ void XML_input
 							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
 						else
 							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nubar, std::make_shared< Average_Multiplicity_Distribution > (), watt ) );
+                        fissionExist = true;
 					}
 
 					// Terrel
@@ -794,6 +807,7 @@ void XML_input
 							Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
 						else
 							Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS, nu, std::make_shared< Terrel_Multiplicity_Distribution > ( nubar, gamma, b, nmax, v ), watt ) );
+                        fissionExist = true;
 					}
 				
 					// Unknown multiplicity distribution
@@ -815,7 +829,10 @@ void XML_input
 		else
 		// Set nuclide referring to the available library
 		{
-			setNuclide( n_tag, name, Nuc );
+			fissionExistSN = setNuclide( n_tag, name, Nuc );
+            if( fissionExistSN == true ){
+                fissionExist = true;
+            }
 		}
 		
 		// Push new nuclide
@@ -1356,8 +1373,8 @@ void XML_input
   	}
     
     //Check if pulse height is allowed
-    if( pulseHeightExist == true && varReductionExist == true ){
-        std::cout << "Pulse height tally is not allowed if any type of variance reduction techniques is used" << std::endl;
+    if( pulseHeightExist == true && (varReductionExist == true || fissionExist == true )  ){
+        std::cout << "Pulse height tally is not allowed if any type of variance reduction techniques is used or if fission is enabled " << std::endl;
         throw;
     }
     

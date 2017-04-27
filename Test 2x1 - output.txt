@@ -1,0 +1,23 @@
+
+==============
+== Test 2x1 ==
+==============
+Number of histories: 100000000
+Track time: 535273442
+
+
+Estimator report: Detector
+==========================
+Total tallies,
+  Flux:
+  -> Mean     = 0.0391701  +/-  2.48815e-05  (0.0635215%)
+  -> Variance = 0.0619088
+  [F.O.M.: 0.00463001]
+
+
+  Abs. Rate:
+  -> Mean     = 0.000331564  +/-  9.01851e-07  (0.271999%)
+  -> Variance = 8.13335e-05
+  [F.O.M.: 0.000252517]
+
+

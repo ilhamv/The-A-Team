@@ -333,7 +333,7 @@ class Region_t : public Geometry_t
 		bool testPoint( const Point_t& p );
 		
 		// Move particle and score any estimators
-		void moveParticle( Particle_t& P, const double dmove, bool eigenvalue, int passive, int cycles );
+		void moveParticle( Particle_t& P, const double dmove, bool eigenvalue, int passive, int cycles = 0 );
 		
 		// Return the closest bounding surface and the corresponding particle hit distance 
 		std::pair< std::shared_ptr< Surface_t >, double > surface_intersect( const Particle_t& P );

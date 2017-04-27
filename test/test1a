@@ -1,5 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
+
 <simulation>
 	<description name="Test 1a" histories="1e7"/>
 </simulation>
@@ -12,35 +13,33 @@
 
 <nuclides>
     	<Cnat name="C0"/>
-    	<H-1 name="H1"/>
+    	<H-1  name="H1"/>
     	<He-3 name="He3"/>
 </nuclides>
 
 
 <materials>
   	<material name="polyethylene">
-    		<nuclide name="C0" density="0.0399338924"/>
-    		<nuclide name="H1" density="0.0798661076"/>
+    		<nuclide name="C0" density="0.039929"/>
+    		<nuclide name="H1" density="0.079855"/>
   	</material>
-	
 	<material name="helium3">
     		<nuclide name="He3" density="0.00002501"/>
   	</material>
-
-    	<material name="graphite">
-        	<nuclide name="C0" density="0.1003"/>
-    	</material>
+    <material name="graphite">
+        	<nuclide name="C0" density="0.100280"/>
+    </material>
 </materials>
 
 
 <surfaces>
-	<sphere     name="sp1"  x="0.0" y="0.0" z="0.0" r="4.0"/>
-	<plane_x    name="px1"  x="13.5"/>
-	<plane_x    name="px2"  x="19.5"/>
-	<cylinder_x name="cx1"  y="0.0" z="0.0" r="1.0"/> <!-- outer cylinder -->
-    	<plane_x    name="px11" x="14.0"/>
-    	<plane_x    name="px22" x="19.0"/>
-    	<cylinder_x name="cx11" y="0.0" z="0.0" r="0.5"/> <!-- inner cylinder -->
+    <sphere     name="sp1"  x="0.0" y="0.0" z="0.0" r="4.0"/>
+    <plane_x    name="px1"  x="9.0"/>
+    <plane_x    name="px2"  x="24.0"/>
+    <cylinder_x name="cx1"  y="0.0" z="0.0" r="5.5"/> <!-- outer cylinder -->
+    <plane_x    name="px11" x="14.0"/>
+    <plane_x    name="px22" x="19.0"/>
+    <cylinder_x name="cx11" y="0.0" z="0.0" r="0.5"/> <!-- inner cylinder -->
 </surfaces>
 
 

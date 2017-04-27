@@ -20,7 +20,7 @@ std::shared_ptr<Region_t> Particle_t::region() const { return p_region; } // Par
 
 
 // Setters
-void Particle_t::setDirection( const Point_t& p )                { p_dir    = p; } // Direction
+void Particle_t::setDirection( const Point_t& p )                { p_dir    = p; p_dir.normalize(); } // Direction
 void Particle_t::setWeight( const double w )                     { p_weight = w; } // Weight
 void Particle_t::setRegion( const std::shared_ptr<Region_t>& R ) { p_region = R; } // Particle region
 void Particle_t::setTime( const double t )                       { p_time   = t; } // Elapsed time
