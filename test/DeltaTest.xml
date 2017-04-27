@@ -1,0 +1,285 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+
+<simulation>
+	<description name="XStest" histories="1000000" transportMethod="1" />
+	<cut-off     time="1e-7"/>
+</simulation>
+
+
+<distributions>
+  	<delta       name="enrg" datatype="double" val="1e6"/>
+  	<isotropic       name="dir" datatype="point"/>
+</distributions>
+
+
+<nuclides>
+    <Zr-90 name="Zr90"/>
+    <Zr-91 name="Zr91"/>
+    <Zr-92 name="Zr92"/>
+    <Zr-94 name="Zr94"/>
+    <Zr-96 name="Zr96"/>
+    
+    <Sn-112 name="Sn112"/>
+    <Sn-114 name="Sn114"/>
+    <Sn-115 name="Sn115"/>
+    <Sn-116 name="Sn116"/>
+    <Sn-117 name="Sn117"/>
+    <Sn-118 name="Sn118"/>
+    <Sn-119 name="Sn119"/>
+    <Sn-120 name="Sn120"/>
+    <Sn-122 name="Sn122"/>
+    <Sn-124 name="Sn124"/>
+    
+    <Fe-54 name="Fe54"/>
+    <Fe-56 name="Fe56"/>
+    <Fe-57 name="Fe57"/>
+    <Fe-58 name="Fe58"/>
+    
+    <Cr-50 name="Cr50"/>
+    <Cr-52 name="Cr52"/>
+    <Cr-53 name="Cr53"/>
+    <Cr-54 name="Cr54"/>
+    
+    <U-235 name="U235"/>
+    <U-238 name="U238"/> 
+    
+    <O-16 name="O16"/>
+    
+    <He-3 name="He3"/>
+    <H-1 name="H1"/>
+    
+</nuclides>
+
+
+<materials>
+  	<material name="Zircaloy-4">
+    		<nuclide name="Zr90" density="0.021827985"/>
+    		<nuclide name="Zr91" density="0.004760155"/>
+    		<nuclide name="Zr92" density="0.007275995"/>
+    		<nuclide name="Zr94" density="0.007373574"/>
+    		<nuclide name="Zr96" density="0.001187918"/>
+    		
+            <nuclide name="Sn112" density="4.4948E-06"/>
+            <nuclide name="Sn114" density="3.05832E-06"/>
+            <nuclide name="Sn115" density="1.5755E-06"/>
+            <nuclide name="Sn116" density="6.73757E-05"/>
+            <nuclide name="Sn117" density="3.55877E-05"/>
+            <nuclide name="Sn118" density="0.000112231"/>
+            <nuclide name="Sn119" density="3.98045E-05"/>
+            <nuclide name="Sn120" density="0.00015097"/>
+            <nuclide name="Sn122" density="2.14546E-05"/>
+            <nuclide name="Sn124" density="2.68298E-05"/>
+            
+            <nuclide name="Fe54" density="8.23111E-06"/>
+            <nuclide name="Fe56" density="0.000129095"/>
+            <nuclide name="Fe57" density="2.9829E-06"/>
+            <nuclide name="Fe58" density="3.93968E-07"/>
+            
+            <nuclide name="Cr50" density="3.28306E-06"/>
+            <nuclide name="Cr52" density="6.33105E-05"/>
+            <nuclide name="Cr53" density="7.1789E-06"/>
+            <nuclide name="Cr54" density="1.78698E-06"/>       
+            
+            <nuclide name="O16" density="0.000294686"/>       
+  	</material>
+  	
+    <material name="Light Water">
+    		<nuclide name="H1" density="0.066733"/>
+    		<nuclide name="O16" density="0.033368"/>       
+  	</material>
+    
+    <material name="Uranium Oxide">
+    		<nuclide name="O16" density="0.0474998"/>    
+    		<nuclide name="U235" density="0.000541"/>            
+    		<nuclide name="U238" density="0.017270"/>       
+  	</material>
+    
+    <material name="Vacuum">
+    		<nuclide name="O16" density="0.0"/>       
+  	</material>
+
+</materials>
+
+
+<surfaces>
+    <plane_x    name="px1" x="0" />
+    <plane_x    name="px2" x="0.1"/>
+    <plane_x    name="px3" x="0.2"/>
+    <plane_x    name="px4" x="0.3"/>
+    <plane_x    name="px5" x="0.4"/>
+    <plane_x    name="px6" x="0.5"/>
+    <plane_x    name="px7" x="0.6"/>
+    <plane_x    name="px8" x="0.7"/>
+    <plane_x    name="px9" x="0.8"/>
+    <plane_x    name="px10" x="0.9"/>
+    <plane_x    name="px11" x="1.0"/>
+    <plane_x    name="px12" x="1.1"/>
+    <plane_x    name="px13" x="1.2"/>
+    <plane_x    name="px14" x="1.3"/>
+    <plane_x    name="px15" x="1.4"/>
+    <plane_x    name="px16" x="1.5"/>
+    <plane_x    name="px17" x="1.6"/>
+    <plane_x    name="px18" x="1.7"/>
+    <plane_x    name="px19" x="1.8"/>
+    <plane_x    name="px20" x="1.9"/>
+    <plane_x    name="px21" x="2.0"/>
+    <plane_x    name="px22" x="2.1"/>
+    <plane_x    name="px23" x="2.2"/>
+    <plane_x    name="px24" x="2.3"/>
+    <plane_x    name="px25" x="2.4"/>
+    <plane_x    name="px26" x="2.5"/>
+</surfaces>
+
+
+<regions>
+    <region name="Left Graveyard" material="Vacuum" importance="0.0">
+    		<surface name="px1"      sense="-1"/>
+  	</region>
+    
+  	<region name="Layer1" material="Uranium Oxide" importance="1.0">
+    		<surface name="px1"      sense="1"/>
+            <surface name="px2"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer2" material="Light Water" importance="1.0">
+    		<surface name="px2"      sense="1"/>
+            <surface name="px3"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer3" material="Uranium Oxide" importance="1.0">
+    		<surface name="px3"      sense="1"/>
+            <surface name="px4"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer4" material="Light Water" importance="1.0">
+    		<surface name="px4"      sense="1"/>
+            <surface name="px5"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer5" material="Uranium Oxide" importance="1.0">
+    		<surface name="px5"      sense="1"/>
+            <surface name="px6"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer6" material="Light Water" importance="1.0">
+    		<surface name="px6"      sense="1"/>
+            <surface name="px7"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer7" material="Uranium Oxide" importance="1.0">
+    		<surface name="px7"      sense="1"/>
+            <surface name="px8"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer8" material="Light Water" importance="1.0">
+    		<surface name="px8"      sense="1"/>
+            <surface name="px9"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer9" material="Uranium Oxide" importance="1.0">
+    		<surface name="px9"      sense="1"/>
+            <surface name="px10"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer10" material="Light Water" importance="1.0">
+    		<surface name="px10"      sense="1"/>
+            <surface name="px11"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer11" material="Uranium Oxide" importance="1.0">
+    		<surface name="px11"      sense="1"/>
+            <surface name="px12"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer12" material="Light Water" importance="1.0">
+    		<surface name="px12"      sense="1"/>
+            <surface name="px13"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer13" material="Uranium Oxide" importance="1.0">
+    		<surface name="px13"      sense="1"/>
+            <surface name="px14"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer14" material="Light Water" importance="1.0">
+    		<surface name="px14"      sense="1"/>
+            <surface name="px15"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer15" material="Uranium Oxide" importance="1.0">
+    		<surface name="px15"      sense="1"/>
+            <surface name="px16"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer16" material="Light Water" importance="1.0">
+    		<surface name="px16"      sense="1"/>
+            <surface name="px17"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer17" material="Uranium Oxide" importance="1.0">
+    		<surface name="px17"      sense="1"/>
+            <surface name="px18"      sense="-1"/>
+  	</region>
+    
+   <region name="Layer18" material="Light Water" importance="1.0">
+    		<surface name="px18"      sense="1"/>
+            <surface name="px19"      sense="-1"/>
+  	</region>
+    
+   <region name="Layer19" material="Uranium Oxide" importance="1.0">
+    		<surface name="px19"      sense="1"/>
+            <surface name="px20"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer20" material="Light Water" importance="1.0">
+    		<surface name="px20"      sense="1"/>
+            <surface name="px21"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer21" material="Uranium Oxide" importance="1.0">
+    		<surface name="px21"      sense="1"/>
+            <surface name="px22"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer22" material="Light Water" importance="1.0">
+    		<surface name="px21"      sense="1"/>
+            <surface name="px22"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer23" material="Uranium Oxide" importance="1.0">
+    		<surface name="px22"      sense="1"/>
+            <surface name="px23"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer24" material="Light Water" importance="1.0">
+    		<surface name="px23"      sense="1"/>
+            <surface name="px24"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer25" material="Uranium Oxide" importance="1.0">
+    		<surface name="px24"      sense="1"/>
+            <surface name="px25"      sense="-1"/>
+  	</region>
+    
+    <region name="Layer26" material="Light Water" importance="1.0">
+    		<surface name="px25"      sense="1"/>
+            <surface name="px26"      sense="-1"/>
+  	</region>
+    
+    <region name="Right Graveyard" material="Vacuum" importance="0.0">
+    		<surface name="px26"      sense="1"/>
+  	</region>
+    
+</regions>
+
+
+<estimators>
+  	<estimator name="collisions in last U layer" score="total flux">
+    		<region name="Layer25"/>
+  	</estimator>
+</estimators>
+
+
+<sources>
+  	<disk_x x="0.000000001" y="0.0" z="0.0" r="0.5" distribution="dir" energy="enrg"/>
+</sources>
