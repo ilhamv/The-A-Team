@@ -142,11 +142,13 @@ int main()
         // Cycle loop
 		for ( unsigned int icycle = 0; icycle < ncycles; icycle++ )
 		{
+			std::cout << "cycle: " << icycle << std::endl;
+
 			// Simulation loop
 			for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 			{
 
-				std::cout << isample << std::endl;
+				//std::cout << "history: " << isample << std::endl;
 
 				std::shared_ptr <Source_t> Source = Sbank.getSource();
 				Particle_t source_particle = Source->getSource();
@@ -162,11 +164,17 @@ int main()
 					std::shared_ptr<Region_t> R = P.region();  // Working region
 					Pbank.pop();
 
+					//particle_counter++;
+					//std::cout << particle_counter << std::endl;
+
 					//std::cout << "GOT TO PARTICLE!" << std::endl;
 
 					// Particle loop
 					while ( P.alive() )
 					{
+
+						//std::cout << "should this print: " << P.alive() << std::endl;
+
 						std::pair< std::shared_ptr< Surface_t >, double > SnD; // To hold nearest surface and its distance
 				
 						// Determine nearest surface and its distance
@@ -192,6 +200,8 @@ int main()
 							// 	Tally if there is any Surface Tally
 							// 	Note: particle weight and working region are not updated yet
 							SnD.first->hit( P, Region, eigenvalue, npassive, icycle );
+
+							// std::cout << P.region()->name() << std::endl;
 
 							//std::cout << "SURFACE CROSS!" << std::endl;
 
