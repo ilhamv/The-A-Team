@@ -48,7 +48,7 @@ int main()
 	std::vector < std::shared_ptr<Distribution_t<double>> > double_distributions;
   	std::vector < std::shared_ptr<Distribution_t<int>>    > int_distributions;
   	std::vector < std::shared_ptr<Distribution_t<Point_t>>> point_distributions;
-    double                                           transportMethod;   // standard is 0, anything else is delta
+    double                                           transportMethod = 0.0;   // standard is 0, anything else is delta
 	
 	// XML input parser	
 	XML_input
@@ -73,7 +73,7 @@ int main()
 			Particle_t source_particle = Source->getSource();
 			source_particle.searchRegion( Region );
 			Pbank.push( source_particle );
-	    	
+
 	    	// History loop
 	    	while ( !Pbank.empty() )
 	    	{
@@ -145,17 +145,24 @@ int main()
 			// Simulation loop
 			for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 			{
+
+				std::cout << isample << std::endl;
+
 				std::shared_ptr <Source_t> Source = Sbank.getSource();
 				Particle_t source_particle = Source->getSource();
 				source_particle.searchRegion( Region );
 				Pbank.push( source_particle );
-		
+
+				//std::cout << "GOT TO HISTORY!" << std::endl;
+
 				// History loop
 				while ( !Pbank.empty() )
 				{
 					Particle_t                P = Pbank.top(); // Working particle
 					std::shared_ptr<Region_t> R = P.region();  // Working region
 					Pbank.pop();
+
+					//std::cout << "GOT TO PARTICLE!" << std::endl;
 
 					// Particle loop
 					while ( P.alive() )
@@ -167,12 +174,16 @@ int main()
 
 						// Determine collision distance
 						double dcol = R->collision_distance( P.energy() );
+
+						//std::cout << "COLLISION OR SURFACE CROSS?" << std::endl;
 				
 						// Hit surface?
 						if ( dcol > SnD.second )
 						{	
 							// Surface hit! Move particle to surface, tally if there is any Region Tally
 							R->moveParticle( P, SnD.second, eigenvalue, npassive, icycle );
+
+							//std::cout << "PARTICLE MOVED!" << std::endl;
 
 							// Implement surface hit:
 							// 	Reflect angle for reflective surface
@@ -181,6 +192,8 @@ int main()
 							// 	Tally if there is any Surface Tally
 							// 	Note: particle weight and working region are not updated yet
 							SnD.first->hit( P, Region, eigenvalue, npassive, icycle );
+
+							//std::cout << "SURFACE CROSS!" << std::endl;
 
 							// Splitting & Roulette Variance Reduction Technique
 							// 	More important : split
@@ -198,7 +211,12 @@ int main()
 						{
 							// Move particle to collision site and sample the collision and tally if there is any region tally
 							R->moveParticle( P, dcol, eigenvalue, npassive, icycle );
+
+							//std::cout << "PARTICLE MOVED!" << std::endl;
+
 							R->collision( P, eigenvalue, k, Pbank, Fbank, shannon_mesh );
+
+							//std::cout << "COLLISION!" << std::endl;
 					
 							// Accumulate "computation time"
 							trackTime++;

@@ -340,12 +340,12 @@ void ConeZ_Surface::reflect( Particle_t& P ) { return; }
 // Getters
 double      Region_t::importance() { return r_importance; } // importance
 // Get macroXsec of the contained material
-double      Region_t::SigmaT  ( const double E ) { return material->SigmaT( E ); }
-double      Region_t::SigmaS  ( const double E ) { return material->SigmaS( E ); }
-double      Region_t::SigmaC  ( const double E ) { return material->SigmaC( E ); }
-double      Region_t::SigmaF  ( const double E ) { return material->SigmaF( E ); }
-double      Region_t::nu      ( const double E ) { return material->nu( E ); }
-double      Region_t::nuSigmaF( const double E ) { return material->nuSigmaF( E ); }
+double      Region_t::SigmaT  ( const double E ) { if ( material ) { return material->SigmaT( E ); } else { return 0; } }
+double      Region_t::SigmaS  ( const double E ) { if ( material ) { return material->SigmaS( E ); } else { return 0; } }
+double      Region_t::SigmaC  ( const double E ) { if ( material ) { return material->SigmaC( E ); } else { return 0; } }
+double      Region_t::SigmaF  ( const double E ) { if ( material ) { return material->SigmaF( E ); } else { return 0; } }
+double      Region_t::nu      ( const double E ) { if ( material ) { return material->nu( E ); } else { return 0; } }
+double      Region_t::nuSigmaF( const double E ) { if ( material ) { return material->nuSigmaF( E ); } else { return 0; } }
 
 
 // Take in a pair of surface pointer and integer describing sense

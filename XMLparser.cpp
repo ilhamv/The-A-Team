@@ -76,7 +76,7 @@ bool setNuclide( const std::string name, const std::string label, std::shared_pt
 			a.push_back( c1 );	
 			b.push_back( c2 );	
 		}
-		else { std::cout<< "Faled to read ab in library file " << name << "\n"; throw; }
+		else { std::cout<< "Failed to read ab in library file " << name << "\n"; throw; }
 	}
 
 	// Cross sections
@@ -196,7 +196,7 @@ void XML_input
 			{
 				if ( (std::string) k.name() == "x" )
 				{
-					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("number_of_steps") ) )
 					{
 						std::cout << "Shannon Entropy Mesh x-dimension requires minimum value, maximum value, and number of steps" << std::endl;
 						throw;
@@ -208,7 +208,7 @@ void XML_input
 				}
 				else if ( (std::string) k.name() == "y" )
 				{
-					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("number_of_steps") ) )
 					{
 						std::cout << "Shannon Entropy Mesh y-dimension requires minimum value, maximum value, and number of steps" << std::endl;
 						throw;
@@ -220,7 +220,7 @@ void XML_input
 				}
 				else if ( (std::string) k.name() == "z" )
 				{
-					if( !( k.attribute("min") && k.attribute("max") && k.attribute("mesh_step_number") ) )
+					if( !( k.attribute("min") && k.attribute("max") && k.attribute("number_of_steps") ) )
 					{
 						std::cout << "Shannon Entropy Mesh z-dimension requires minimum value, maximum value, and number of steps" << std::endl;
 						throw;
@@ -1018,41 +1018,41 @@ void XML_input
 
     		// Set region material
     		if ( r.attribute("material") ) 
-		{
-			const std::shared_ptr<Material_t> matPtr = findByName( Material, r.attribute("material").value() );
-      			if ( matPtr ) 
 			{
+				const std::shared_ptr<Material_t> matPtr = findByName( Material, r.attribute("material").value() );
+      			if ( matPtr ) 
+				{
         			Reg->setMaterial( matPtr );
       			}
-			else
+				else
 		       	{
         			std::cout << "unknown material " << r.attribute("material").value() << " in region " << name << std::endl;
         			throw;
       			} 
-   		}
+   			}
    
     		// Set region bounding surfaces
     		for ( const auto& s : r.children() ) 
-		{
-      			if ( (std::string) s.name() == "surface" ) 
 			{
+      			if ( (std::string) s.name() == "surface" ) 
+				{
         			std::string name  = s.attribute("name").value();
         			const int   sense = s.attribute("sense").as_int();
 
         			std::shared_ptr<Surface_t> SurfPtr = findByName( Surface, name );
         			
-				if ( SurfPtr ) 
-				{
+					if ( SurfPtr ) 
+					{
           				Reg->addSurface( findByName( Surface, name ), sense );
         			}
-				else 
-				{
+					else 
+					{
           				std::cout << "unknown surface with name " << name << std::endl;
           				throw;
         			}
       			}
-			else 
-			{
+				else 
+				{
         			std::cout << "unknown data type " << s.name() << " in region " << name << std::endl;
         			throw;
       			}
