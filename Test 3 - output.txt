@@ -2,17 +2,17 @@
 ============
 == Test 3 ==
 ============
-Number of histories: 2491
-Track time: 114359
+Number of histories: 10301
+Track time: 4558305
 
 
 Estimator report: Sphere leakage
 ================================
 Total tallies,
   Current:
-  -> Mean     = 0  +/-  0  (nan%)
-  -> Variance = 0
-  [F.O.M.: nan]
+  -> Mean     = 0.634333  +/-  0.000360055  (0.0567611%)
+  -> Variance = 0.233007
+  [F.O.M.: 0.680919]
 
 
 
@@ -20,9 +20,9 @@ Total tallies,
 Estimator report: k_eigenvalue_estimator
 ========================================
 Total tallies,
-  Prod. Rate:
-  -> Mean     = 0  +/-  0  (nan%)
-  -> Variance = 0
-  [F.O.M.: nan]
+  k_eff:
+  -> Mean     = 0.907419  +/-  0.000547837  (0.0603732%)
+  -> Variance = 5.40227e-05
+  [F.O.M.: 0.601878]
 
 

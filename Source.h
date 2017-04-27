@@ -19,7 +19,7 @@ class Source_t
 
 		// Get the particle source
 		virtual Particle_t getSource() = 0;
-		virtual void update( std::stack <Particle_t> F ) { return; };
+		virtual void update( std::stack <Particle_t>& F ) { return; };
 };
 
 
@@ -139,7 +139,7 @@ class Generic_Source : public Source_t
 class Eigenvalue_Source : public Source_t
 {
 	private:
-		int source_weight;						//overall source weight kept constant over all iterations
+		double source_weight;						//overall source weight kept constant over all iterations
 		double source_particle_weight;					//weight of each source particle set to maintain constant source_weight
 		std::stack <Particle_t> source_particle_bank;
 	public:
@@ -147,7 +147,7 @@ class Eigenvalue_Source : public Source_t
 				const std::shared_ptr< Distribution_t<double> > enrg, const std::shared_ptr< Distribution_t<double> > time );
 		~Eigenvalue_Source() {};
 
-		void update( std::stack <Particle_t> F );
+		void update( std::stack <Particle_t>& F );
 		Particle_t getSource();
 };
 

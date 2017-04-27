@@ -109,14 +109,18 @@ Eigenvalue_Source::Eigenvalue_Source( const int SW, const std::shared_ptr< Distr
 	}
 
 	source_weight = SW;
-	source_particle_weight = 1;
+
+	std::cout << "source_weight: " << source_weight << std::endl;
+
+	source_particle_weight = 1.0;
 }
 
-void Eigenvalue_Source::update( std::stack <Particle_t> F )
+void Eigenvalue_Source::update( std::stack <Particle_t>& F )
 {
 	source_particle_bank.swap( F );
 	std::cout << "new source bank size: " << source_particle_bank.size() << std::endl;
-	source_particle_weight = source_weight / source_particle_bank.size();
+	source_particle_weight = source_weight / (double) source_particle_bank.size();
+	std::cout << "new source particle weight: " << source_particle_weight << std::endl;
 	return;
 }
 

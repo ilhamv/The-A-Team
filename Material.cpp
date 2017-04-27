@@ -2,6 +2,7 @@
 #include <memory>  // shared_ptr
 #include <cassert>
 #include <cmath>   //floor(double)
+#include <iostream>
 
 #include "Random.h"
 #include "Particle.h"
@@ -103,6 +104,9 @@ std::shared_ptr< Nuclide_t > Material_t::nuclide_sample( const double E )
 void Material_t::bank_fission_neutrons ( Particle_t& P, double K, std::stack< Particle_t>& Fbank, std::shared_ptr <Shannon_Entropy_Mesh> shannon_mesh )
 {
 	double bank_nu = floor( ( P.weight() / K ) * nu ( P.energy() ) * ( SigmaF( P.energy() ) / SigmaT( P.energy() ) ) + Urand() );
+
+	//std::cout << "Number of neutrons to add to fission bank: " << bank_nu << std::endl;
+
 	shannon_mesh->update( P, bank_nu );
 	for ( int n = 0; n < bank_nu; n++ )
 	{

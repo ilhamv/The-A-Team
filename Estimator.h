@@ -100,7 +100,7 @@ class Fission_Score : public Score_t
 class Production_Score : public Score_t
 {
 	public:
-		 Production_Score() : Score_t( "Prod. Rate" ) {};
+		 Production_Score() : Score_t( "k_eff" ) {};
 		~Production_Score() {};
 
 		double add_score( const Particle_t& P, const double track = 0.0 );
@@ -281,7 +281,7 @@ class Generic_Estimator : public Estimator_t
 class K_Eigenvalue_Estimator : public Generic_Estimator
 {
 	private:
-		int source_weight;
+		double source_weight;
 	public:
 		K_Eigenvalue_Estimator( int SW ) : source_weight(SW), Generic_Estimator( "k_eigenvalue_estimator" ) { addScore( std::make_shared< Production_Score > () ); };
 		~K_Eigenvalue_Estimator() {};
