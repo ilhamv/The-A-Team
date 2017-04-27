@@ -1,6 +1,6 @@
 exec    = a.exe
 cc      = g++
-opt     = -O3
+opt     = -g
 cflags  = -std=c++1y $(opt)
 testdir = Unit_Testing
 
