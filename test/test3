@@ -1,12 +1,12 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="Test 3" histories="1e3"/>
+	<description name="Test 3" histories="1e4"/>
 	<cut-off energy="1" />
-    <k-eigenvalue number_of_cycles="20" passive_cycles="5">
-    	<x min="-8.0" max="8.0" number_of_steps="16"/>
-        <y min="-8.0" max="8.0" number_of_steps="16"/>
-        <z min="-8.0" max="8.0" number_of_steps="16"/>
+    <k-eigenvalue number_of_cycles="200" passive_cycles="20">
+    	<x min="-9.0" max="9.0" number_of_steps="16"/>
+        <y min="-9.0" max="9.0" number_of_steps="16"/>
+        <z min="-9.0" max="9.0" number_of_steps="16"/>
     </k-eigenvalue>
 </simulation>
 
@@ -33,7 +33,7 @@
 
 
 <surfaces>
-	<sphere name="suspicious_sphere"  x="0.0" y="0.0" z="0.0" r="7.0"/>
+	<sphere name="suspicious_sphere"  x="0.0" y="0.0" z="0.0" r="7.68"/>
 </surfaces>
 
 

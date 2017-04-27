@@ -303,7 +303,11 @@ double K_Eigenvalue_Estimator::new_k( int passive, int cycles )
 	return k;
 }
 
-void K_Eigenvalue_Estimator::endCycle() { endHistory(); };
+void K_Eigenvalue_Estimator::endCycle()
+{
+	total_tally.at(0).hist /= source_weight;
+	endHistory();
+}
 
 // Homogenized MG Constant Generator
 ////////////////////////////////////
