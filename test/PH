@@ -1,12 +1,12 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 
 <simulation>
-	<description name="PulseHeight" histories="1e8"/>
+	<description name="PulseHeight" histories="1e7"/>
 </simulation>
 
 <distributions>
-    <delta       name="enrg"       datatype="double" val="1.0e6"/>
-    <delta       name="dir"        datatype="point" x = "1.0" y = "0.0" z = "0.0"/>
+    <delta       name="enrg"  datatype="double" val="1.0e6"/>
+    <delta       name="dir"   datatype="point"  x = "1.0" y = "0.0" z = "0.0"/>
 </distributions>
 
 
@@ -18,16 +18,18 @@
 
 <materials>
   	<material name="ej309">
-            <!-- C:H = 4:5, density 0.968g/cm3 Eljen technology -->
+            <!-- C:H = 4:5, density 0.968g/cm3 Eljen technology
     		<nuclide name="C0" density="0.01663532747"/>
-            <nuclide name="H1" density="0.003465693222"/>
+            <nuclide name="H1" density="0.003465693222"/> -->
+            <nuclide name="C0" density="0.0437"/>
+            <nuclide name="H1" density="0.0546"/>
   	</material>
 </materials>
 
 
 <surfaces>
-	<plane_x name="px1" x="0.0"/>
-    <plane_x name="px2" x="7.62"/>
+	<plane_x    name="px1" x="0.0"/>
+    <plane_x    name="px2" x="7.62"/>
     <cylinder_x name="cyl" y="0.0" z="0.0" r="3.81"/>
 </surfaces>
 
@@ -49,7 +51,7 @@
         <surface name="cyl" sense="+1" />
     </region>
 	
-	<region name="right outside" importance="0.0">
+	<region name="right outside" >
     		<surface name="px2" sense="+1"/>
   	</region>
     
@@ -60,7 +62,7 @@
     
     <pulseHeight name="pulse height" >
         <region  name="detector"/>
-        <bin     type="energy" grid_linear="0 0.005e6 1.50e6"/> <!-- from 0 eV to 1.5 MeV, increment 5 KeV or  0.005 MeV -->
+        <bin     type="energy" grid_linear="0 5000 1.50e6"/> <!-- from 0 eV to 1.5 MeV, increment 5 KeV -->
     </pulseHeight>
     
 </estimators>
