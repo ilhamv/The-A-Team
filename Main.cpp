@@ -148,14 +148,14 @@ int main()
 			for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
 			{
 
-				//std::cout << "history: " << isample << std::endl;
+				std::cout << "history: " << isample << std::endl;
 
 				std::shared_ptr <Source_t> Source = Sbank.getSource();
 				Particle_t source_particle = Source->getSource();
 				source_particle.searchRegion( Region );
 				Pbank.push( source_particle );
 
-				//std::cout << "GOT TO HISTORY!" << std::endl;
+				std::cout << "GOT TO HISTORY!" << std::endl;
 
 				// History loop
 				while ( !Pbank.empty() )
@@ -167,7 +167,7 @@ int main()
 					//particle_counter++;
 					//std::cout << particle_counter << std::endl;
 
-					//std::cout << "GOT TO PARTICLE!" << std::endl;
+					std::cout << "GOT TO PARTICLE!" << std::endl;
 
 					// Particle loop
 					while ( P.alive() )
@@ -183,7 +183,7 @@ int main()
 						// Determine collision distance
 						double dcol = R->collision_distance( P.energy() );
 
-						//std::cout << "COLLISION OR SURFACE CROSS?" << std::endl;
+						std::cout << "COLLISION OR SURFACE CROSS?" << std::endl;
 				
 						// Hit surface?
 						if ( dcol > SnD.second )
@@ -191,7 +191,7 @@ int main()
 							// Surface hit! Move particle to surface, tally if there is any Region Tally
 							R->moveParticle( P, SnD.second, eigenvalue, npassive, icycle );
 
-							//std::cout << "PARTICLE MOVED!" << std::endl;
+							std::cout << "PARTICLE MOVED!" << std::endl;
 
 							// Implement surface hit:
 							// 	Reflect angle for reflective surface
@@ -201,9 +201,9 @@ int main()
 							// 	Note: particle weight and working region are not updated yet
 							SnD.first->hit( P, Region, eigenvalue, npassive, icycle );
 
-							// std::cout << P.region()->name() << std::endl;
+							std::cout << "SURFACE CROSS!" << std::endl;
 
-							//std::cout << "SURFACE CROSS!" << std::endl;
+							// std::cout << P.region()->name() << std::endl;
 
 							// Splitting & Roulette Variance Reduction Technique
 							// 	More important : split
@@ -222,12 +222,12 @@ int main()
 							// Move particle to collision site and sample the collision and tally if there is any region tally
 							R->moveParticle( P, dcol, eigenvalue, npassive, icycle );
 
-							//std::cout << "PARTICLE MOVED!" << std::endl;
+							std::cout << "PARTICLE MOVED!" << std::endl;
 
 							R->collision( P, eigenvalue, k, Pbank, Fbank, shannon_mesh );
-
-							//std::cout << "COLLISION!" << std::endl;
 					
+							std::cout << "COLLISION!" << std::endl;
+
 							// Accumulate "computation time"
 							trackTime++;
 						}
@@ -282,17 +282,17 @@ int main()
 				k = k_est->new_k( npassive, icycle );					// get new estimate of k for next iteration
 				std::shared_ptr <Source_t> Source = Sbank.getSource();  // Update source with fission bank for next iteration
 
-				std::cout << "old nhist: " << nhist << std::endl;
+				//std::cout << "old nhist: " << nhist << std::endl;
 
 				nhist = Fbank.size();
 
-				std::cout << "new nhist: " << nhist << std::endl;
+				//std::cout << "new nhist: " << nhist << std::endl;
 
 				Source->update( Fbank );
 
-				std::cout << "new fission bank size: " << Fbank.size() <<std::endl;
+				//std::cout << "new fission bank size: " << Fbank.size() <<std::endl;
 
-				std::cout << icycle << " cycles completed -- k = " << k << " -- Shannon Entropy = " << shannon_mesh->entropy( nhist ) << std::endl;
+				std::cout << icycle + 1 << " cycles completed -- k = " << k << " -- Shannon Entropy = " << shannon_mesh->entropy( nhist ) << std::endl;
 				shannon_mesh->clear();
 				if ( icycle == ( npassive - 1 ) ) { std::cout << std::endl << "All passive cycles completed; estimators activated." << std::endl << std::endl; }
 				if ( icycle >= npassive ) { k_est->endCycle(); }		// if source has converged, start sampling mean of k
