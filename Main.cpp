@@ -77,30 +77,21 @@ int main()
 
                     }
                     
-                    std::pair< std::shared_ptr< Surface_t >, double > SnD; // To hold nearest surface and its distance
-	    			
-                    // Determine nearest surface and its distance
-	    			SnD = R->surface_intersect( P );
         	    			
 	    			// Determine collision distance with max cross section
 	    			double dcol = - std::log( Urand() ) / XS_max;;
-	    			                
-	    			// Hit surface?
-	    			if ( dcol > SnD.second )
-	    			{	
-	    				while (dcol > SnD.second) //decrease dcol for every surface hit
-                        {
-                        // Surface hit! Move particle to surface, tally if there is any Region Tally
-	    				R->moveParticle( P, SnD.second );
-                        dcol = dcol - SnD.second; //decrease dcol
-        
-	    				// Implement surface hit:
-	    				// 	Reflect angle for reflective surface
-	    				// 	Cross the surface (move epsilon distance)
-	    				// 	Search new particle region for transmission surface
-	    				// 	Tally if there is any Surface Tally
-	    				// 	Note: particle weight and working region are not updated yet
-	    				SnD.first->hit( P, Region );
+	    
+	    		    R->moveParticle( P, dcol );
+                    
+                    P.searchRegion(Region);
+                    
+	    			// test collision
+	    			if (Urand() < (R->SigmaT(P.energy()))/XS_max)
+	    			{
+	    				// Sample the collision and tally if there is any region tally
+	    				R->collision( P, Pbank );
+	    				
+	    			}
         
 	    				// Splitting & Roulette Variance Reduction Technique
 	    				// 	More important : split
@@ -108,29 +99,18 @@ int main()
 	    				// 	Same importance: do nothing
 	    				// 	Note: old working region has the previous region importance and will be updated
 	    				Split_Roulette( R, P, Pbank );
-	    				
-	    				// Accumulate "computation time"
+                        //Point_t test_point;
+                        //test_point = P.pos();
+                        //std::cout<<test_point.x<<std::endl;
+                        //std::cout<<R->importance()<<std::endl;
+                        
+                    
+                
+                    // Accumulate "computation time"
 	    				trackTime++;
-                        SnD = R->surface_intersect( P ); // find distance to next surface, 
-                                                         // continue if while condition still true             
-                        }
-                        //Move remainder of dcol, no surface cross
-                        R->moveParticle( P, dcol );
-	    			}
-	    			
-	    			// test collision
-	    			if (Urand() < (R->SigmaT(P.energy()))/XS_max)
-	    			{
-	    				// Move particle to collision site and sample the collision and tally if there is any region tally
-	    				R->moveParticle( P, dcol );
-	    				R->collision( P, Pbank );
-	    				
-	    				// Accumulate "computation time"
-	    				trackTime++;
-	    			}
 	    		
 	    		// Cut-off working particle?
-	    		if ( P.energy() < Ecut_off || P.time() > tcut_off ) { P.kill();}
+	    		if ( P.energy() < Ecut_off || P.time() > tcut_off  || R->importance() ==0) { P.kill();}
 
 	    		} // Particle is dead, end of particle loop		
 	    		// Transport next Particle in the bank
