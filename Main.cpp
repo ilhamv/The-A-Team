@@ -58,9 +58,6 @@ int main()
 	std::cout<<"\nSimulation setup done,\nNow running the simulation...\n\n";
 	std::cout.flush();
 
-	// Start timing for progress updating later
-    std::clock_t start = std::clock();
-
 	// Simulation loop
 	if (transportMethod != 0) // delta tracking
     {   std::cout << "RUNNING DELTA TRACKING MODE!"<<std::endl;
@@ -143,6 +140,9 @@ int main()
 		for ( unsigned int icycle = 0; icycle < ncycles; icycle++ )
 		{
 			std::cout << "cycle: " << icycle << std::endl;
+
+			// Start timing for progress updating later
+			std::clock_t start = std::clock();
 
 			// Simulation loop
 			for ( unsigned int isample = 0 ; isample < nhist ; isample++ )
@@ -250,7 +250,7 @@ int main()
 					for ( auto& E : Estimator ) { E->endHistory(); }
 
 				// Print progress report to terminal
-				if ( ( fmod( std::log10( isample + 1 ), 1 ) == 0 ) || ( isample + 1 == nhist ) )
+				if ( ( !eigenvalue & ( fmod( std::log10( isample + 1 ), 1 ) == 0 ) ) || ( isample + 1 == nhist ) )
 				{
 		  			double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 		  			if ( duration != 0 )
