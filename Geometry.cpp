@@ -398,8 +398,8 @@ std::pair< std::shared_ptr< Surface_t >, double > Region_t::surface_intersect( c
 	std::shared_ptr< Surface_t > S = nullptr;
   	for ( const auto& s : surfaces ) 
 	{
-    		double d = s.first->distance( P );
-    		if ( d < dist )
+    	double d = s.first->distance( P );
+    	if ( d < dist )
 		{ 
 			dist = d;
 			S    = s.first;

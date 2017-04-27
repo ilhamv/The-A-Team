@@ -38,7 +38,7 @@ std::shared_ptr< T > findByName( const std::vector< std::shared_ptr< T > >& vec,
 
 // Function that set nuclide based on library availability
 // Current approximation: isotropic in C.O.M.
-bool setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc )
+bool setNuclide( const std::string name, const std::string label, std::shared_ptr<Nuclide_t>& Nuc, bool eigenvalue )
 {
     
     bool PHbool = false;
@@ -107,7 +107,10 @@ bool setNuclide( const std::string name, const std::string label, std::shared_pt
 	// Fissionable check
 	if ( nu[ nu.size() / 2 ] > 0.0 )
 	{
-		Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Average_Multiplicity_Distribution > (), std::make_shared< Watt_Distribution > ( a, b ) ) );
+		if( eigenvalue )
+			Nuc->addReaction( std::make_shared< Implicit_Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Average_Multiplicity_Distribution > (), std::make_shared< Watt_Distribution > ( a, b ) ) );
+		else
+			Nuc->addReaction( std::make_shared< Fission_Reaction > ( XS_F, XS_nu, std::make_shared< Average_Multiplicity_Distribution > (), std::make_shared< Watt_Distribution > ( a, b ) ) );
         PHbool = true;
 	}
     
@@ -829,7 +832,7 @@ void XML_input
 		else
 		// Set nuclide referring to the available library
 		{
-			fissionExistSN = setNuclide( n_tag, name, Nuc );
+			fissionExistSN = setNuclide( n_tag, name, Nuc, eigenvalue );
             if( fissionExistSN == true ){
                 fissionExist = true;
             }
